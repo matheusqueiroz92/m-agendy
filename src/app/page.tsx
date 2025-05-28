@@ -12,14 +12,17 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center">
-      <Button
-        className="p-10"
-        variant={variant as "default" | "outline"}
-        onClick={changeColorButton}
-      >
-        Clique para alterar a cor do botão!
-      </Button>
-    </div>
+    <>
+      <h1 className="p-4 text-center text-2xl font-bold">Página Home</h1>
+      <div className="flex h-screen items-center justify-center">
+        <Button
+          className="p-10"
+          variant={variant as "default" | "outline"}
+          onClick={changeColorButton}
+        >
+          Clique para alterar a cor do botão!
+        </Button>
+      </div>
+    </>
   );
 }
