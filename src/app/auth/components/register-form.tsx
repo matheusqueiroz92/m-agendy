@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -20,6 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z
   .object({
@@ -44,6 +47,7 @@ const registerSchema = z
   });
 
 const RegisterForm = () => {
+  const router = useRouter();
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -54,8 +58,19 @@ const RegisterForm = () => {
     },
   });
 
-  const onSubmitRegister = (data: z.infer<typeof registerSchema>) => {
-    console.log(data);
+  const onSubmitRegister = async (data: z.infer<typeof registerSchema>) => {
+    await authClient.signUp.email(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
+      {
+        onSuccess: () => {
+          router.push("/dashboard");
+        },
+      },
+    );
   };
 
   return (
@@ -136,8 +151,16 @@ const RegisterForm = () => {
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
-              Registrar
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerForm.formState.isSubmitting}
+            >
+              {registerForm.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Registrar"
+              )}
             </Button>
           </CardFooter>
         </form>

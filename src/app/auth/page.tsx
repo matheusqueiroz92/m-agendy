@@ -27,7 +27,7 @@ const AuthenticationPage = () => {
       {/* Coluna da direita */}
       <div className="flex h-[50vh] w-[50vw] flex-col items-center justify-center">
         <Tabs defaultValue="login" className="w-[400px]">
-          <TabsList className="w-f ull grid grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Criar conta</TabsTrigger>
           </TabsList>
