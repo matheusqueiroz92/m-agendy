@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -55,7 +57,7 @@ const LoginForm = () => {
           router.push("/dashboard");
         },
         onError: () => {
-          toast.error("E-mail ou senha inválidos");
+          toast.error("E-mail ou senha inválidos.");
         },
       },
     );
