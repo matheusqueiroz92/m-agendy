@@ -24,11 +24,11 @@ const AuthenticationPage = async () => {
       <div className="flex h-screen w-[50vw] flex-col items-center justify-center gap-12 bg-[url('/images/login-image.jpg')] bg-cover bg-center">
         <Image src={logo} alt="logo-m-agendy" width={200} height={200} />
         <div>
-          <h1 className="text-center text-3xl font-bold text-white">
-            Bem-vindo de volta!
+          <h1 className="text-center text-2xl font-bold text-white">
+            Transformando tempo em oportunidade.
           </h1>
           <p className="text-center text-lg text-white">
-            Acesse sua conta e gerencie os agendamentos de sua empresa.
+            Faça login para acessar o sistema.
           </p>
         </div>
       </div>
