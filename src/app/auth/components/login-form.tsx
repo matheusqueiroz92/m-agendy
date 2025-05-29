@@ -24,6 +24,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import GithubIcon from "@/components/ui/github-icon";
+import GoogleIcon from "@/components/ui/google-icon";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
@@ -46,7 +48,7 @@ const LoginForm = () => {
     },
   });
 
-  const onSubmitLogin = async (data: z.infer<typeof loginSchema>) => {
+  const handleSubmitLogin = async (data: z.infer<typeof loginSchema>) => {
     await authClient.signIn.email(
       {
         email: data.email,
@@ -63,11 +65,25 @@ const LoginForm = () => {
     );
   };
 
+  const handleGoogleLogin = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+    });
+  };
+
+  const handleGithubLogin = async () => {
+    await authClient.signIn.social({
+      provider: "github",
+      callbackURL: "/dashboard",
+    });
+  };
+
   return (
     <Card>
       <Form {...loginForm}>
         <form
-          onSubmit={loginForm.handleSubmit(onSubmitLogin)}
+          onSubmit={loginForm.handleSubmit(handleSubmitLogin)}
           className="space-y-6"
         >
           <CardHeader>
@@ -109,7 +125,7 @@ const LoginForm = () => {
               )}
             />
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-4">
             <Button
               type="submit"
               className="w-full"
@@ -121,6 +137,24 @@ const LoginForm = () => {
                 "Entrar"
               )}
             </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleGoogleLogin}
+              >
+                <GoogleIcon />
+                Entrar com Google
+              </Button>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleGithubLogin}
+              >
+                <GithubIcon />
+                Entrar com Github
+              </Button>
+            </div>
           </CardFooter>
         </form>
       </Form>

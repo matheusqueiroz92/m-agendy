@@ -61,7 +61,7 @@ const RegisterForm = () => {
     },
   });
 
-  const onSubmitRegister = async (data: z.infer<typeof registerSchema>) => {
+  const handleSubmitRegister = async (data: z.infer<typeof registerSchema>) => {
     await authClient.signUp.email(
       {
         email: data.email,
@@ -87,7 +87,7 @@ const RegisterForm = () => {
     <Card>
       <Form {...registerForm}>
         <form
-          onSubmit={registerForm.handleSubmit(onSubmitRegister)}
+          onSubmit={registerForm.handleSubmit(handleSubmitRegister)}
           className="space-y-6"
         >
           <CardHeader>
