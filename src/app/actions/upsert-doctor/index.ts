@@ -25,6 +25,7 @@ export const upsertDoctor = actionClient
       .set("minute", parseInt(availableFromTime.split(":")[1]))
       .set("second", parseInt(availableFromTime.split(":")[2]))
       .utc();
+
     const availableToTimeUTC = dayjs()
       .set("hour", parseInt(availableToTime.split(":")[0]))
       .set("minute", parseInt(availableToTime.split(":")[1]))
@@ -34,12 +35,15 @@ export const upsertDoctor = actionClient
     const session = await auth.api.getSession({
       headers: await headers(),
     });
+
     if (!session?.user) {
       throw new Error("Unauthorized");
     }
+
     if (!session?.user.clinic?.id) {
       throw new Error("Clinic not found");
     }
+
     await db
       .insert(doctorsTable)
       .values({
