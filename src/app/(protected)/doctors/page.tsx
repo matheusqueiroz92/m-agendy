@@ -1,5 +1,13 @@
-import { Plus } from "lucide-react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   PageActions,
   PageContainer,
@@ -8,22 +16,44 @@ import {
   PageHeader,
   PageHeaderContent,
   PageTitle,
-} from "@/components/page-container";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/page-container";
+import { auth } from "@/lib/auth";
 
-const DoctorsPage = () => {
+import CreateDoctorButton from "./_components/create-doctor-button";
+
+const DoctorsPage = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    redirect("/auth");
+  }
+
+  if (!session?.user?.clinic) {
+    redirect("/clinic-form");
+  }
+
   return (
     <PageContainer>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
+            Médicos
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Médicos</PageTitle>
           <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <Button>
-            <Plus />
-            Adicionar Médico
-          </Button>
+          <CreateDoctorButton />
         </PageActions>
       </PageHeader>
       <PageContent>
