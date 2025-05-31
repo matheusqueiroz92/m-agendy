@@ -8,7 +8,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 import UpsertDoctorForm from "./upsert-doctor-form";
 
-const CreateDoctorButton = () => {
+const AddDoctorButton = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -24,4 +24,4 @@ const CreateDoctorButton = () => {
   );
 };
 
-export default CreateDoctorButton;
+export default AddDoctorButton;

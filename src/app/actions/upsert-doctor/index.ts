@@ -50,15 +50,22 @@ export const upsertDoctor = actionClient
         ...parsedInput,
         id: parsedInput.id,
         clinicId: session?.user.clinic?.id,
+        avatarImageUrl: parsedInput.avatarImageUrl || null, // Permitir null
         availableFromTime: availableFromTimeUTC.format("HH:mm:ss"),
         availableToTime: availableToTimeUTC.format("HH:mm:ss"),
       })
       .onConflictDoUpdate({
         target: [doctorsTable.id],
         set: {
-          ...parsedInput,
+          name: parsedInput.name,
+          speciality: parsedInput.speciality,
+          avatarImageUrl: parsedInput.avatarImageUrl || null,
+          appointmentPriceInCents: parsedInput.appointmentPriceInCents,
+          availableFromWeekDay: parsedInput.availableFromWeekDay,
+          availableToWeekDay: parsedInput.availableToWeekDay,
           availableFromTime: availableFromTimeUTC.format("HH:mm:ss"),
           availableToTime: availableToTimeUTC.format("HH:mm:ss"),
+          updatedAt: new Date(),
         },
       });
     revalidatePath("/doctors");

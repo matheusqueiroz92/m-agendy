@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -44,7 +45,7 @@ const formSchema = z
     speciality: z.string().trim().min(1, {
       message: "Especialidade é obrigatória.",
     }),
-    // avatarImageUrl: z.string(),
+    avatarImageUrl: z.string().optional(),
     appointmentPriceInCents: z.number().min(1, {
       message: "Preço da consulta é obrigatório.",
     }),
@@ -69,7 +70,10 @@ const formSchema = z
   );
 
 interface UpsertDoctorFormProps {
-  doctor?: typeof doctorsTable.$inferSelect;
+  doctor?: typeof doctorsTable.$inferSelect & {
+    availableFromTime: string;
+    availableToTime: string;
+  };
   onSuccess?: () => void;
 }
 
@@ -80,7 +84,7 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
     defaultValues: {
       name: doctor?.name ?? "",
       speciality: doctor?.speciality ?? "",
-      // avatarImageUrl: doctor?.avatarImageUrl ?? "",
+      avatarImageUrl: doctor?.avatarImageUrl ?? "",
       appointmentPriceInCents: doctor?.appointmentPriceInCents
         ? doctor.appointmentPriceInCents / 100
         : 0,
@@ -93,12 +97,16 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
 
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
-      toast.success("Médico adicionado com sucesso.");
+      toast.success(
+        doctor
+          ? "Médico atualizado com sucesso."
+          : "Médico adicionado com sucesso.",
+      );
       onSuccess?.();
     },
     onError: (error) => {
       console.log(error);
-      toast.error("Erro ao adicionar médico.");
+      toast.error("Erro ao salvar médico.");
     },
   });
 
@@ -109,12 +117,12 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
       availableFromWeekDay: parseInt(values.availableFromWeekDay),
       availableToWeekDay: parseInt(values.availableToWeekDay),
       appointmentPriceInCents: values.appointmentPriceInCents * 100,
-      // avatarImageUrl: doctor?.avatarImageUrl ?? "",
+      avatarImageUrl: values.avatarImageUrl || undefined,
     });
   };
 
   return (
-    <DialogContent>
+    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{doctor ? doctor.name : "Adicionar médico"}</DialogTitle>
         <DialogDescription>
@@ -125,6 +133,24 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="avatarImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Foto do médico</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={upsertDoctorAction.isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="name"
@@ -138,6 +164,7 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="speciality"
@@ -168,19 +195,7 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
               </FormItem>
             )}
           />
-          {/* <FormField
-            control={form.control}
-            name="avatarImageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Imagem</FormLabel>
-                <FormControl>
-                  <Input type="file" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
+
           <FormField
             control={form.control}
             name="appointmentPriceInCents"
@@ -205,202 +220,211 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="availableFromWeekDay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dia inicial de disponibilidade</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um dia" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">Domingo</SelectItem>
-                    <SelectItem value="1">Segunda</SelectItem>
-                    <SelectItem value="2">Terça</SelectItem>
-                    <SelectItem value="3">Quarta</SelectItem>
-                    <SelectItem value="4">Quinta</SelectItem>
-                    <SelectItem value="5">Sexta</SelectItem>
-                    <SelectItem value="6">Sábado</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="availableToWeekDay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dia final de disponibilidade</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um dia" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">Domingo</SelectItem>
-                    <SelectItem value="1">Segunda</SelectItem>
-                    <SelectItem value="2">Terça</SelectItem>
-                    <SelectItem value="3">Quarta</SelectItem>
-                    <SelectItem value="4">Quinta</SelectItem>
-                    <SelectItem value="5">Sexta</SelectItem>
-                    <SelectItem value="6">Sábado</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="availableFromTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horário inicial de disponibilidade</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um horário" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Manhã</SelectLabel>
-                      <SelectItem value="05:00:00">05:00</SelectItem>
-                      <SelectItem value="05:30:00">05:30</SelectItem>
-                      <SelectItem value="06:00:00">06:00</SelectItem>
-                      <SelectItem value="06:30:00">06:30</SelectItem>
-                      <SelectItem value="07:00:00">07:00</SelectItem>
-                      <SelectItem value="07:30:00">07:30</SelectItem>
-                      <SelectItem value="08:00:00">08:00</SelectItem>
-                      <SelectItem value="08:30:00">08:30</SelectItem>
-                      <SelectItem value="09:00:00">09:00</SelectItem>
-                      <SelectItem value="09:30:00">09:30</SelectItem>
-                      <SelectItem value="10:00:00">10:00</SelectItem>
-                      <SelectItem value="10:30:00">10:30</SelectItem>
-                      <SelectItem value="11:00:00">11:00</SelectItem>
-                      <SelectItem value="11:30:00">11:30</SelectItem>
-                      <SelectItem value="12:00:00">12:00</SelectItem>
-                      <SelectItem value="12:30:00">12:30</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Tarde</SelectLabel>
-                      <SelectItem value="13:00:00">13:00</SelectItem>
-                      <SelectItem value="13:30:00">13:30</SelectItem>
-                      <SelectItem value="14:00:00">14:00</SelectItem>
-                      <SelectItem value="14:30:00">14:30</SelectItem>
-                      <SelectItem value="15:00:00">15:00</SelectItem>
-                      <SelectItem value="15:30:00">15:30</SelectItem>
-                      <SelectItem value="16:00:00">16:00</SelectItem>
-                      <SelectItem value="16:30:00">16:30</SelectItem>
-                      <SelectItem value="17:00:00">17:00</SelectItem>
-                      <SelectItem value="17:30:00">17:30</SelectItem>
-                      <SelectItem value="18:00:00">18:00</SelectItem>
-                      <SelectItem value="18:30:00">18:30</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Noite</SelectLabel>
-                      <SelectItem value="19:00:00">19:00</SelectItem>
-                      <SelectItem value="19:30:00">19:30</SelectItem>
-                      <SelectItem value="20:00:00">20:00</SelectItem>
-                      <SelectItem value="20:30:00">20:30</SelectItem>
-                      <SelectItem value="21:00:00">21:00</SelectItem>
-                      <SelectItem value="21:30:00">21:30</SelectItem>
-                      <SelectItem value="22:00:00">22:00</SelectItem>
-                      <SelectItem value="22:30:00">22:30</SelectItem>
-                      <SelectItem value="23:00:00">23:00</SelectItem>
-                      <SelectItem value="23:30:00">23:30</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="availableToTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horário final de disponibilidade</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um horário" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Manhã</SelectLabel>
-                      <SelectItem value="05:00:00">05:00</SelectItem>
-                      <SelectItem value="05:30:00">05:30</SelectItem>
-                      <SelectItem value="06:00:00">06:00</SelectItem>
-                      <SelectItem value="06:30:00">06:30</SelectItem>
-                      <SelectItem value="07:00:00">07:00</SelectItem>
-                      <SelectItem value="07:30:00">07:30</SelectItem>
-                      <SelectItem value="08:00:00">08:00</SelectItem>
-                      <SelectItem value="08:30:00">08:30</SelectItem>
-                      <SelectItem value="09:00:00">09:00</SelectItem>
-                      <SelectItem value="09:30:00">09:30</SelectItem>
-                      <SelectItem value="10:00:00">10:00</SelectItem>
-                      <SelectItem value="10:30:00">10:30</SelectItem>
-                      <SelectItem value="11:00:00">11:00</SelectItem>
-                      <SelectItem value="11:30:00">11:30</SelectItem>
-                      <SelectItem value="12:00:00">12:00</SelectItem>
-                      <SelectItem value="12:30:00">12:30</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Tarde</SelectLabel>
-                      <SelectItem value="13:00:00">13:00</SelectItem>
-                      <SelectItem value="13:30:00">13:30</SelectItem>
-                      <SelectItem value="14:00:00">14:00</SelectItem>
-                      <SelectItem value="14:30:00">14:30</SelectItem>
-                      <SelectItem value="15:00:00">15:00</SelectItem>
-                      <SelectItem value="15:30:00">15:30</SelectItem>
-                      <SelectItem value="16:00:00">16:00</SelectItem>
-                      <SelectItem value="16:30:00">16:30</SelectItem>
-                      <SelectItem value="17:00:00">17:00</SelectItem>
-                      <SelectItem value="17:30:00">17:30</SelectItem>
-                      <SelectItem value="18:00:00">18:00</SelectItem>
-                      <SelectItem value="18:30:00">18:30</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Noite</SelectLabel>
-                      <SelectItem value="19:00:00">19:00</SelectItem>
-                      <SelectItem value="19:30:00">19:30</SelectItem>
-                      <SelectItem value="20:00:00">20:00</SelectItem>
-                      <SelectItem value="20:30:00">20:30</SelectItem>
-                      <SelectItem value="21:00:00">21:00</SelectItem>
-                      <SelectItem value="21:30:00">21:30</SelectItem>
-                      <SelectItem value="22:00:00">22:00</SelectItem>
-                      <SelectItem value="22:30:00">22:30</SelectItem>
-                      <SelectItem value="23:00:00">23:00</SelectItem>
-                      <SelectItem value="23:30:00">23:30</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="availableFromWeekDay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dia inicial de disponibilidade</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um dia" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="0">Domingo</SelectItem>
+                      <SelectItem value="1">Segunda</SelectItem>
+                      <SelectItem value="2">Terça</SelectItem>
+                      <SelectItem value="3">Quarta</SelectItem>
+                      <SelectItem value="4">Quinta</SelectItem>
+                      <SelectItem value="5">Sexta</SelectItem>
+                      <SelectItem value="6">Sábado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="availableToWeekDay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dia final de disponibilidade</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um dia" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="0">Domingo</SelectItem>
+                      <SelectItem value="1">Segunda</SelectItem>
+                      <SelectItem value="2">Terça</SelectItem>
+                      <SelectItem value="3">Quarta</SelectItem>
+                      <SelectItem value="4">Quinta</SelectItem>
+                      <SelectItem value="5">Sexta</SelectItem>
+                      <SelectItem value="6">Sábado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="availableFromTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Horário inicial de disponibilidade</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um horário" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Manhã</SelectLabel>
+                        <SelectItem value="05:00:00">05:00</SelectItem>
+                        <SelectItem value="05:30:00">05:30</SelectItem>
+                        <SelectItem value="06:00:00">06:00</SelectItem>
+                        <SelectItem value="06:30:00">06:30</SelectItem>
+                        <SelectItem value="07:00:00">07:00</SelectItem>
+                        <SelectItem value="07:30:00">07:30</SelectItem>
+                        <SelectItem value="08:00:00">08:00</SelectItem>
+                        <SelectItem value="08:30:00">08:30</SelectItem>
+                        <SelectItem value="09:00:00">09:00</SelectItem>
+                        <SelectItem value="09:30:00">09:30</SelectItem>
+                        <SelectItem value="10:00:00">10:00</SelectItem>
+                        <SelectItem value="10:30:00">10:30</SelectItem>
+                        <SelectItem value="11:00:00">11:00</SelectItem>
+                        <SelectItem value="11:30:00">11:30</SelectItem>
+                        <SelectItem value="12:00:00">12:00</SelectItem>
+                        <SelectItem value="12:30:00">12:30</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Tarde</SelectLabel>
+                        <SelectItem value="13:00:00">13:00</SelectItem>
+                        <SelectItem value="13:30:00">13:30</SelectItem>
+                        <SelectItem value="14:00:00">14:00</SelectItem>
+                        <SelectItem value="14:30:00">14:30</SelectItem>
+                        <SelectItem value="15:00:00">15:00</SelectItem>
+                        <SelectItem value="15:30:00">15:30</SelectItem>
+                        <SelectItem value="16:00:00">16:00</SelectItem>
+                        <SelectItem value="16:30:00">16:30</SelectItem>
+                        <SelectItem value="17:00:00">17:00</SelectItem>
+                        <SelectItem value="17:30:00">17:30</SelectItem>
+                        <SelectItem value="18:00:00">18:00</SelectItem>
+                        <SelectItem value="18:30:00">18:30</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Noite</SelectLabel>
+                        <SelectItem value="19:00:00">19:00</SelectItem>
+                        <SelectItem value="19:30:00">19:30</SelectItem>
+                        <SelectItem value="20:00:00">20:00</SelectItem>
+                        <SelectItem value="20:30:00">20:30</SelectItem>
+                        <SelectItem value="21:00:00">21:00</SelectItem>
+                        <SelectItem value="21:30:00">21:30</SelectItem>
+                        <SelectItem value="22:00:00">22:00</SelectItem>
+                        <SelectItem value="22:30:00">22:30</SelectItem>
+                        <SelectItem value="23:00:00">23:00</SelectItem>
+                        <SelectItem value="23:30:00">23:30</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="availableToTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Horário final de disponibilidade</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um horário" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Manhã</SelectLabel>
+                        <SelectItem value="05:00:00">05:00</SelectItem>
+                        <SelectItem value="05:30:00">05:30</SelectItem>
+                        <SelectItem value="06:00:00">06:00</SelectItem>
+                        <SelectItem value="06:30:00">06:30</SelectItem>
+                        <SelectItem value="07:00:00">07:00</SelectItem>
+                        <SelectItem value="07:30:00">07:30</SelectItem>
+                        <SelectItem value="08:00:00">08:00</SelectItem>
+                        <SelectItem value="08:30:00">08:30</SelectItem>
+                        <SelectItem value="09:00:00">09:00</SelectItem>
+                        <SelectItem value="09:30:00">09:30</SelectItem>
+                        <SelectItem value="10:00:00">10:00</SelectItem>
+                        <SelectItem value="10:30:00">10:30</SelectItem>
+                        <SelectItem value="11:00:00">11:00</SelectItem>
+                        <SelectItem value="11:30:00">11:30</SelectItem>
+                        <SelectItem value="12:00:00">12:00</SelectItem>
+                        <SelectItem value="12:30:00">12:30</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Tarde</SelectLabel>
+                        <SelectItem value="13:00:00">13:00</SelectItem>
+                        <SelectItem value="13:30:00">13:30</SelectItem>
+                        <SelectItem value="14:00:00">14:00</SelectItem>
+                        <SelectItem value="14:30:00">14:30</SelectItem>
+                        <SelectItem value="15:00:00">15:00</SelectItem>
+                        <SelectItem value="15:30:00">15:30</SelectItem>
+                        <SelectItem value="16:00:00">16:00</SelectItem>
+                        <SelectItem value="16:30:00">16:30</SelectItem>
+                        <SelectItem value="17:00:00">17:00</SelectItem>
+                        <SelectItem value="17:30:00">17:30</SelectItem>
+                        <SelectItem value="18:00:00">18:00</SelectItem>
+                        <SelectItem value="18:30:00">18:30</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Noite</SelectLabel>
+                        <SelectItem value="19:00:00">19:00</SelectItem>
+                        <SelectItem value="19:30:00">19:30</SelectItem>
+                        <SelectItem value="20:00:00">20:00</SelectItem>
+                        <SelectItem value="20:30:00">20:30</SelectItem>
+                        <SelectItem value="21:00:00">21:00</SelectItem>
+                        <SelectItem value="21:30:00">21:30</SelectItem>
+                        <SelectItem value="22:00:00">22:00</SelectItem>
+                        <SelectItem value="22:30:00">22:30</SelectItem>
+                        <SelectItem value="23:00:00">23:00</SelectItem>
+                        <SelectItem value="23:30:00">23:30</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <DialogFooter>
             <Button type="submit" disabled={upsertDoctorAction.isPending}>
               {upsertDoctorAction.isPending

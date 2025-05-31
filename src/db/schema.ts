@@ -150,7 +150,9 @@ export const patientsTable = pgTable("patients", {
   phoneNumber: text("phone_number").notNull(),
   sex: patientSexEnum("sex").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const patientsTableRelations = relations(

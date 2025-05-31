@@ -22,8 +22,8 @@ import { db } from "@/db";
 import { doctorsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
-import CreateDoctorButton from "./_components/create-doctor-button";
-import { DoctorCard } from "./_components/doctor-card";
+import AddDoctorButton from "./_components/add-doctor-button";
+import DoctorCard from "./_components/doctor-card";
 
 const DoctorsPage = async () => {
   const session = await auth.api.getSession({
@@ -61,7 +61,7 @@ const DoctorsPage = async () => {
           <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <CreateDoctorButton />
+          <AddDoctorButton />
         </PageActions>
       </PageHeader>
       <PageContent>
