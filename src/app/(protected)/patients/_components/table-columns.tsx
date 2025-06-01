@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
+import { Badge } from "@/components/ui/badge";
 import FemaleIcon from "@/components/ui/female-icon";
 import MaleIcon from "@/components/ui/male-icon";
 import { patientsTable } from "@/db/schema";
@@ -38,13 +39,13 @@ export const patientsTableColumns: ColumnDef<Patient>[] = [
     cell: (params) => {
       const patient = params.row.original;
       return patient.sex === "male" ? (
-        <span className="flex items-center gap-2">
+        <Badge variant="outline">
           <MaleIcon /> Masculino
-        </span>
+        </Badge>
       ) : (
-        <span className="flex items-center gap-2">
+        <Badge variant="outline">
           <FemaleIcon /> Feminino
-        </span>
+        </Badge>
       );
     },
   },
