@@ -49,14 +49,16 @@ export const createAppointmentsTableColumns = (
     header: "Médico",
     cell: (params) => {
       const appointment = params.row.original;
-      return (
-        <div>
-          <p className="font-medium">{appointment.doctor.name}</p>
-          <p className="text-muted-foreground text-sm">
-            {appointment.doctor.speciality}
-          </p>
-        </div>
-      );
+      return <p>{appointment.doctor.name}</p>;
+    },
+  },
+  {
+    id: "speciality",
+    accessorKey: "doctor.speciality",
+    header: "Especialidade",
+    cell: (params) => {
+      const appointment = params.row.original;
+      return <Badge variant="outline">{appointment.doctor.speciality}</Badge>;
     },
   },
   {

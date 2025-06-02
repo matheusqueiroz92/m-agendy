@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { UserRoundX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -9,6 +10,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { DataNotFound } from "@/components/ui/data-not-found";
 import {
   PageActions,
   PageContainer,
@@ -65,11 +67,18 @@ const DoctorsPage = async () => {
         </PageActions>
       </PageHeader>
       <PageContent>
-        <div className="grid grid-cols-3 gap-6">
-          {doctors.map((doctor) => (
-            <DoctorCard key={doctor.id} doctor={doctor} />
-          ))}
-        </div>
+        {doctors.length > 0 ? (
+          <div className="grid grid-cols-3 gap-6">
+            {doctors.map((doctor) => (
+              <DoctorCard key={doctor.id} doctor={doctor} />
+            ))}
+          </div>
+        ) : (
+          <DataNotFound
+            title="médico"
+            icon={<UserRoundX className="text-muted-foreground h-12 w-12" />}
+          />
+        )}
       </PageContent>
     </PageContainer>
   );

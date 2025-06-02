@@ -35,6 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { useAvailableTimeSlots } from "@/hooks/use-available-time-slots";
+import { useInvalidateTimeSlots } from "@/hooks/use-invalidate-time-slots";
 
 const formSchema = z.object({
   patientId: z.string().min(1, {
@@ -83,6 +85,8 @@ const UpsertAppointmentForm = ({
     appointment?.patientId || "",
   );
 
+  const { invalidateTimeSlots } = useInvalidateTimeSlots();
+
   const form = useForm<z.infer<typeof formSchema>>({
     shouldUnregister: true,
     resolver: zodResolver(formSchema),
@@ -99,6 +103,19 @@ const UpsertAppointmentForm = ({
     },
   });
 
+  const watchedDate = form.watch("date");
+
+  // Hook para buscar horários disponíveis
+  const {
+    data: availableTimeSlots = [],
+    isLoading: isLoadingTimeSlots,
+    error: timeSlotsError,
+  } = useAvailableTimeSlots({
+    doctorId: selectedDoctorId,
+    date: watchedDate,
+    enabled: !!selectedDoctorId && !!watchedDate,
+  });
+
   const upsertAppointmentAction = useAction(upsertAppointment, {
     onSuccess: () => {
       toast.success(
@@ -106,6 +123,14 @@ const UpsertAppointmentForm = ({
           ? "Agendamento atualizado com sucesso!"
           : "Agendamento criado com sucesso!",
       );
+
+      // Invalidar cache para o médico e data do agendamento
+      const formData = form.getValues();
+      const { doctorId, date } = formData;
+      if (date && doctorId) {
+        invalidateTimeSlots(doctorId, date);
+      }
+
       onSuccess?.();
     },
     onError: (error) => {
@@ -130,6 +155,9 @@ const UpsertAppointmentForm = ({
       );
     }
     form.setValue("doctorId", doctorId);
+
+    // Limpar horário quando trocar médico
+    form.setValue("time", "");
   };
 
   const handlePatientChange = (patientId: string) => {
@@ -137,9 +165,44 @@ const UpsertAppointmentForm = ({
     form.setValue("patientId", patientId);
   };
 
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      form.setValue("date", date);
+    } else {
+      form.resetField("date");
+    }
+    // Limpar horário quando trocar data
+    form.setValue("time", "");
+  };
+
+  // Função para verificar se uma data está disponível para o médico selecionado
+  const isDateAvailable = (date: Date) => {
+    if (!selectedDoctorId) return false;
+
+    const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
+    if (!selectedDoctor) return false;
+
+    const dayOfWeek = date.getDay(); // 0 = domingo, 1 = segunda, etc.
+
+    // Verifica se o dia da semana está dentro do range de disponibilidade do médico
+    const { availableFromWeekDay, availableToWeekDay } = selectedDoctor;
+
+    if (availableFromWeekDay <= availableToWeekDay) {
+      // Range normal (ex: segunda a sexta = 1 a 5)
+      return (
+        dayOfWeek >= availableFromWeekDay && dayOfWeek <= availableToWeekDay
+      );
+    } else {
+      // Range que cruza a semana (ex: sexta a segunda = 5 a 1)
+      return (
+        dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay
+      );
+    }
+  };
+
   // Condições para habilitar campos
   const isDateEnabled = selectedPatientId && selectedDoctorId;
-  const isTimeEnabled = selectedPatientId && selectedDoctorId;
+  const isTimeEnabled = selectedPatientId && selectedDoctorId && watchedDate;
   const isPriceEnabled = selectedDoctorId;
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -253,8 +316,20 @@ const UpsertAppointmentForm = ({
                 <FormControl>
                   <DatePicker
                     date={field.value}
-                    onSelect={field.onChange}
-                    disabled={!isDateEnabled}
+                    onSelect={handleDateChange}
+                    disabled={
+                      !isDateEnabled
+                        ? true
+                        : (date: Date) => {
+                            // Desabilita datas passadas
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (date < today) return true;
+
+                            // Desabilita dias que o médico não atende
+                            return !isDateAvailable(date);
+                          }
+                    }
                     placeholder="Selecione uma data"
                   />
                 </FormControl>
@@ -276,26 +351,35 @@ const UpsertAppointmentForm = ({
                 >
                   <FormControl>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um horário" />
+                      <SelectValue
+                        placeholder={
+                          isLoadingTimeSlots
+                            ? "Carregando horários..."
+                            : "Selecione um horário"
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="08:00">08:00</SelectItem>
-                    <SelectItem value="08:30">08:30</SelectItem>
-                    <SelectItem value="09:00">09:00</SelectItem>
-                    <SelectItem value="09:30">09:30</SelectItem>
-                    <SelectItem value="10:00">10:00</SelectItem>
-                    <SelectItem value="10:30">10:30</SelectItem>
-                    <SelectItem value="11:00">11:00</SelectItem>
-                    <SelectItem value="11:30">11:30</SelectItem>
-                    <SelectItem value="14:00">14:00</SelectItem>
-                    <SelectItem value="14:30">14:30</SelectItem>
-                    <SelectItem value="15:00">15:00</SelectItem>
-                    <SelectItem value="15:30">15:30</SelectItem>
-                    <SelectItem value="16:00">16:00</SelectItem>
-                    <SelectItem value="16:30">16:30</SelectItem>
-                    <SelectItem value="17:00">17:00</SelectItem>
-                    <SelectItem value="17:30">17:30</SelectItem>
+                    {isLoadingTimeSlots ? (
+                      <SelectItem value="" disabled>
+                        Carregando horários...
+                      </SelectItem>
+                    ) : timeSlotsError ? (
+                      <SelectItem value="" disabled>
+                        Erro ao carregar horários
+                      </SelectItem>
+                    ) : availableTimeSlots.length === 0 ? (
+                      <SelectItem value="" disabled>
+                        Nenhum horário disponível
+                      </SelectItem>
+                    ) : (
+                      availableTimeSlots.map((timeSlot) => (
+                        <SelectItem key={timeSlot} value={timeSlot}>
+                          {timeSlot}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
