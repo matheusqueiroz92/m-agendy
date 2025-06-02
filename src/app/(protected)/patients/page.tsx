@@ -3,7 +3,7 @@ import { UserRoundX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Breadcrumb,
   BreadcrumbItem,

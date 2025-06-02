@@ -131,15 +131,31 @@ const UpsertAppointmentForm = ({
         invalidateTimeSlots(doctorId, date);
       }
 
+      // Invalidar também todos os caches de horários para garantir consistência
+      invalidateTimeSlots();
+
       onSuccess?.();
     },
     onError: (error) => {
       console.log(error);
-      toast.error(
-        appointment
-          ? "Erro ao atualizar agendamento."
-          : "Erro ao criar agendamento.",
-      );
+
+      // Verificar se é erro de conflito específico
+      const errorMessage = error.error.serverError;
+      if (errorMessage && errorMessage.includes("Já existe um agendamento")) {
+        toast.error(errorMessage);
+        // Invalidar cache para atualizar horários disponíveis
+        const formData = form.getValues();
+        const { doctorId, date } = formData;
+        if (date && doctorId) {
+          invalidateTimeSlots(doctorId, date);
+        }
+      } else {
+        toast.error(
+          appointment
+            ? "Erro ao atualizar agendamento."
+            : "Erro ao criar agendamento.",
+        );
+      }
     },
   });
 
@@ -158,6 +174,12 @@ const UpsertAppointmentForm = ({
 
     // Limpar horário quando trocar médico
     form.setValue("time", "");
+
+    // Invalidar cache para o novo médico
+    const currentDate = form.getValues("date");
+    if (currentDate) {
+      invalidateTimeSlots(doctorId, currentDate);
+    }
   };
 
   const handlePatientChange = (patientId: string) => {
@@ -173,6 +195,11 @@ const UpsertAppointmentForm = ({
     }
     // Limpar horário quando trocar data
     form.setValue("time", "");
+
+    // Invalidar cache para a nova data
+    if (date && selectedDoctorId) {
+      invalidateTimeSlots(selectedDoctorId, date);
+    }
   };
 
   // Função para verificar se uma data está disponível para o médico selecionado
@@ -182,22 +209,28 @@ const UpsertAppointmentForm = ({
     const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
     if (!selectedDoctor) return false;
 
-    const dayOfWeek = date.getDay(); // 0 = domingo, 1 = segunda, etc.
+    // CORREÇÃO: usar data local para calcular o dia da semana sem problemas de timezone
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const localDate = new Date(year, month, day);
+    const dayOfWeek = localDate.getDay(); // 0 = domingo, 1 = segunda, etc.
 
     // Verifica se o dia da semana está dentro do range de disponibilidade do médico
     const { availableFromWeekDay, availableToWeekDay } = selectedDoctor;
 
+    let isAvailable = false;
     if (availableFromWeekDay <= availableToWeekDay) {
       // Range normal (ex: segunda a sexta = 1 a 5)
-      return (
-        dayOfWeek >= availableFromWeekDay && dayOfWeek <= availableToWeekDay
-      );
+      isAvailable =
+        dayOfWeek >= availableFromWeekDay && dayOfWeek <= availableToWeekDay;
     } else {
       // Range que cruza a semana (ex: sexta a segunda = 5 a 1)
-      return (
-        dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay
-      );
+      isAvailable =
+        dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay;
     }
+
+    return isAvailable;
   };
 
   // Condições para habilitar campos
@@ -362,17 +395,17 @@ const UpsertAppointmentForm = ({
                   </FormControl>
                   <SelectContent>
                     {isLoadingTimeSlots ? (
-                      <SelectItem value="" disabled>
+                      <div className="text-muted-foreground p-2 text-center text-sm">
                         Carregando horários...
-                      </SelectItem>
+                      </div>
                     ) : timeSlotsError ? (
-                      <SelectItem value="" disabled>
+                      <div className="text-muted-foreground p-2 text-center text-sm">
                         Erro ao carregar horários
-                      </SelectItem>
+                      </div>
                     ) : availableTimeSlots.length === 0 ? (
-                      <SelectItem value="" disabled>
+                      <div className="text-muted-foreground p-2 text-center text-sm">
                         Nenhum horário disponível
-                      </SelectItem>
+                      </div>
                     ) : (
                       availableTimeSlots.map((timeSlot) => (
                         <SelectItem key={timeSlot} value={timeSlot}>

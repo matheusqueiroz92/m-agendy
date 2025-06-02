@@ -2,7 +2,7 @@
 
 import { CalendarX } from "lucide-react";
 
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 

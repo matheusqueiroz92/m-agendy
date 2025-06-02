@@ -72,10 +72,55 @@ export const getAvailableTimeSlots = actionClient
     }
 
     // Verificar se a data está dentro dos dias de trabalho do médico
-    const selectedDate = new Date(date);
+    // CORREÇÃO: Criar uma nova data baseada na string da data para evitar problemas de timezone
+    const [year, month, day] = date.split("-").map(Number);
+    const selectedDate = new Date(year, month - 1, day); // month é 0-indexed
     const dayOfWeek = selectedDate.getDay();
 
     const { availableFromWeekDay, availableToWeekDay } = doctor;
+
+    // Debug: log dos dados do médico e data selecionada
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEBUG] Verificação de disponibilidade:`, {
+        doctorId,
+        doctorName: doctor.name,
+        originalDate: date,
+        parsedYear: year,
+        parsedMonth: month,
+        parsedDay: day,
+        selectedDate: selectedDate.toISOString(),
+        dayOfWeek,
+        dayOfWeekName: [
+          "Domingo",
+          "Segunda",
+          "Terça",
+          "Quarta",
+          "Quinta",
+          "Sexta",
+          "Sábado",
+        ][dayOfWeek],
+        availableFromWeekDay,
+        availableToWeekDay,
+        availableFromWeekDayName: [
+          "Domingo",
+          "Segunda",
+          "Terça",
+          "Quarta",
+          "Quinta",
+          "Sexta",
+          "Sábado",
+        ][availableFromWeekDay],
+        availableToWeekDayName: [
+          "Domingo",
+          "Segunda",
+          "Terça",
+          "Quarta",
+          "Quinta",
+          "Sexta",
+          "Sábado",
+        ][availableToWeekDay],
+      });
+    }
 
     let isDayAvailable = false;
     if (availableFromWeekDay <= availableToWeekDay) {
@@ -84,6 +129,20 @@ export const getAvailableTimeSlots = actionClient
     } else {
       isDayAvailable =
         dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay;
+    }
+
+    // Debug: log do resultado da verificação
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEBUG] Resultado da verificação:`, {
+        isDayAvailable,
+        condition:
+          availableFromWeekDay <= availableToWeekDay
+            ? "range normal"
+            : "range cruzado",
+        dayOfWeek,
+        availableFromWeekDay,
+        availableToWeekDay,
+      });
     }
 
     if (!isDayAvailable) {
@@ -97,25 +156,21 @@ export const getAvailableTimeSlots = actionClient
     );
 
     // Buscar agendamentos já existentes nesta data para este médico
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
     const existingAppointments = await db.query.appointmentsTable.findMany({
       where: and(
         eq(appointmentsTable.doctorId, doctorId),
         eq(appointmentsTable.clinicId, session.user.clinic.id),
-        // Note: precisamos filtrar por data no JavaScript pois é mais complexo com timestamps
       ),
     });
 
     // Filtrar agendamentos da data específica e extrair horários ocupados
+    const targetDateStr = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
+
     const occupiedSlots = existingAppointments
       .filter((appointment) => {
         const appointmentDate = new Date(appointment.date);
-        return appointmentDate.toDateString() === selectedDate.toDateString();
+        const appointmentDateStr = appointmentDate.toISOString().split("T")[0]; // YYYY-MM-DD
+        return appointmentDateStr === targetDateStr;
       })
       .map((appointment) => {
         const appointmentDate = new Date(appointment.date);
@@ -127,10 +182,32 @@ export const getAvailableTimeSlots = actionClient
         return `${hours}:${minutes}`;
       });
 
+    // Debug log para verificar o funcionamento
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEBUG] Horários ocupados para ${targetDateStr}:`, {
+        doctorId,
+        targetDate: targetDateStr,
+        allSlots,
+        occupiedSlots,
+        totalAppointments: existingAppointments.length,
+        filteredCount: occupiedSlots.length,
+      });
+    }
+
     // Retornar apenas slots livres
     const availableSlots = allSlots.filter(
       (slot) => !occupiedSlots.includes(slot),
     );
+
+    // Log final para confirmar resultado
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEBUG] Resultado final:`, {
+        availableSlots,
+        totalAvailable: availableSlots.length,
+        totalSlots: allSlots.length,
+        removed: allSlots.length - availableSlots.length,
+      });
+    }
 
     return { availableSlots };
   });

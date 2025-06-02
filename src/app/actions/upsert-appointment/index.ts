@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -51,6 +51,23 @@ export const upsertAppointment = actionClient
       const [hours, minutes] = time.split(":").map(Number);
       const appointmentDateTime = new Date(date);
       appointmentDateTime.setHours(hours, minutes, 0, 0);
+
+      // VALIDAÇÃO DE CONFLITO: Verificar se já existe agendamento no mesmo horário para o mesmo médico
+      const existingAppointment = await db.query.appointmentsTable.findFirst({
+        where: and(
+          eq(appointmentsTable.doctorId, doctorId),
+          eq(appointmentsTable.clinicId, session.user.clinic.id),
+          eq(appointmentsTable.date, appointmentDateTime),
+          // Se estiver editando, excluir o próprio agendamento da verificação
+          id ? ne(appointmentsTable.id, id) : undefined,
+        ),
+      });
+
+      if (existingAppointment) {
+        throw new Error(
+          `Já existe um agendamento para este médico no horário ${time}. Por favor, escolha outro horário.`,
+        );
+      }
 
       let appointment;
 

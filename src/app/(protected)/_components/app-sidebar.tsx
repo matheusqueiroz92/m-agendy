@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
+import logo from "../../../../public/images/logo-m-agendy-com-nome.png";
+
 const items = [
   {
     title: "Dashboard",
@@ -80,12 +82,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
-        <Image
-          src="/logo-m-agendy-icon.svg"
-          alt="Logo M.Agendy"
-          width={200}
-          height={32}
-        />
+        <Image src={logo} alt="Logo M.Agendy" width={200} height={32} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
