@@ -146,7 +146,7 @@ export const getAvailableTimeSlots = actionClient
     }
 
     if (!isDayAvailable) {
-      return { availableSlots: [] };
+      return { timeSlots: [] };
     }
 
     // Gerar todos os slots possíveis do médico
@@ -194,20 +194,21 @@ export const getAvailableTimeSlots = actionClient
       });
     }
 
-    // Retornar apenas slots livres
-    const availableSlots = allSlots.filter(
-      (slot) => !occupiedSlots.includes(slot),
-    );
+    // Retornar slots com status de disponibilidade
+    const timeSlots = allSlots.map((slot) => ({
+      time: slot,
+      available: !occupiedSlots.includes(slot),
+    }));
 
     // Log final para confirmar resultado
     if (process.env.NODE_ENV === "development") {
       console.log(`[DEBUG] Resultado final:`, {
-        availableSlots,
-        totalAvailable: availableSlots.length,
+        timeSlots,
         totalSlots: allSlots.length,
-        removed: allSlots.length - availableSlots.length,
+        availableCount: timeSlots.filter((slot) => slot.available).length,
+        occupiedCount: timeSlots.filter((slot) => !slot.available).length,
       });
     }
 
-    return { availableSlots };
+    return { timeSlots };
   });

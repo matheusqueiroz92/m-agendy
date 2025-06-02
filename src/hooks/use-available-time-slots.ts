@@ -11,6 +11,11 @@ interface UseAvailableTimeSlotsProps {
   enabled?: boolean;
 }
 
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+}
+
 export function useAvailableTimeSlots({
   doctorId,
   date,
@@ -22,7 +27,7 @@ export function useAvailableTimeSlots({
 
   return useQuery({
     queryKey: ["available-time-slots", doctorId, dateString],
-    queryFn: async () => {
+    queryFn: async (): Promise<TimeSlot[]> => {
       if (!doctorId || !dateString) {
         throw new Error("Doctor ID and date are required");
       }
@@ -40,7 +45,7 @@ export function useAvailableTimeSlots({
         throw new Error("Validation error");
       }
 
-      return result?.data?.availableSlots || [];
+      return result?.data?.timeSlots || [];
     },
     enabled: enabled && !!doctorId && !!dateString,
     staleTime: 1000 * 60 * 2, // 2 minutos (menor que o padrão para dados mais críticos)

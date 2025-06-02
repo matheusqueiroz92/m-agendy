@@ -107,7 +107,7 @@ const UpsertAppointmentForm = ({
 
   // Hook para buscar horários disponíveis
   const {
-    data: availableTimeSlots = [],
+    data: timeSlots = [],
     isLoading: isLoadingTimeSlots,
     error: timeSlotsError,
   } = useAvailableTimeSlots({
@@ -402,14 +402,26 @@ const UpsertAppointmentForm = ({
                       <div className="text-muted-foreground p-2 text-center text-sm">
                         Erro ao carregar horários
                       </div>
-                    ) : availableTimeSlots.length === 0 ? (
+                    ) : timeSlots.length === 0 ? (
                       <div className="text-muted-foreground p-2 text-center text-sm">
                         Nenhum horário disponível
                       </div>
                     ) : (
-                      availableTimeSlots.map((timeSlot) => (
-                        <SelectItem key={timeSlot} value={timeSlot}>
-                          {timeSlot}
+                      timeSlots.map((timeSlot) => (
+                        <SelectItem
+                          key={timeSlot.time}
+                          value={timeSlot.time}
+                          disabled={!timeSlot.available}
+                          className={
+                            !timeSlot.available ? "text-muted-foreground" : ""
+                          }
+                        >
+                          {timeSlot.time}
+                          {!timeSlot.available && (
+                            <span className="text-muted-foreground ml-2 text-xs">
+                              indisponível
+                            </span>
+                          )}
                         </SelectItem>
                       ))
                     )}
