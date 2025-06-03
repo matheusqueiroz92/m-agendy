@@ -3,15 +3,14 @@ import { UserRoundX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { DataTable } from "@/components/ui/data-table";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { DataNotFound } from "@/components/ui/data-not-found";
+import { DataTable } from "@/components/ui/data-table";
 import {
   PageActions,
   PageContainer,
@@ -50,9 +49,7 @@ const PatientsPage = async () => {
     <PageContainer>
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
+          <BreadcrumbItem>Menu principal</BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
             Pacientes

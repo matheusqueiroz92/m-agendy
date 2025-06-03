@@ -100,6 +100,7 @@ export const upsertAppointment = actionClient
       }
 
       revalidatePath("/appointments");
+      revalidatePath("/dashboard");
 
       return { appointment: appointment[0] };
     },

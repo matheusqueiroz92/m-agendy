@@ -68,7 +68,7 @@ const DoctorsPage = async () => {
       </PageHeader>
       <PageContent>
         {doctors.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-4 gap-6">
             {doctors.map((doctor) => (
               <DoctorCard key={doctor.id} doctor={doctor} />
             ))}
