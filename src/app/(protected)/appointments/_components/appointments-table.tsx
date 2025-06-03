@@ -28,7 +28,7 @@ interface AppointmentsTableProps {
   patients: (typeof patientsTable.$inferSelect)[];
 }
 
-const AppointmentsTable = ({
+export const AppointmentsTable = ({
   appointments,
   doctors,
   patients,
@@ -49,5 +49,3 @@ const AppointmentsTable = ({
 
   return <DataTable columns={appointmentsTableColumns} data={appointments} />;
 };
-
-export default AppointmentsTable;

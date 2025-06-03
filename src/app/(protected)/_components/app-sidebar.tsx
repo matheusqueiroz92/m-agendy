@@ -64,7 +64,7 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const session = authClient.useSession();
@@ -81,7 +81,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b p-4">
+      <SidebarHeader className="h-20 border-b p-4">
         <Image src={logo} alt="Logo M.Agendy" width={200} height={32} />
       </SidebarHeader>
       <SidebarContent>
@@ -143,4 +143,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+};

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { auth } from "@/lib/auth";
 
-import ClinicForm from "./components/clinic-form";
+import { ClinicForm } from "./components/clinic-form";
 
 const ClinicFormPage = async () => {
   const session = await auth.api.getSession({

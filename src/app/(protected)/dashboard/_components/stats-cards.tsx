@@ -5,8 +5,8 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { formatCurrencyInCents } from "@/helpers/currency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrencyInCents } from "@/helpers/currency";
 
 interface StatsCardsProps {
   totalRevenue: number | null;
@@ -15,7 +15,7 @@ interface StatsCardsProps {
   totalDoctors: number;
 }
 
-const StatsCards = ({
+export const StatsCards = ({
   totalRevenue,
   totalAppointments,
   totalPatients,
@@ -67,5 +67,3 @@ const StatsCards = ({
     </div>
   );
 };
-
-export default StatsCards;

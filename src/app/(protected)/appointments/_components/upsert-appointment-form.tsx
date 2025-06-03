@@ -72,7 +72,7 @@ interface UpsertAppointmentFormProps {
   onSuccess?: () => void;
 }
 
-const UpsertAppointmentForm = ({
+export const UpsertAppointmentForm = ({
   doctors,
   patients,
   appointment,
@@ -452,5 +452,3 @@ const UpsertAppointmentForm = ({
     </DialogContent>
   );
 };
-
-export default UpsertAppointmentForm;

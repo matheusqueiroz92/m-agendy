@@ -27,13 +27,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { patientsTable } from "@/db/schema";
 
-import UpsertPatientForm from "./upsert-patient-form";
+import { UpsertPatientForm } from "./upsert-patient-form";
 
 interface PatientsTableActionsProps {
   patient: typeof patientsTable.$inferSelect;
 }
 
-const PatientsTableActions = ({ patient }: PatientsTableActionsProps) => {
+export const PatientsTableActions = ({
+  patient,
+}: PatientsTableActionsProps) => {
   const [upsertDialogIsOpen, setUpsertDialogIsOpen] = useState(false);
 
   const deletePatientAction = useAction(deletePatient, {
@@ -101,5 +103,3 @@ const PatientsTableActions = ({ patient }: PatientsTableActionsProps) => {
     </Dialog>
   );
 };
-
-export default PatientsTableActions;

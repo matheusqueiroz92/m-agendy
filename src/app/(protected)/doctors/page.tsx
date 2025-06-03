@@ -24,8 +24,8 @@ import { db } from "@/db";
 import { doctorsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
-import AddDoctorButton from "./_components/add-doctor-button";
-import DoctorCard from "./_components/doctor-card";
+import { AddDoctorButton } from "./_components/add-doctor-button";
+import { DoctorCard } from "./_components/doctor-card";
 
 const DoctorsPage = async () => {
   const session = await auth.api.getSession({
@@ -49,7 +49,7 @@ const DoctorsPage = async () => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">

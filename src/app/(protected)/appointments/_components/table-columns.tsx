@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale/pt-BR";
 import { Badge } from "@/components/ui/badge";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 
-import AppointmentTableActions from "./table-actions";
+import { AppointmentTableActions } from "./table-actions";
 
 type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
   patient: {

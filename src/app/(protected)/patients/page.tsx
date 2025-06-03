@@ -24,8 +24,7 @@ import { db } from "@/db";
 import { patientsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
-import AddPatientButton from "./_components/add-patient-button";
-// import PatientCard from "./_components/patient-card";
+import { AddPatientButton } from "./_components/add-patient-button";
 import { patientsTableColumns } from "./_components/table-columns";
 
 const PatientsPage = async () => {
@@ -49,7 +48,7 @@ const PatientsPage = async () => {
     <PageContainer>
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>Menu principal</BreadcrumbItem>
+          <BreadcrumbItem>Menu Principal</BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
             Pacientes

@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 
-import UpsertAppointmentForm from "./upsert-appointment-form";
+import { UpsertAppointmentForm } from "./upsert-appointment-form";
 
 type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
   patient: {
@@ -51,7 +51,7 @@ interface AppointmentTableActionsProps {
   patients: (typeof patientsTable.$inferSelect)[];
 }
 
-const AppointmentTableActions = ({
+export const AppointmentTableActions = ({
   appointment,
   doctors,
   patients,
@@ -130,5 +130,3 @@ const AppointmentTableActions = ({
     </Dialog>
   );
 };
-
-export default AppointmentTableActions;

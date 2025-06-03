@@ -37,13 +37,13 @@ import { doctorsTable } from "@/db/schema";
 import { formatCurrencyInCents } from "@/helpers/currency";
 
 import { getAvailability } from "../../../../helpers/availability";
-import UpsertDoctorForm from "./upsert-doctor-form";
+import { UpsertDoctorForm } from "./upsert-doctor-form";
 
 interface DoctorCardProps {
   doctor: typeof doctorsTable.$inferSelect;
 }
 
-const DoctorCard = ({ doctor }: DoctorCardProps) => {
+export const DoctorCard = ({ doctor }: DoctorCardProps) => {
   const [isUpsertDoctorDialogOpen, setIsUpsertDoctorDialogOpen] =
     useState(false);
   const deleteDoctorAction = useAction(deleteDoctor, {
@@ -141,5 +141,3 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
     </Card>
   );
 };
-
-export default DoctorCard;

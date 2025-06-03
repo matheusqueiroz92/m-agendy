@@ -5,7 +5,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deletePatient } from "@/app/actions/delete-patient";
+import { deletePatient } from "@/actions/delete-patient";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,13 +30,13 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { patientsTable } from "@/db/schema";
 
-import UpsertPatientForm from "./upsert-patient-form";
+import { UpsertPatientForm } from "./upsert-patient-form";
 
 interface PatientCardProps {
   patient: typeof patientsTable.$inferSelect;
 }
 
-const PatientCard = ({ patient }: PatientCardProps) => {
+export const PatientCard = ({ patient }: PatientCardProps) => {
   const [isUpsertPatientDialogOpen, setIsUpsertPatientDialogOpen] =
     useState(false);
 
@@ -142,5 +142,3 @@ const PatientCard = ({ patient }: PatientCardProps) => {
     </Card>
   );
 };
-
-export default PatientCard;

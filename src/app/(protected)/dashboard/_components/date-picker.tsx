@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export function DatePicker({
+export const DatePicker = ({
   className,
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement>) => {
   const [from, setFrom] = useQueryState(
     "from",
     parseAsIsoDate.withDefault(new Date()),
@@ -89,4 +89,4 @@ export function DatePicker({
       </Popover>
     </div>
   );
-}
+};

@@ -6,9 +6,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
-import UpsertPatientForm from "./upsert-patient-form";
+import { UpsertPatientForm } from "./upsert-patient-form";
 
-const AddPatientButton = () => {
+export const AddPatientButton = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -19,7 +19,7 @@ const AddPatientButton = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Adicionar paciente
         </Button>
       </DialogTrigger>
@@ -27,5 +27,3 @@ const AddPatientButton = () => {
     </Dialog>
   );
 };
-
-export default AddPatientButton;

@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -18,12 +17,11 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
-import { db } from "@/db";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { getDataTableAppointments } from "@/data/get-data-table-appointments";
 import { auth } from "@/lib/auth";
 
-import AddAppointmentButton from "./_components/add-appointment-button";
-import AppointmentsTable from "./_components/appointments-table";
+import { AddAppointmentButton } from "./_components/add-appointment-button";
+import { AppointmentsTable } from "./_components/appointments-table";
 
 const AppointmentsPage = async () => {
   const session = await auth.api.getSession({
@@ -38,21 +36,15 @@ const AppointmentsPage = async () => {
     redirect("/clinic-form");
   }
 
-  const [doctors, patients, appointments] = await Promise.all([
-    db.query.doctorsTable.findMany({
-      where: eq(doctorsTable.clinicId, session.user.clinic.id),
-    }),
-    db.query.patientsTable.findMany({
-      where: eq(patientsTable.clinicId, session.user.clinic.id),
-    }),
-    db.query.appointmentsTable.findMany({
-      where: eq(appointmentsTable.clinicId, session.user.clinic.id),
-      with: {
-        patient: true,
-        doctor: true,
+  const { doctors, patients, appointments } = await getDataTableAppointments({
+    session: {
+      user: {
+        clinic: {
+          id: session.user.clinic.id,
+        },
       },
-    }),
-  ]);
+    },
+  });
 
   return (
     <PageContainer>

@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { and, count, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { Calendar } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -10,6 +10,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   PageActions,
   PageContainer,
@@ -19,14 +20,18 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
-import { db } from "@/db";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { Separator } from "@/components/ui/separator";
+import { getDashboard } from "@/data/get-dashboard";
+import { getDataTableAppointments } from "@/data/get-data-table-appointments";
 import { auth } from "@/lib/auth";
 
-import { AppointmentsChart } from "./_components/appointmenst-chart";
+import { AppointmentsTable } from "../appointments/_components/appointments-table";
+import { AppointmentsChart } from "./_components/appointments-chart";
 import { DatePicker } from "./_components/date-picker";
-import StatsCards from "./_components/stats-cards";
-import TopDoctors from "./_components/top-doctors";
+import { StatsCards } from "./_components/stats-cards";
+import { TopDoctors } from "./_components/top-doctors";
+import { TopSpecialities } from "./_components/top-specialities";
+
 interface DashboardPageProps {
   searchParams: Promise<{
     from: string;
@@ -47,110 +52,53 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     redirect("/clinic-form");
   }
 
+  // if (!session.user.plan) {
+  //   redirect("/new-subscription");
+  // }
+
   const { from, to } = await searchParams;
   if (!from || !to) {
     redirect(
-      // a data padrão é o dia atual e 30 dias para frente
       `/dashboard?from=${dayjs().format("YYYY-MM-DD")}&to=${dayjs().add(1, "month").format("YYYY-MM-DD")}`,
     );
   }
-
-  const [
-    [totalRevenue],
-    [totalAppointments],
-    [totalPatients],
-    [totalDoctors],
+  const {
+    totalRevenue,
+    totalAppointments,
+    totalPatients,
+    totalDoctors,
     topDoctors,
-  ] = await Promise.all([
-    db
-      .select({
-        total: sum(appointmentsTable.appointmentPriceInCents),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(patientsTable)
-      .where(eq(patientsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        total: count(),
-      })
-      .from(doctorsTable)
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        id: doctorsTable.id,
-        name: doctorsTable.name,
-        avatarImageUrl: doctorsTable.avatarImageUrl,
-        speciality: doctorsTable.speciality,
-        appointments: count(appointmentsTable.id),
-      })
-      .from(doctorsTable)
-      .leftJoin(
-        appointmentsTable,
-        and(
-          eq(appointmentsTable.doctorId, doctorsTable.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      )
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id))
-      .groupBy(doctorsTable.id)
-      .orderBy(desc(count(appointmentsTable.id)))
-      .limit(5),
-  ]);
+    topSpecialities,
+    todayAppointments,
+    dailyAppointmentsData,
+  } = await getDashboard({
+    from,
+    to,
+    session: {
+      user: {
+        clinic: {
+          id: session.user.clinic.id,
+        },
+      },
+    },
+  });
 
-  const chartStartDate = dayjs().subtract(10, "days").startOf("day").toDate();
-
-  const chartEndDate = dayjs().add(10, "days").endOf("day").toDate();
-
-  const dailyAppointmentsData = await db
-    .select({
-      date: sql<string>`DATE(${appointmentsTable.date})`.as("date"),
-      appointments: count(appointmentsTable.id),
-      revenue:
-        sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as(
-          "revenue",
-        ),
-    })
-    .from(appointmentsTable)
-    .where(
-      and(
-        eq(appointmentsTable.clinicId, session.user.clinic.id),
-        gte(appointmentsTable.date, chartStartDate),
-        lte(appointmentsTable.date, chartEndDate),
-      ),
-    )
-    .groupBy(sql`DATE(${appointmentsTable.date})`)
-    .orderBy(sql`DATE(${appointmentsTable.date})`);
+  const { doctors, patients } = await getDataTableAppointments({
+    session: {
+      user: {
+        clinic: {
+          id: session.user.clinic.id,
+        },
+      },
+    },
+  });
 
   return (
     <PageContainer>
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Menu principal</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
@@ -162,8 +110,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
         <PageHeaderContent>
           <PageTitle>Dashboard</PageTitle>
           <PageDescription>
-            Acesse os detalhes das principais métricas e resultados da sua
-            clínica
+            Tenha uma visão geral da sua clínica.
           </PageDescription>
         </PageHeaderContent>
         <PageActions>
@@ -177,9 +124,28 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
           totalPatients={totalPatients.total}
           totalDoctors={totalDoctors.total}
         />
-        <div className="grid grid-cols-[2.2fr_1fr] gap-4">
+
+        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
           <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
           <TopDoctors topDoctors={topDoctors} />
+        </div>
+
+        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <Calendar className="text-[var(--primary)]" />
+              <CardTitle>Agendamentos e Faturamento</CardTitle>
+            </CardHeader>
+            <Separator />
+            <CardContent>
+              <AppointmentsTable
+                appointments={todayAppointments}
+                doctors={doctors}
+                patients={patients}
+              />
+            </CardContent>
+          </Card>
+          <TopSpecialities topSpecialities={topSpecialities} />
         </div>
       </PageContent>
     </PageContainer>

@@ -1,34 +1,30 @@
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-import { Stethoscope } from "lucide-react";
+import { Star } from "lucide-react";
 
 import { AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
-interface TopDoctorsListProps {
-  topDoctors: Doctor[];
+interface TopDoctorsProps {
+  topDoctors: {
+    id: string;
+    name: string;
+    avatarImageUrl: string | null;
+    speciality: string;
+    appointments: number;
+  }[];
 }
 
-interface Doctor {
-  id: string;
-  name: string;
-  avatarImageUrl: string | null;
-  speciality: string;
-  appointments: number;
-}
-
-const TopDoctors = ({ topDoctors }: TopDoctorsListProps) => {
+export const TopDoctors = ({ topDoctors }: TopDoctorsProps) => {
   return (
     <Card className="mx-auto w-full">
+      <CardHeader className="flex flex-row items-center gap-2">
+        <Star className="text-[var(--primary)]" />
+        <CardTitle>Top Médicos</CardTitle>
+      </CardHeader>
+      <Separator />
       <CardContent>
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Stethoscope className="text-muted-foreground" />
-            <CardTitle className="text-base">Top Médicos</CardTitle>
-          </div>
-        </div>
-
-        {/* Doctors List */}
-        <div className="space-y-6">
+        <div className="space-y-10">
           {topDoctors.map((doctor) => (
             <div key={doctor.id} className="flex items-center justify-between">
               <div className="flex items-center gap-8">
@@ -45,6 +41,7 @@ const TopDoctors = ({ topDoctors }: TopDoctorsListProps) => {
                     </AvatarFallback>
                   )}
                 </Avatar>
+
                 <div>
                   <h3 className="text-sm">{doctor.name}</h3>
                   <p className="text-muted-foreground text-sm">
@@ -64,5 +61,3 @@ const TopDoctors = ({ topDoctors }: TopDoctorsListProps) => {
     </Card>
   );
 };
-
-export default TopDoctors;

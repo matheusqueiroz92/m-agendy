@@ -1,84 +1,83 @@
 "use client";
 
+import "dayjs/locale/pt-br";
+
 import dayjs from "dayjs";
+
+dayjs.locale("pt-br");
+import { ChartLine } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Separator } from "@/components/ui/separator";
 import { formatCurrencyInCents } from "@/helpers/currency";
 
-export const description = "An area chart with gradient fill";
+interface DailyAppointment {
+  date: string;
+  appointments: number;
+  revenue: number | null;
+}
 
-interface RevenueChartProps {
-  dailyAppointmentsData: {
-    date: string;
-    appointments: number;
-    revenue: number;
-  }[];
+interface AppointmentsChartProps {
+  dailyAppointmentsData: DailyAppointment[];
 }
 
 export const AppointmentsChart = ({
   dailyAppointmentsData,
-}: RevenueChartProps) => {
-  // Gera 21 dias: 10 antes + hoje + 10 depois
-  const chartDays = Array.from({ length: 21 }).map((_item, index) =>
+}: AppointmentsChartProps) => {
+  // Gerar 21 dias: 10 antes + hoje + 10 depois
+  const chartDays = Array.from({ length: 21 }).map((_, i) =>
     dayjs()
-      .subtract(10 - index, "days")
+      .subtract(10 - i, "days")
       .format("YYYY-MM-DD"),
   );
 
   const chartData = chartDays.map((date) => {
-    const dayData = dailyAppointmentsData.find((item) => item.date === date);
+    const dataForDay = dailyAppointmentsData.find((item) => item.date === date);
     return {
       date: dayjs(date).format("DD/MM"),
       fullDate: date,
-      appointments: dayData?.appointments || 0,
-      revenue: dayData?.revenue || 0,
+      appointments: dataForDay?.appointments || 0,
+      revenue: Number(dataForDay?.revenue || 0),
     };
   });
 
   const chartConfig = {
     appointments: {
       label: "Agendamentos",
-      color: "var(--sidebar-primary)",
+      color: "#0B68F7",
     },
     revenue: {
-      label: "Receita",
-      color: "var(--chart-2)",
+      label: "Faturamento",
+      color: "#10B981",
     },
   } satisfies ChartConfig;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Area Chart - Gradient</CardTitle>
-        <CardDescription>
-          Showing total visitors for the last 6 months
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center gap-2">
+        <ChartLine className="text-[var(--primary)]" />
+        <CardTitle>Agendamentos e Faturamento</CardTitle>
       </CardHeader>
+      <Separator />
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-80 w-full">
           <AreaChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
           >
-            <CartesianGrid vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickLine={false}
-              axisLine={false}
               tickMargin={10}
+              axisLine={false}
             />
             <YAxis
               yAxisId="left"
@@ -95,33 +94,29 @@ export const AppointmentsChart = ({
               tickFormatter={(value) => formatCurrencyInCents(value)}
             />
             <ChartTooltip
-              cursor={false}
               content={
                 <ChartTooltipContent
                   formatter={(value, name) => {
                     if (name === "revenue") {
                       return (
                         <>
-                          <div className="h3 w-3 rounded bg-[var(--chart-2)]">
-                            <span className="text-muted-foreground">
-                              Faturamento:
-                            </span>
-                            <span className="font-semibold">
-                              {formatCurrencyInCents(Number(value))}
-                            </span>
-                          </div>
+                          <div className="h-3 w-3 rounded bg-[var(--chart-2)]" />
+                          <span className="text-muted-foreground">
+                            Faturamento:
+                          </span>
+                          <span className="font-semibold">
+                            {formatCurrencyInCents(Number(value))}
+                          </span>
                         </>
                       );
                     }
-
                     return (
                       <>
-                        <div className="h3 w-3 rounded bg-[var(--side-bar-primary)]">
-                          <span className="text-muted-foreground">
-                            Agendamentos:
-                          </span>
-                          <span className="font-semibold">{value}</span>
-                        </div>
+                        <div className="h-3 w-3 rounded bg-[var(--sidebar-primary)]" />
+                        <span className="text-muted-foreground">
+                          Agendamentos:
+                        </span>
+                        <span className="font-semibold">{value}</span>
                       </>
                     );
                   }}

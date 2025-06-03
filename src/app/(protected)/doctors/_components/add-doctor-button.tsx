@@ -6,9 +6,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
-import UpsertDoctorForm from "./upsert-doctor-form";
+import { UpsertDoctorForm } from "./upsert-doctor-form";
 
-const AddDoctorButton = () => {
+export const AddDoctorButton = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -23,5 +23,3 @@ const AddDoctorButton = () => {
     </Dialog>
   );
 };
-
-export default AddDoctorButton;

@@ -7,7 +7,7 @@ import FemaleIcon from "@/components/ui/female-icon";
 import MaleIcon from "@/components/ui/male-icon";
 import { patientsTable } from "@/db/schema";
 
-import PatientsTableActions from "./table-actions";
+import { PatientsTableActions } from "./table-actions";
 
 type Patient = typeof patientsTable.$inferSelect;
 

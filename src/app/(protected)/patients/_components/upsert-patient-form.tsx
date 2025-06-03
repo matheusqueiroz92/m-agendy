@@ -52,7 +52,10 @@ interface UpsertPatientFormProps {
   onSuccess?: () => void;
 }
 
-const UpsertPatientForm = ({ patient, onSuccess }: UpsertPatientFormProps) => {
+export const UpsertPatientForm = ({
+  patient,
+  onSuccess,
+}: UpsertPatientFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     shouldUnregister: true,
     resolver: zodResolver(formSchema),
@@ -195,5 +198,3 @@ const UpsertPatientForm = ({ patient, onSuccess }: UpsertPatientFormProps) => {
     </DialogContent>
   );
 };
-
-export default UpsertPatientForm;
