@@ -5,7 +5,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { formatCurrencyInCents } from "@/_helpers/currency";
+import { formatCurrencyInCents } from "@/helpers/currency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StatsCardsProps {

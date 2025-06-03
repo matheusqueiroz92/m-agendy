@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAction } from "next-safe-action/hooks";
 
-import { getAvailableTimeSlots } from "@/app/actions/get-available-time-slots";
+import { getAvailableTimeSlots } from "@/actions/get-available-time-slots";
 
 interface UseAvailableTimeSlotsProps {
   doctorId?: string;

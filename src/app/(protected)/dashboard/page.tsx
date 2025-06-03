@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { and, count, eq, gte, lte, sum } from "drizzle-orm";
+import { and, count, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -23,9 +23,9 @@ import { db } from "@/db";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
+import { AppointmentsChart } from "./_components/appointmenst-chart";
 import { DatePicker } from "./_components/date-picker";
 import StatsCards from "./_components/stats-cards";
-
 interface DashboardPageProps {
   searchParams: Promise<{
     from: string;
@@ -94,6 +94,30 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
         .where(eq(doctorsTable.clinicId, session.user.clinic.id)),
     ]);
 
+  const chartStartDate = dayjs().subtract(10, "days").startOf("day").toDate();
+
+  const chartEndDate = dayjs().add(10, "days").endOf("day").toDate();
+
+  const dailyAppointmentsData = await db
+    .select({
+      date: sql<string>`DATE(${appointmentsTable.date})`.as("date"),
+      appointments: count(appointmentsTable.id),
+      revenue:
+        sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as(
+          "revenue",
+        ),
+    })
+    .from(appointmentsTable)
+    .where(
+      and(
+        eq(appointmentsTable.clinicId, session.user.clinic.id),
+        gte(appointmentsTable.date, chartStartDate),
+        lte(appointmentsTable.date, chartEndDate),
+      ),
+    )
+    .groupBy(sql`DATE(${appointmentsTable.date})`)
+    .orderBy(sql`DATE(${appointmentsTable.date})`);
+
   return (
     <PageContainer>
       <Breadcrumb>
@@ -126,6 +150,9 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
           totalPatients={totalPatients.total}
           totalDoctors={totalDoctors.total}
         />
+        <div className="grid grid-cols-[2.2fr_1fr] gap-4">
+          <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
+        </div>
       </PageContent>
     </PageContainer>
   );

@@ -5,7 +5,7 @@ import { PatternFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { upsertPatient } from "@/app/actions/upsert-patient";
+import { upsertPatient } from "@/actions/upsert-patient";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
