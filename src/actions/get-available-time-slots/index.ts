@@ -131,20 +131,6 @@ export const getAvailableTimeSlots = actionClient
         dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay;
     }
 
-    // Debug: log do resultado da verificação
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[DEBUG] Resultado da verificação:`, {
-        isDayAvailable,
-        condition:
-          availableFromWeekDay <= availableToWeekDay
-            ? "range normal"
-            : "range cruzado",
-        dayOfWeek,
-        availableFromWeekDay,
-        availableToWeekDay,
-      });
-    }
-
     if (!isDayAvailable) {
       return { timeSlots: [] };
     }
