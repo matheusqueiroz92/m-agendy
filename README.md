@@ -68,6 +68,7 @@ O **M.Agendy** é uma solução moderna e completa para gestão de clínicas mé
 ### 👨‍⚕️ **Gestão de Médicos**
 
 - ✅ Cadastro de médicos com especialidades
+- ✅ **Campo de telefone opcional** para contato
 - ✅ Configuração de horários de trabalho
 - ✅ Definição de dias disponíveis na semana
 - ✅ Valores de consulta personalizados
@@ -87,6 +88,9 @@ O **M.Agendy** é uma solução moderna e completa para gestão de clínicas mé
 ### 🔐 **Autenticação e Autorização**
 
 - ✅ Login seguro com BetterAuth
+- ✅ **Verificação de e-mail** para novos usuários
+- ✅ **Login OAuth** (Google/GitHub) com verificação automática
+- ✅ **Templates de e-mail** profissionais em português
 - ✅ Gestão de sessões
 - ✅ Controle de acesso por clínica
 - ✅ Proteção de rotas
@@ -120,6 +124,7 @@ O **M.Agendy** é uma solução moderna e completa para gestão de clínicas mé
 
 - **[Next.js API Routes](https://nextjs.org/docs/api-routes/introduction)** - Server Actions
 - **[BetterAuth](https://better-auth.com/)** - Autenticação
+- **[Nodemailer](https://nodemailer.com/)** - Envio de e-mails
 - **[Drizzle ORM](https://orm.drizzle.team/)** - Object-Relational Mapping
 - **[PostgreSQL](https://postgresql.org/)** - Banco de dados relacional
 - **[Next Safe Action](https://next-safe-action.dev/)** - Server Actions tipadas
@@ -199,13 +204,24 @@ npm install
 cp .env.example .env.local
 ```
 
-4. **Configure o banco de dados no `.env.local`:**
+4. **Configure o banco de dados e e-mail no `.env.local`:**
 
 ```env
+# Database
 DATABASE_URL="postgresql://usuario:senha@localhost:5432/magendy"
+
+# Auth
 BETTER_AUTH_SECRET="seu-secret-super-seguro"
 BETTER_AUTH_URL="http://localhost:3000"
+
+# Email Configuration (opcional - apenas para verificação de e-mail)
+EMAIL_SERVICE="gmail"
+EMAIL_USER="seu-email@gmail.com"
+EMAIL_PASS="sua-senha-de-app"
+EMAIL_FROM_NAME="M.Agendy"
 ```
+
+> **📧 Configuração de E-mail:** Para habilitar a verificação de e-mail, consulte o arquivo [EMAIL_SETUP.md](./EMAIL_SETUP.md) para instruções detalhadas.
 
 5. **Execute as migrações:**
 
@@ -405,6 +421,55 @@ export function AppHeader() {
 - **🎨 Interface mais intuitiva** com melhor UX
 - **📱 Responsividade aprimorada** em dispositivos móveis
 
+### 📧 **Sistema de Verificação de E-mail**
+
+**Nova implementação completa** de verificação de e-mail para segurança:
+
+#### **✉️ Funcionalidades de E-mail**
+
+- **📨 Envio automático** de e-mail de verificação para novos usuários
+- **🎨 Template profissional** em português com design responsivo
+- **🔐 Verificação obrigatória** apenas para registro por e-mail/senha
+- **⚡ OAuth inteligente** - Google/GitHub com verificação automática
+- **🔄 Link de verificação** com expiração de 24 horas
+- **📱 Interface responsiva** para verificação
+
+#### **🛠️ Tecnologias Utilizadas**
+
+- **Nodemailer** para envio de e-mails
+- **Better Auth** com verificação integrada
+- **Templates HTML** responsivos
+- **Suporte Gmail** e SMTP genérico
+
+#### **🔄 Fluxo de Verificação**
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant F as Formulário
+    participant BA as BetterAuth
+    participant E as EmailService
+    participant V as VerifyPage
+
+    U->>F: Registro por e-mail/senha
+    F->>BA: signUp.email()
+    BA->>E: Envia e-mail de verificação
+    E->>U: E-mail com link
+    U->>V: Clica no link
+    V->>BA: Verifica token
+    BA->>V: Token válido
+    V->>U: Redirecionamento para dashboard
+```
+
+### 👨‍⚕️ **Melhorias na Gestão de Médicos**
+
+#### **📞 Campo de Telefone Opcional**
+
+- **🔢 Formatação automática** com máscara (##) #####-####
+- **✅ Validação inteligente** com React Number Format
+- **💾 Armazenamento opcional** no banco de dados
+- **🎨 Interface consistente** com outros formulários
+
 ### 🎨 **Melhorias na Interface**
 
 #### **🎭 Ícones e Visual**
@@ -510,13 +575,16 @@ function generateDashboardMetrics() {
 
 ### **🚀 Versão 2.0 - Próximas Funcionalidades**
 
-#### **📊 Dashboard e Analytics - ✅ CONCLUÍDO**
+#### **✅ Concluído (Q4 2024)**
 
-- [x] Dashboard administrativo com métricas
-- [x] Gráficos de agendamentos por período
-- [x] Ranking de médicos mais ativos
-- [x] Cards de estatísticas em tempo real
-- [x] Sistema de temas dark/light
+1. ✅ Dashboard com métricas e analytics
+2. ✅ Sistema de temas dark/light
+3. ✅ Gráficos interativos com Recharts
+4. ✅ Ranking de médicos e especialidades
+5. ✅ Interface responsiva aprimorada
+6. ✅ **Sistema de verificação de e-mail**
+7. ✅ **Campo de telefone opcional para médicos**
+8. ✅ **Templates de e-mail profissionais**
 
 #### **📱 Notificações e Comunicação**
 
@@ -592,6 +660,9 @@ function generateDashboardMetrics() {
 3. ✅ Gráficos interativos com Recharts
 4. ✅ Ranking de médicos e especialidades
 5. ✅ Interface responsiva aprimorada
+6. ✅ **Sistema de verificação de e-mail**
+7. ✅ **Campo de telefone opcional para médicos**
+8. ✅ **Templates de e-mail profissionais**
 
 #### **Alta Prioridade (Q1 2025)**
 

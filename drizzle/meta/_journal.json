@@ -8,6 +8,13 @@
       "when": 1748784106771,
       "tag": "0000_easy_thundra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749045131170,
+      "tag": "0001_giant_stark_industries",
+      "breakpoints": true
     }
   ]
 }

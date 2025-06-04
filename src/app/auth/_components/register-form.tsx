@@ -67,10 +67,14 @@ const RegisterForm = () => {
         email: data.email,
         password: data.password,
         name: data.name,
+        callbackURL: "/dashboard",
       },
       {
         onSuccess: () => {
-          router.push("/dashboard");
+          toast.success(
+            "Conta criada com sucesso! Verifique seu e-mail para continuar.",
+          );
+          router.push("/verify-email");
         },
         onError: (ctx) => {
           if (ctx.error.code === "USER_ALREADY_EXISTS") {

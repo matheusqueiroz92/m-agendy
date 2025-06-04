@@ -18,9 +18,20 @@ import {
 interface PricingCardProps {
   active?: boolean;
   userEmail?: string;
+  planName?: string;
+  price?: number;
+  features?: string[];
+  description?: string;
 }
 
-export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
+export const SubscriptionPlan = ({
+  active,
+  userEmail,
+  planName,
+  features,
+  price,
+  description,
+}: PricingCardProps) => {
   const router = useRouter();
 
   const createStripeCheckoutAction = useAction(createStripeCheckout, {
@@ -45,15 +56,6 @@ export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
     },
   });
 
-  const features = [
-    "Cadastro de até 1 médico",
-    "Agendamentos ilimitados",
-    "Métricas básicas",
-    "Cadastro de pacientes",
-    "Confirmação manual",
-    "Suporte via e-mail",
-  ];
-
   const handleSubscribeClick = async () => {
     createStripeCheckoutAction.execute();
   };
@@ -68,7 +70,7 @@ export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
     <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-3xl font-bold">Premium</h3>
+          <h3 className="text-3xl font-bold">{planName}</h3>
           {active && (
             <Badge
               variant="secondary"
@@ -78,24 +80,25 @@ export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
             </Badge>
           )}
         </div>
-        <p className="text-muted-foreground text-sm">
-          Para clínicas e profissionais autônomos
-        </p>
+        <p className="text-muted-foreground text-sm">{description}</p>
       </CardHeader>
 
       <CardContent className="pb-6">
         <div className="mb-6">
-          <span className="text-3xl font-bold">R$59,90</span>
+          <span className="text-3xl font-bold">
+            <span className="text-muted-foreground text-xl">R$</span>
+            {price}
+          </span>
           <span className="text-muted-foreground ml-1">/mês</span>
         </div>
 
         <ul className="space-y-3">
-          {features.map((feature, index) => (
+          {features?.map((feature, index) => (
             <li key={index} className="flex items-center gap-3">
               <div className="flex-shrink-0">
                 <CheckCircle className="text-chart-2 h-5 w-5" />
               </div>
-              <span className="text-sm text-gray-700">{feature}</span>
+              <span className="text-muted-foreground text-sm">{feature}</span>
             </li>
           ))}
         </ul>

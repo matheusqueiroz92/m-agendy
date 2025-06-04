@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
-import { NumericFormat } from "react-number-format";
+import { NumericFormat, PatternFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -42,6 +42,7 @@ const formSchema = z
     name: z.string().trim().min(1, {
       message: "Nome é obrigatório.",
     }),
+    phoneNumber: z.string().trim().optional(),
     speciality: z.string().trim().min(1, {
       message: "Especialidade é obrigatória.",
     }),
@@ -86,6 +87,7 @@ export const UpsertDoctorForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: doctor?.name ?? "",
+      phoneNumber: doctor?.phoneNumber ?? "",
       speciality: doctor?.speciality ?? "",
       avatarImageUrl: doctor?.avatarImageUrl ?? "",
       appointmentPriceInCents: doctor?.appointmentPriceInCents
@@ -121,6 +123,7 @@ export const UpsertDoctorForm = ({
       availableToWeekDay: parseInt(values.availableToWeekDay),
       appointmentPriceInCents: values.appointmentPriceInCents * 100,
       avatarImageUrl: values.avatarImageUrl || undefined,
+      phoneNumber: values.phoneNumber || undefined,
     });
   };
 
@@ -162,6 +165,30 @@ export const UpsertDoctorForm = ({
                 <FormLabel>Nome</FormLabel>
                 <FormControl>
                   <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefone (opcional)</FormLabel>
+                <FormControl>
+                  <PatternFormat
+                    format="(##) #####-####"
+                    mask="_"
+                    customInput={Input}
+                    placeholder="(00) 00000-0000"
+                    value={field.value}
+                    onValueChange={(values) => {
+                      field.onChange(values.value);
+                    }}
+                    disabled={upsertDoctorAction.isPending}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

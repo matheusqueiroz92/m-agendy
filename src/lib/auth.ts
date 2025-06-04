@@ -7,6 +7,8 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { usersTable, usersToClinicsTable } from "@/db/schema";
 
+import { createVerificationEmailTemplate, sendEmail } from "./email";
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -17,6 +19,30 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      try {
+        const { subject, html, text } = createVerificationEmailTemplate(
+          user.name,
+          url,
+        );
+
+        await sendEmail({
+          to: user.email,
+          subject,
+          html,
+          text,
+        });
+
+        console.log(`E-mail de verificação enviado para ${user.email}`);
+      } catch (error) {
+        console.error("Erro ao enviar e-mail de verificação:", error);
+        throw error;
+      }
     },
   },
   plugins: [
@@ -82,5 +108,6 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
 });

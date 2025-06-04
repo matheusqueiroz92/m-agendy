@@ -32,6 +32,7 @@ export const upsertDoctor = actionClient
         id: parsedInput.id,
         clinicId: session?.user.clinic?.id,
         avatarImageUrl: parsedInput.avatarImageUrl || null,
+        phoneNumber: parsedInput.phoneNumber || null,
         availableFromTime: parsedInput.availableFromTime,
         availableToTime: parsedInput.availableToTime,
       })
@@ -39,6 +40,7 @@ export const upsertDoctor = actionClient
         target: [doctorsTable.id],
         set: {
           name: parsedInput.name,
+          phoneNumber: parsedInput.phoneNumber || null,
           speciality: parsedInput.speciality,
           avatarImageUrl: parsedInput.avatarImageUrl || null,
           appointmentPriceInCents: parsedInput.appointmentPriceInCents,
