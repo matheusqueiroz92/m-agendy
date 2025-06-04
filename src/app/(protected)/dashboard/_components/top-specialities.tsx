@@ -45,6 +45,45 @@ const getSpecialityIcon = (speciality: string) => {
   return Stethoscope;
 };
 
+// const specialitiesAndIcons = [
+//   {
+//     speciality: "Cardiologista",
+//     icon: Heart,
+//   },
+//   {
+//     speciality: "Ginecologista",
+//     icon: Baby,
+//   },
+//   {
+//     speciality: "Pediatra",
+//     icon: Activity,
+//   },
+//   {
+//     speciality: "Dermatologista",
+//     icon: Hand,
+//   },
+//   {
+//     speciality: "Ortopedista",
+//     icon: Bone,
+//   },
+//   {
+//     speciality: "Oftalmologista",
+//     icon: Eye,
+//   },
+//   {
+//     speciality: "Neurologista",
+//     icon: Brain,
+//   },
+//   {
+//     speciality: "Traumatologista",
+//     icon: Bone,
+//   },
+//   {
+//     speciality: "Urologista",
+//     icon: Urology,
+//   },
+// ];
+
 export const TopSpecialities = ({ topSpecialities }: TopSpecialitiesProps) => {
   const maxAppointments = Math.max(
     ...topSpecialities.map((i) => i.appointments),
