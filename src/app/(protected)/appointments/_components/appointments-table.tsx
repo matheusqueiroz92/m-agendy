@@ -41,8 +41,9 @@ export const AppointmentsTable = ({
   if (appointments.length === 0) {
     return (
       <DataNotFound
-        title="agendamento"
+        title="Nenhum agendamento cadastrado!"
         icon={<CalendarX className="text-muted-foreground h-12 w-12" />}
+        description="Ainda não há agendamentos cadastrados. Adicione um agendamento ao sistema."
       />
     );
   }

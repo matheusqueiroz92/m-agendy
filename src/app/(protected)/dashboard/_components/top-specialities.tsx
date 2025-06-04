@@ -7,10 +7,12 @@ import {
   Hand,
   Heart,
   Hospital,
+  SearchX,
   Stethoscope,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataNotFound } from "@/components/ui/data-not-found";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
@@ -97,34 +99,42 @@ export const TopSpecialities = ({ topSpecialities }: TopSpecialitiesProps) => {
       <Separator />
       <CardContent>
         <div className="space-y-6">
-          {topSpecialities.map((speciality) => {
-            const Icon = getSpecialityIcon(speciality.speciality);
-            // Porcentagem de ocupação da especialidade baseando-se no maior número de agendamentos
-            const progressValue =
-              (speciality.appointments / maxAppointments) * 100;
+          {topSpecialities.length > 0 ? (
+            topSpecialities.map((speciality) => {
+              const Icon = getSpecialityIcon(speciality.speciality);
+              // Porcentagem de ocupação da especialidade baseando-se no maior número de agendamentos
+              const progressValue =
+                (speciality.appointments / maxAppointments) * 100;
 
-            return (
-              <div
-                key={speciality.speciality}
-                className="flex items-center gap-2"
-              >
-                <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                  <Icon className="text-primary h-5 w-5" />
-                </div>
-                <div className="flex w-full flex-col justify-center">
-                  <div className="flex w-full justify-between">
-                    <h3 className="text-sm">{speciality.speciality}</h3>
-                    <div className="text-right">
-                      <span className="text-muted-foreground text-sm font-medium">
-                        {speciality.appointments} agend.
-                      </span>
-                    </div>
+              return (
+                <div
+                  key={speciality.speciality}
+                  className="flex items-center gap-2"
+                >
+                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                    <Icon className="text-primary h-5 w-5" />
                   </div>
-                  <Progress value={progressValue} className="w-full" />
+                  <div className="flex w-full flex-col justify-center">
+                    <div className="flex w-full justify-between">
+                      <h3 className="text-sm">{speciality.speciality}</h3>
+                      <div className="text-right">
+                        <span className="text-muted-foreground text-sm font-medium">
+                          {speciality.appointments} agend.
+                        </span>
+                      </div>
+                    </div>
+                    <Progress value={progressValue} className="w-full" />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <DataNotFound
+              title="Nenhuma especialidade cadastrada!"
+              description="Ainda não há especialidades cadastrados. Adicione uma especialidade ao sistema."
+              icon={<SearchX className="text-muted-foreground h-8 w-8" />}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

@@ -68,7 +68,7 @@ export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
     <Card className="mx-auto w-full max-w-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Premium</h3>
+          <h3 className="text-3xl font-bold">Premium</h3>
           {active && (
             <Badge
               variant="secondary"
@@ -85,7 +85,7 @@ export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
 
       <CardContent className="pb-6">
         <div className="mb-6">
-          <span className="text-3xl font-bold">R$59</span>
+          <span className="text-3xl font-bold">R$59,90</span>
           <span className="text-muted-foreground ml-1">/mês</span>
         </div>
 
