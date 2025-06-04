@@ -20,6 +20,11 @@ const ClinicFormPage = async () => {
   if (!session?.user) {
     redirect("/auth");
   }
+
+  if (session.user.plan !== "premium") {
+    redirect("/new-subscription");
+  }
+
   return (
     <div>
       <Dialog open>
