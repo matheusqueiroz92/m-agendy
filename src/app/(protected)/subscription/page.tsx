@@ -1,3 +1,6 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,11 +16,23 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
+import { auth } from "@/lib/auth";
 
 import { SubscriptionPlan } from "./_components/subscription-plan";
 
-const SubscriptionPage = () => {
-  const active = false;
+const SubscriptionPage = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/auth");
+  }
+
+  if (!session?.user.clinic) {
+    redirect("/clinic-form");
+  }
+
   return (
     <PageContainer>
       <Breadcrumb>
@@ -38,7 +53,10 @@ const SubscriptionPage = () => {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <SubscriptionPlan active={active} />
+        <SubscriptionPlan
+          active={session.user.plan === "premium"}
+          userEmail={session.user.email}
+        />
       </PageContent>
     </PageContainer>
   );

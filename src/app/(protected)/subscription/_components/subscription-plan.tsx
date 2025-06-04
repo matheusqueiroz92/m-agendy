@@ -2,6 +2,7 @@
 
 import { loadStripe } from "@stripe/stripe-js";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 
 import { createStripeCheckout } from "@/actions/create-stripe-checkout";
@@ -16,9 +17,12 @@ import {
 
 interface PricingCardProps {
   active?: boolean;
+  userEmail?: string;
 }
 
-export const SubscriptionPlan = ({ active }: PricingCardProps) => {
+export const SubscriptionPlan = ({ active, userEmail }: PricingCardProps) => {
+  const router = useRouter();
+
   const createStripeCheckoutAction = useAction(createStripeCheckout, {
     onSuccess: async ({ data }) => {
       if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
@@ -52,6 +56,12 @@ export const SubscriptionPlan = ({ active }: PricingCardProps) => {
 
   const handleSubscribeClick = async () => {
     createStripeCheckoutAction.execute();
+  };
+
+  const handleManageSubscriptionClick = () => {
+    router.push(
+      `${process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${userEmail}`,
+    );
   };
 
   return (
@@ -95,7 +105,9 @@ export const SubscriptionPlan = ({ active }: PricingCardProps) => {
         <Button
           className="w-full"
           variant={active ? "outline" : "default"}
-          onClick={active ? () => {} : handleSubscribeClick}
+          onClick={
+            active ? handleManageSubscriptionClick : handleSubscribeClick
+          }
           disabled={createStripeCheckoutAction.isExecuting}
         >
           {createStripeCheckoutAction.isExecuting ? (

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/auth";
 
-import logo from "../../../public/images/logo-white.png";
+import logo from "../../../public/images/logo-m-agendy-com-nome.png";
 import LoginForm from "./_components/login-form";
 import RegisterForm from "./_components/register-form";
 
