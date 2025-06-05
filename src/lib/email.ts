@@ -117,7 +117,7 @@ export function createVerificationEmailTemplate(
             </div>
             <div class="content">
               <img
-                src="../public/logo-m-agendy-preta.png"
+                src="../../public/images/logo-m-agendy-com-nome-3.png"
                 alt="logo-m-agendy"
                 width="100px"
                 height="100px"

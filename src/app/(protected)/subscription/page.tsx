@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/page-container";
 import { auth } from "@/lib/auth";
 
+import { PlanFeatures } from "../_contants/plan-features";
 import { SubscriptionPlan } from "./_components/subscription-plan";
 
 const SubscriptionPage = async () => {
@@ -53,10 +54,15 @@ const SubscriptionPage = async () => {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <SubscriptionPlan
-          active={session.user.plan === "premium"}
-          userEmail={session.user.email}
-        />
+        <div className="justify-cente flex h-full flex-1 items-center">
+          <SubscriptionPlan
+            active={session.user.plan === "premium"}
+            userEmail={session.user.email}
+            planName="Premium"
+            price={59}
+            features={PlanFeatures.premium}
+          />
+        </div>
       </PageContent>
     </PageContainer>
   );

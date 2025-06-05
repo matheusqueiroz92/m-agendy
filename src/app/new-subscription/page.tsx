@@ -4,32 +4,10 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 
+import { PlanFeatures } from "../(protected)/_contants/plan-features";
 import { SubscriptionPlan } from "../(protected)/subscription/_components/subscription-plan";
 
 export default async function Home() {
-  const featuresEssential = [
-    "Cadastro de até 3 profissionais",
-    "Até 100 agendamentos mensais",
-    "Métricas básicas",
-  ];
-
-  const featuresPremium = [
-    "Cadastro de até 10 profissionais",
-    "Agendamentos ilimitados",
-    "Métricas Detalhadas",
-    "Cadastro de pacientes/clientes",
-    "Suporte via e-mail",
-  ];
-
-  const featuresGold = [
-    "Cadastro ilimitado de profissionais",
-    "Agendamentos ilimitados",
-    "Métricas detalhadas",
-    "Cadastro de pacientes/clientes",
-    "Suporte personalizado",
-    "Análise de métricas com IA",
-  ];
-
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -71,7 +49,7 @@ export default async function Home() {
             <SubscriptionPlan
               userEmail={session.user.email}
               planName="Essential"
-              features={featuresEssential}
+              features={PlanFeatures.essential}
               price={39}
               description="Perfeito para negócios em crescimento e profissionais autônomos"
             />
@@ -81,7 +59,7 @@ export default async function Home() {
             <SubscriptionPlan
               userEmail={session.user.email}
               planName="Premium"
-              features={featuresPremium}
+              features={PlanFeatures.premium}
               price={59}
               description="Ideal para empressas e profissionais com um número maior de agendamentos"
             />
@@ -91,7 +69,7 @@ export default async function Home() {
             <SubscriptionPlan
               userEmail={session.user.email}
               planName="Gold"
-              features={featuresGold}
+              features={PlanFeatures.gold}
               price={99}
               description="Para empresas buscam rescursos avançados e desejam uma solução e personalizada"
             />

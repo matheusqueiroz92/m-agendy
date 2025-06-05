@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { UserRoundX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -79,8 +79,9 @@ const DoctorsPage = async () => {
           </div>
         ) : (
           <DataNotFound
-            title="médico"
-            icon={<UserRoundX className="text-muted-foreground h-12 w-12" />}
+            title="Nenhum médico cadastrado!"
+            description="Ainda não há médicos cadastrados. Adicione um médico ao sistema."
+            icon={<SearchX className="text-muted-foreground h-8 w-8" />}
           />
         )}
       </PageContent>
