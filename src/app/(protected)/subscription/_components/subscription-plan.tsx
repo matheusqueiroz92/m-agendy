@@ -67,7 +67,7 @@ export const SubscriptionPlan = ({
   };
 
   return (
-    <Card className="mx-auto w-full max-w-sm">
+    <Card className="w-full max-w-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-3xl font-bold">{planName}</h3>
@@ -106,7 +106,7 @@ export const SubscriptionPlan = ({
 
       <CardFooter>
         <Button
-          className="w-full"
+          className="relative w-full overflow-hidden rounded-full border-2 border-neutral-300 bg-white/80 text-sm font-semibold shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg focus:ring-2 focus:ring-blue-200"
           variant={active ? "outline" : "default"}
           onClick={
             active ? handleManageSubscriptionClick : handleSubscribeClick
@@ -116,9 +116,9 @@ export const SubscriptionPlan = ({
           {createStripeCheckoutAction.isExecuting ? (
             <Loader2 className="h4 mr-1 w-4 animate-spin" />
           ) : active ? (
-            "Gerenciar Assinatura"
+            <span className="relative z-10">Gerenciar Assinatura</span>
           ) : (
-            "Fazer Assinatura"
+            <span className="relative z-10">Fazer Assinatura</span>
           )}
         </Button>
       </CardFooter>

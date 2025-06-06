@@ -69,7 +69,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     totalDoctors,
     topDoctors,
     topSpecialities,
-    todayAppointments,
+    // todayAppointments,
     dailyAppointmentsData,
   } = await getDashboard({
     from,
@@ -83,7 +83,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     },
   });
 
-  const { doctors, patients } = await getDataTableAppointments({
+  const { doctors, patients, appointments } = await getDataTableAppointments({
     session: {
       user: {
         clinic: {
@@ -139,7 +139,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
             <Separator />
             <CardContent>
               <AppointmentsTable
-                appointments={todayAppointments}
+                appointments={appointments}
                 doctors={doctors}
                 patients={patients}
               />

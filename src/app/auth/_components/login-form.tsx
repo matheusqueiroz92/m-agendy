@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -24,7 +26,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import GithubIcon from "@/components/ui/github-icon";
+import GithubIconBlack from "@/components/ui/github-icon-black";
+import GithubIconWhite from "@/components/ui/github-icon-white";
 import GoogleIcon from "@/components/ui/google-icon";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -39,6 +42,12 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -79,6 +88,11 @@ const LoginForm = () => {
     });
   };
 
+  // Só renderiza após montar para evitar problemas de hidratação
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <Card>
       <Form {...loginForm}>
@@ -87,7 +101,7 @@ const LoginForm = () => {
           className="space-y-6"
         >
           <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold text-[var(--primary)]">
+            <CardTitle className="text-center text-2xl font-black text-[var(--primary)]">
               Login
             </CardTitle>
             <CardDescription className="text-center">
@@ -137,24 +151,28 @@ const LoginForm = () => {
                 "Entrar"
               )}
             </Button>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={handleGoogleLogin}
-              >
-                <GoogleIcon />
-                Entrar com Google
-              </Button>
-              <Button
-                variant="outline"
-                type="button"
-                onClick={handleGithubLogin}
-              >
-                <GithubIcon />
-                Entrar com Github
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full"
+            >
+              <GoogleIcon />
+              Entrar com Google
+            </Button>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleGithubLogin}
+              className="w-full"
+            >
+              {resolvedTheme === "dark" ? (
+                <GithubIconWhite />
+              ) : (
+                <GithubIconBlack />
+              )}
+              Entrar com Github
+            </Button>
           </CardFooter>
         </form>
       </Form>

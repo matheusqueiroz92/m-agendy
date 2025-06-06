@@ -5,7 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
+    "noEmit": true, // não utiliza o typescript para compilar o código
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

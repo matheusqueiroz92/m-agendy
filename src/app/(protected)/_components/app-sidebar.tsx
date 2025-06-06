@@ -1,9 +1,7 @@
 "use client";
 
-import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import {
   CalendarDays,
-  EllipsisVertical,
   Gem,
   LayoutDashboard,
   LogOut,
@@ -15,12 +13,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -35,7 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
-import logo from "../../../../public/images/logo-m-agendy-com-nome.png";
+import Logo from "../../../../public/images/logo-m-agendy-com-nome.png";
+import Logo2 from "../../../../public/images/logo-m-agendy-com-nome-2.png";
 
 const items = [
   {
@@ -68,7 +61,6 @@ const items = [
 export const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const session = authClient.useSession();
 
   const handleSignOut = () => {
     authClient.signOut({
@@ -83,7 +75,25 @@ export const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader className="h-20 border-b p-4">
-        <Image src={logo} alt="Logo M.Agendy" width={200} height={32} />
+        <Image
+          src={
+            typeof window !== "undefined" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? Logo2
+              : Logo
+          }
+          alt="logo-m-agendy"
+          width={200}
+          height={32}
+          className="block dark:hidden"
+        />
+        <Image
+          src={Logo2}
+          alt="logo-m-agendy"
+          width={200}
+          height={32}
+          className="hidden dark:block"
+        />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -129,36 +139,10 @@ export const AppSidebar = () => {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg">
-                  <Avatar>
-                    <AvatarImage
-                      src={session?.data?.user?.image as string}
-                      alt="Avatar"
-                      className="rounded-xl"
-                    />
-                  </Avatar>
-                  <div className="flex w-full items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {session?.data?.user?.clinic?.name}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {session?.data?.user.email}
-                      </p>
-                    </div>
-                    <EllipsisVertical className="h-4 w-4 text-[var(--primary)]" />
-                  </div>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <SidebarMenuButton onClick={handleSignOut}>
+              <LogOut />
+              <span>Sair</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

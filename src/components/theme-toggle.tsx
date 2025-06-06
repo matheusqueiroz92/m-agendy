@@ -25,7 +25,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <div className="bg-card flex items-center gap-3 rounded-lg border p-2 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-full border p-2 shadow-sm">
       <Sun
         className={`h-4 w-4 transition-colors ${isDark ? "text-muted-foreground" : "text-yellow-500"}`}
       />

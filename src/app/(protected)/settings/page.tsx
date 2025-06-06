@@ -18,20 +18,23 @@ import {
 } from "@/components/ui/page-container";
 import { auth } from "@/lib/auth";
 
-import { PlanFeatures } from "../_contants/plan-features";
-import { SubscriptionPlan } from "./_components/subscription-plan";
+import { SettingsForm } from "./_components/settings-form";
 
-const SubscriptionPage = async () => {
+const SettingsPage = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session) {
+  if (!session?.user) {
     redirect("/auth");
   }
 
-  if (!session?.user.clinic) {
+  if (!session?.user?.clinic) {
     redirect("/clinic-form");
+  }
+
+  if (!session.user.plan) {
+    redirect("/new-subscription");
   }
 
   return (
@@ -39,33 +42,27 @@ const SubscriptionPage = async () => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Outros</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Assinatura
+            Configurações
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Assinatura</PageTitle>
-          <PageDescription>Gerencie seu plano de assinatura</PageDescription>
+          <PageTitle>Configurações</PageTitle>
+          <PageDescription>
+            Gerencie as configurações da sua conta e da clínica
+          </PageDescription>
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <div className="flex justify-start">
-          <SubscriptionPlan
-            active={session.user.plan === "premium"}
-            userEmail={session.user.email}
-            planName="Premium"
-            price={59}
-            features={PlanFeatures.premium}
-          />
-        </div>
+        <SettingsForm user={session.user} />
       </PageContent>
     </PageContainer>
   );
 };
 
-export default SubscriptionPage;
+export default SettingsPage;

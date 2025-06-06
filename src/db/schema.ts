@@ -10,15 +10,23 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+export const userPlanEnum = pgEnum("user_plan", [
+  "trial",
+  "essential",
+  "premium",
+  "gold",
+]);
+
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
+  // phoneNumber: text("phone_number"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
-  plan: text("plan"),
+  plan: text("plan"), // modificar aqui para adcionar os planos
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
