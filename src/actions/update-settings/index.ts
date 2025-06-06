@@ -29,7 +29,7 @@ export const updateSettings = actionClient
     const {
       name,
       email,
-      phoneNumber,
+      // phoneNumber,
       clinicName,
       // As configurações de notificação e preferências poderiam ser salvas
       // em uma tabela separada de configurações, por enquanto vamos apenas
@@ -43,7 +43,7 @@ export const updateSettings = actionClient
       .set({
         name,
         email,
-        phoneNumber: phoneNumber || null,
+        // phoneNumber: phoneNumber || null,
         updatedAt: new Date(),
       })
       .where(eq(usersTable.id, session.user.id));
