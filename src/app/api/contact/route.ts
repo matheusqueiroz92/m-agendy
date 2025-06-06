@@ -22,15 +22,15 @@ export async function POST(request: NextRequest) {
       port: Number(process.env.SMTP_PORT) || 587,
       secure: false, // true para 465, false para outras portas
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     // Configurar o e-mail
     const mailOptions = {
-      from: `"${validatedData.name}" <${process.env.SMTP_USER}>`, // Remetente
-      to: process.env.CONTACT_EMAIL || process.env.SMTP_USER, // Destinatário
+      from: `"${validatedData.name}" <${process.env.EMAIL_USER}>`, // Remetente
+      to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER, // Destinatário
       subject: `Novo contato via M.Agendy - ${validatedData.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
