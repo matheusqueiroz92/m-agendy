@@ -142,7 +142,7 @@ const LoginForm = () => {
           <CardFooter className="flex flex-col gap-4">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full rounded-full"
               disabled={loginForm.formState.isSubmitting}
             >
               {loginForm.formState.isSubmitting ? (
@@ -155,7 +155,7 @@ const LoginForm = () => {
               variant="outline"
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full"
+              className="w-full rounded-full"
             >
               <GoogleIcon />
               Entrar com Google
@@ -164,7 +164,7 @@ const LoginForm = () => {
               variant="outline"
               type="button"
               onClick={handleGithubLogin}
-              className="w-full"
+              className="w-full rounded-full"
             >
               {resolvedTheme === "dark" ? (
                 <GithubIconWhite />

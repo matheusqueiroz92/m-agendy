@@ -27,6 +27,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import WhatsappIcon from "@/components/ui/whatsapp-icon";
 
+import DashboardDarkImage from "../../public/images/dashboard-dark-image.png";
+import DashboardLightImage from "../../public/images/dashboard-light-image.png";
 import Logo from "../../public/images/logo-m-agendy-com-nome.png";
 import Logo2 from "../../public/images/logo-m-agendy-com-nome-2.png";
 
@@ -227,64 +229,149 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-2xl bg-slate-900 p-6 shadow-2xl">
-              <div className="mb-4 rounded-lg bg-slate-800 p-4">
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                  <span className="ml-auto text-xs text-slate-400">
-                    M.Agendy Dashboard
-                  </span>
-                </div>
-
-                {/* Dashboard Preview */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-blue-600 p-3">
-                      <h3 className="text-sm font-medium text-white">
-                        Dr. Carlos Silva
-                      </h3>
-                      <p className="text-xs text-blue-200">14:30 - Consulta</p>
-                    </div>
-                    <div className="rounded-lg bg-green-600 p-3">
-                      <h3 className="text-sm font-medium text-white">
-                        Dra. Ana Santos
-                      </h3>
-                      <p className="text-xs text-green-200">15:00 - Exame</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg bg-slate-700 p-4">
-                    <h4 className="mb-2 text-sm font-medium text-white">
-                      Próximos agendamentos
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300">João Pedro</span>
-                        <span className="text-slate-400">16:00</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300">Maria Silva</span>
-                        <span className="text-slate-400">16:30</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg bg-slate-700 p-4">
-                    <h4 className="mb-2 text-sm font-medium text-white">
-                      Estatísticas
-                    </h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="h-8 rounded bg-yellow-500"></div>
-                      <div className="h-6 rounded bg-yellow-400"></div>
-                      <div className="h-10 rounded bg-yellow-500"></div>
-                    </div>
-                  </div>
-                </div>
+          {/* Lado direito: Imagem elegante e animada */}
+          <div className="relative flex items-center justify-center">
+            {/* Fundo com gradiente animado */}
+            <div className="absolute inset-0 z-0">
+              <svg
+                className="h-full w-full"
+                viewBox="0 0 500 500"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ filter: "blur(8px)" }}
+              >
+                <defs>
+                  <radialGradient id="grad1" cx="50%" cy="50%" r="80%">
+                    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                <ellipse cx="250" cy="250" rx="220" ry="180" fill="url(#grad1)">
+                  <animate
+                    attributeName="rx"
+                    values="220;200;220"
+                    dur="6s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="ry"
+                    values="180;200;180"
+                    dur="7s"
+                    repeatCount="indefinite"
+                  />
+                </ellipse>
+              </svg>
+            </div>
+            {/* Imagem principal com efeito de elevação, brilho e sombra azul */}
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="relative overflow-hidden rounded-xl border-4 border-blue-100 bg-white/80 shadow-2xl transition-transform duration-500 hover:scale-105 dark:border-blue-900 dark:bg-slate-900/80">
+                {/* Sombra extra para a imagem do dashboard */}
+                <div
+                  className="pointer-events-none absolute inset-0 z-0"
+                  style={{
+                    filter: "blur(24px)",
+                    boxShadow:
+                      "0 16px 64px 0 rgba(59,130,246,0.25), 0 2px 24px 0 rgba(30,58,138,0.10)",
+                  }}
+                ></div>
+                {/* Imagem para tema claro */}
+                <Image
+                  src={DashboardLightImage}
+                  alt="Dashboard moderno do M.Agendy"
+                  className="animate-fade-in shadow-blue-dashboard block h-auto w-[800px] object-cover dark:hidden"
+                  style={{
+                    boxShadow:
+                      "0 0 40px 0 rgba(59,130,246,0.35), 0 8px 32px 0 rgba(59,130,246,0.18), 0 1.5px 8px 0 rgba(30,58,138,0.10), 0 16px 64px 0 rgba(59,130,246,0.18)",
+                  }}
+                />
+                {/* Imagem para tema escuro */}
+                <Image
+                  src={DashboardDarkImage}
+                  alt="Dashboard moderno do M.Agendy"
+                  className="animate-fade-in shadow-blue-dashboard hidden h-auto w-[800px] object-cover dark:block"
+                  style={{
+                    boxShadow:
+                      "0 0 40px 0 rgba(59,130,246,0.35), 0 8px 32px 0 rgba(59,130,246,0.18), 0 1.5px 8px 0 rgba(30,58,138,0.10), 0 16px 64px 0 rgba(59,130,246,0.18)",
+                  }}
+                />
+                {/* Glow animado */}
+                <div className="animate-pulse-glow pointer-events-none absolute -bottom-8 left-1/2 h-24 w-72 -translate-x-1/2 rounded-full bg-blue-400/30 blur-2xl"></div>
+              </div>
+              {/* Elementos gráficos decorativos */}
+              <div className="absolute -top-8 -right-8 z-20">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="36"
+                    stroke="#60a5fa"
+                    strokeWidth="4"
+                    strokeDasharray="8 8"
+                    className="animate-spin-slow"
+                  />
+                </svg>
+              </div>
+              <div className="absolute bottom-0 left-0 z-20">
+                <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                  <rect
+                    x="10"
+                    y="10"
+                    width="40"
+                    height="40"
+                    rx="12"
+                    fill="#38bdf8"
+                    fillOpacity="0.15"
+                  />
+                </svg>
               </div>
             </div>
+            <style jsx>{`
+              .animate-fade-in {
+                animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+              }
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(30px) scale(0.98);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0) scale(1);
+                }
+              }
+              .animate-pulse-glow {
+                animation: pulseGlow 2.5s infinite alternate;
+              }
+              @keyframes pulseGlow {
+                0% {
+                  opacity: 0.5;
+                  transform: scaleX(1) scaleY(1);
+                }
+                100% {
+                  opacity: 1;
+                  transform: scaleX(1.1) scaleY(1.2);
+                }
+              }
+              .animate-spin-slow {
+                animation: spinSlow 12s linear infinite;
+                transform-origin: 40px 40px;
+              }
+              @keyframes spinSlow {
+                0% {
+                  transform: rotate(0deg);
+                }
+                100% {
+                  transform: rotate(360deg);
+                }
+              }
+              /* Sombra azul personalizada para a imagem do dashboard */
+              .shadow-blue-dashboard {
+                box-shadow:
+                  0 0 40px 0 rgba(59, 130, 246, 0.35),
+                  0 8px 32px 0 rgba(59, 130, 246, 0.18),
+                  0 1.5px 8px 0 rgba(30, 58, 138, 0.1);
+              }
+            `}</style>
           </div>
         </div>
       </section>
@@ -330,8 +417,8 @@ export default function HomePage() {
                   Gestão de Médicos
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative z-10">
-                <p className="text-muted-foreground text-base">
+              <CardContent>
+                <p className="text-muted-foreground">
                   Cadastre médicos, especialidades e gerencie disponibilidades
                   de forma eficiente.
                 </p>
@@ -348,8 +435,8 @@ export default function HomePage() {
                   Cadastro de Pacientes
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative z-10">
-                <p className="text-muted-foreground text-base">
+              <CardContent>
+                <p className="text-muted-foreground">
                   Mantenha um registro organizado de todos os seus pacientes e
                   histórico de consultas.
                 </p>
@@ -366,8 +453,8 @@ export default function HomePage() {
                   Dashboard Analítico
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative z-10">
-                <p className="text-muted-foreground text-base">
+              <CardContent>
+                <p className="text-muted-foreground">
                   Visualize estatísticas e relatórios para tomar decisões
                   baseadas em dados.
                 </p>
@@ -384,8 +471,8 @@ export default function HomePage() {
                   Lembretes Automáticos
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative z-10">
-                <p className="text-muted-foreground text-base">
+              <CardContent>
+                <p className="text-muted-foreground">
                   Envie notificações automáticas para reduzir faltas e aumentar
                   a satisfação.
                 </p>
@@ -771,8 +858,8 @@ export default function HomePage() {
                   src={
                     typeof window !== "undefined" &&
                     window.matchMedia("(prefers-color-scheme: dark)").matches
-                      ? Logo
-                      : Logo2
+                      ? Logo2
+                      : Logo
                   }
                   alt="logo-m-agendy"
                   width={150}
