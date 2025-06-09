@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { PlanFeatures } from "../(protected)/_contants/plan-features";
 import { SubscriptionPlan } from "../(protected)/subscription/_components/subscription-plan";
 
-export default async function Home() {
+const NewSubscriptionPage = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -90,4 +90,6 @@ export default async function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default NewSubscriptionPage;
