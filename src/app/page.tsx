@@ -457,6 +457,217 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Sobre Section */}
+      <section
+        id="sobre"
+        className="from-background to-background relative z-10 bg-gradient-to-b via-blue-50/60 py-20 sm:py-32 dark:via-blue-950/60"
+      >
+        <div className="container mx-auto flex flex-col items-center px-4">
+          {/* Título e descrição */}
+          <div className="mb-16 max-w-3xl text-center">
+            <h2 className="animate-fade-in mb-4 text-5xl font-extrabold tracking-tight text-blue-700 sm:text-6xl dark:text-blue-300">
+              O que é o <span className="text-primary">M.Agendy</span>?
+            </h2>
+            <p className="text-muted-foreground animate-fade-in mb-8 text-xl [animation-delay:0.2s] sm:text-2xl">
+              <span className="font-semibold text-blue-600 dark:text-blue-200">
+                M.Agendy
+              </span>{" "}
+              é a plataforma inteligente para gestão de agendamentos,
+              profissionais e comunicação, feita para clínicas e consultórios
+              que buscam eficiência, automação e experiência digital de alto
+              nível.
+            </p>
+            <div className="animate-fade-in flex flex-wrap justify-center gap-4 [animation-delay:0.4s]">
+              <Badge
+                variant="outline"
+                className="rounded-full bg-blue-100 px-4 py-2 text-base font-medium text-blue-700 shadow-md dark:bg-blue-900/60 dark:text-blue-200"
+              >
+                100% Online
+              </Badge>
+              <Badge
+                variant="outline"
+                className="rounded-full bg-green-100 px-4 py-2 text-base font-medium text-green-700 shadow-md dark:bg-green-900/60 dark:text-green-200"
+              >
+                Seguro & Confiável
+              </Badge>
+              <Badge
+                variant="outline"
+                className="rounded-full bg-yellow-100 px-4 py-2 text-base font-medium text-yellow-700 shadow-md dark:bg-yellow-900/60 dark:text-yellow-200"
+              >
+                Suporte Humanizado
+              </Badge>
+            </div>
+          </div>
+
+          {/* Mapa mental visual */}
+          <div className="relative flex w-full max-w-6xl flex-col items-center gap-16 lg:flex-row">
+            {/* Gráfico/Mapa mental central */}
+            <div className="relative flex flex-1 items-center justify-center">
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="shadow-blue-dashboard animate-fade-in relative mb-4 flex h-40 w-40 items-center justify-center rounded-full border-4 border-blue-200 bg-white shadow-2xl dark:border-blue-900 dark:bg-slate-900">
+                  <Image
+                    src={
+                      mounted && isDark
+                        ? DashboardDarkImage
+                        : DashboardLightImage
+                    }
+                    alt="Dashboard M.Agendy"
+                    width={160}
+                    height={160}
+                    className="h-32 w-32 rounded-full object-contain transition-all duration-500"
+                    priority
+                  />
+                  {/* Glow animado */}
+                  <div className="animate-pulse-glow pointer-events-none absolute -inset-2 rounded-full border-2 border-blue-200 opacity-40 dark:border-blue-800"></div>
+                </div>
+                <span className="text-lg font-bold text-blue-700 dark:text-blue-200">
+                  Dashboard Inteligente
+                </span>
+              </div>
+              {/* Linhas e ícones do mapa mental */}
+              <div className="absolute top-1/2 left-1/2 z-0 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2">
+                {/* Linha e nó: Painel Inteligente */}
+                <div className="absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
+                  <div className="h-10 w-1 bg-blue-300 dark:bg-blue-800"></div>
+                  <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 shadow-md dark:bg-blue-900/60">
+                    <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                    <span className="text-base font-semibold text-blue-700 dark:text-blue-200">
+                      Painel Inteligente
+                    </span>
+                  </div>
+                </div>
+                {/* Linha e nó: Comunicação */}
+                <div className="absolute top-1/2 right-0 flex -translate-y-1/2 flex-col items-end">
+                  <div className="h-1 w-10 bg-green-300 dark:bg-green-800"></div>
+                  <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2 shadow-md dark:bg-green-900/60">
+                    <Send className="h-6 w-6 text-green-600 dark:text-green-300" />
+                    <span className="text-base font-semibold text-green-700 dark:text-green-200">
+                      Comunicação
+                    </span>
+                  </div>
+                </div>
+                {/* Linha e nó: Gestão de Equipe */}
+                <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
+                  <div className="h-10 w-1 bg-purple-300 dark:bg-purple-800"></div>
+                  <div className="flex items-center gap-2 rounded-xl bg-purple-50 px-4 py-2 shadow-md dark:bg-purple-900/60">
+                    <UserPlus className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                    <span className="text-base font-semibold text-purple-700 dark:text-purple-200">
+                      Equipe
+                    </span>
+                  </div>
+                </div>
+                {/* Linha e nó: Experiência do Cliente */}
+                <div className="absolute top-1/2 left-0 flex -translate-y-1/2 flex-col items-start">
+                  <div className="h-1 w-10 bg-pink-300 dark:bg-pink-800"></div>
+                  <div className="flex items-center gap-2 rounded-xl bg-pink-50 px-4 py-2 shadow-md dark:bg-pink-900/60">
+                    <Eye className="h-6 w-6 text-pink-600 dark:text-pink-300" />
+                    <span className="text-base font-semibold text-pink-700 dark:text-pink-200">
+                      Cliente
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalhes dos recursos em cards */}
+            <div className="grid w-full max-w-xl grid-cols-1 gap-6 sm:grid-cols-2">
+              <Card className="group animate-fade-in border-none bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-xl [animation-delay:0.2s] dark:from-blue-950 dark:via-slate-900 dark:to-blue-900">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <BarChart3 className="h-8 w-8 text-blue-600 dark:text-blue-300" />
+                  <CardTitle className="text-lg font-bold text-blue-700 dark:text-blue-200">
+                    Painel Inteligente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-base">
+                    Visualize métricas, agendamentos e notificações em tempo
+                    real. Painel desenhado para facilitar decisões e
+                    acompanhamento do seu negócio.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="group animate-fade-in border-none bg-gradient-to-br from-green-50 via-white to-green-100 shadow-xl [animation-delay:0.4s] dark:from-green-950 dark:via-slate-900 dark:to-green-900">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <Send className="h-8 w-8 text-green-600 dark:text-green-300" />
+                  <CardTitle className="text-lg font-bold text-green-700 dark:text-green-200">
+                    Comunicação Automatizada
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-base">
+                    Envie lembretes automáticos por WhatsApp, SMS e e-mail,
+                    reduzindo faltas e otimizando o relacionamento com seus
+                    clientes.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="group animate-fade-in border-none bg-gradient-to-br from-purple-50 via-white to-purple-100 shadow-xl [animation-delay:0.6s] dark:from-purple-950 dark:via-slate-900 dark:to-purple-900">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <UserPlus className="h-8 w-8 text-purple-600 dark:text-purple-300" />
+                  <CardTitle className="text-lg font-bold text-purple-700 dark:text-purple-200">
+                    Gestão de Equipe
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-base">
+                    Cadastre profissionais, defina horários, especialidades e
+                    acompanhe o desempenho de cada membro da equipe.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="group animate-fade-in border-none bg-gradient-to-br from-pink-50 via-white to-pink-100 shadow-xl [animation-delay:0.8s] dark:from-pink-950 dark:via-slate-900 dark:to-pink-900">
+                <CardHeader className="flex flex-row items-center gap-3">
+                  <Eye className="h-8 w-8 text-pink-600 dark:text-pink-300" />
+                  <CardTitle className="text-lg font-bold text-pink-700 dark:text-pink-200">
+                    Experiência do Cliente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-base">
+                    Clientes agendam, remarcam e cancelam consultas de forma
+                    simples, rápida e intuitiva, direto do celular ou
+                    computador.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="animate-fade-in mt-20 flex flex-col items-center gap-4 [animation-delay:1s]">
+            <span className="text-muted-foreground text-lg">
+              Pronto para transformar sua gestão?
+            </span>
+            <Link href="#precos">
+              <Button
+                size="lg"
+                className="group px-8 py-5 text-lg font-bold shadow-lg"
+              >
+                <span className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-yellow-400 transition-transform group-hover:scale-110" />
+                  Conheça nossos planos
+                </span>
+              </Button>
+            </Link>
+            <span className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
+              <WhatsappIcon />
+              Suporte rápido via WhatsApp
+            </span>
+          </div>
+        </div>
+        {/* Efeitos decorativos modernos */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/2 h-[320px] w-[640px] -translate-x-1/2 rounded-full bg-blue-200/30 opacity-60 blur-3xl dark:bg-blue-900/30"></div>
+          <div className="absolute right-0 bottom-0 h-[200px] w-[340px] rounded-full bg-green-200/20 opacity-40 blur-2xl dark:bg-green-900/20"></div>
+          <div className="absolute top-1/3 left-0 h-32 w-32 rounded-full bg-pink-200/20 opacity-30 blur-2xl dark:bg-pink-900/20"></div>
+        </div>
+        {/* Efeito decorativo de fundo */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-blue-200/30 opacity-60 blur-3xl dark:bg-blue-900/30"></div>
+          <div className="absolute right-0 bottom-0 h-[180px] w-[300px] rounded-full bg-green-200/20 opacity-40 blur-2xl dark:bg-green-900/20"></div>
+        </div>
+      </section>
+
       {/* Recursos Section */}
       <section id="recursos" className="bg-muted/50 py-12 sm:py-20">
         <div className="container mx-auto px-4">
