@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { Calendar } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -10,7 +9,6 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   PageActions,
   PageContainer,
@@ -20,7 +18,7 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
-import { Separator } from "@/components/ui/separator";
+import { PageSection } from "@/components/ui/page-section";
 import { getDashboard } from "@/data/get-dashboard";
 import { getDataTableAppointments } from "@/data/get-data-table-appointments";
 import { auth } from "@/lib/auth";
@@ -69,7 +67,6 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     totalDoctors,
     topDoctors,
     topSpecialities,
-    // todayAppointments,
     dailyAppointmentsData,
   } = await getDashboard({
     from,
@@ -98,7 +95,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
@@ -110,7 +107,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
         <PageHeaderContent>
           <PageTitle>Dashboard</PageTitle>
           <PageDescription>
-            Tenha uma visão geral da sua clínica.
+            Resumo do período selecionado.
           </PageDescription>
         </PageHeaderContent>
         <PageActions>
@@ -125,26 +122,19 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
           totalDoctors={totalDoctors.total}
         />
 
-        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
           <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
           <TopDoctors topDoctors={topDoctors} />
         </div>
 
-        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <Calendar className="text-[var(--primary)]" />
-              <CardTitle>Agendamentos e Faturamento</CardTitle>
-            </CardHeader>
-            <Separator />
-            <CardContent>
-              <AppointmentsTable
-                appointments={appointments}
-                doctors={doctors}
-                patients={patients}
-              />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+          <PageSection title="Consultas recentes">
+            <AppointmentsTable
+              appointments={appointments}
+              doctors={doctors}
+              patients={patients}
+            />
+          </PageSection>
           <TopSpecialities topSpecialities={topSpecialities} />
         </div>
       </PageContent>

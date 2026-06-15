@@ -21,30 +21,38 @@ const AuthenticationPage = async () => {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
+    <div className="min-h-screen lg:grid lg:grid-cols-2">
       {/* Coluna da esquerda */}
-      <div className="flex h-screen w-[50vw] flex-col items-center justify-center gap-12 bg-[url('/images/login-image.png')] bg-cover bg-left">
-        <div className="mt-128 flex flex-col items-center justify-end rounded-lg bg-white/20 px-12 py-6 backdrop-blur-sm">
-          <h1 className="text-center text-2xl font-bold text-white">
-            Faça login ou crie uma conta para acessar o sistema.
-          </h1>
+      <div className="bg-muted/40 border-border relative hidden flex-col items-center justify-center overflow-hidden border-r px-8 py-12 lg:flex">
+        <div className="flex flex-col items-center justify-center text-center">
+          <Image
+            src="/images/ficha.png"
+            alt="Calendário"
+            width={500}
+            height={400}
+            className="mb-8"
+          />
+
+          <h2 className="text-foreground mb-4 text-2xl font-semibold tracking-tight">
+            Transforme a gestão da sua clínica
+          </h2>
+
+          <p className="text-muted-foreground max-w-md text-lg leading-relaxed">
+            Simplifique o agendamento de consultas, gerencie pacientes e otimize
+            o fluxo da sua clínica com nossa plataforma completa e intuitiva.
+          </p>
         </div>
       </div>
 
       {/* Coluna da direita */}
-      <div className="flex h-[50vh] w-[50vw] flex-col items-center justify-center gap-12">
-        <div className="fixed top-8 right-8 z-50">
+      <div className="bg-background relative flex min-h-screen flex-col items-center justify-center p-8">
+        <div className="absolute top-8 right-8 z-50">
           <ThemeToggle />
         </div>
-        <div className="flex flex-col items-center justify-center">
-          {/* Exibe a logo de acordo com o tema selecionado */}
+
+        <div className="mb-8 flex flex-col items-center justify-center">
           <Image
-            src={
-              typeof window !== "undefined" &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? Logo2
-                : Logo
-            }
+            src={Logo}
             alt="logo-m-agendy"
             width={200}
             height={200}
@@ -58,10 +66,15 @@ const AuthenticationPage = async () => {
             className="hidden dark:block"
           />
         </div>
-        <Tabs defaultValue="login" className="w-[400px]">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Criar conta</TabsTrigger>
+
+        <Tabs defaultValue="login" className="w-full max-w-[400px]">
+          <TabsList className="bg-muted/50 mb-6 grid w-full grid-cols-2 rounded-lg p-1">
+            <TabsTrigger value="login" className="rounded-md">
+              Login
+            </TabsTrigger>
+            <TabsTrigger value="register" className="rounded-md">
+              Criar conta
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="login">
             <LoginForm />

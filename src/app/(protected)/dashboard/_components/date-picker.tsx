@@ -50,12 +50,13 @@ export const DatePicker = ({
           <Button
             id="date"
             variant={"outline"}
+            aria-label="Selecionar período"
             className={cn(
-              "justify-start text-left font-normal",
+              "justify-start rounded-lg text-left font-normal",
               !date && "text-muted-foreground",
             )}
           >
-            <CalendarIcon />
+            <CalendarIcon aria-hidden="true" />
             {date?.from ? (
               date.to ? (
                 <>
@@ -71,7 +72,7 @@ export const DatePicker = ({
                 format(date.from, "LLL dd, y")
               )
             ) : (
-              <span>Pick a date</span>
+              <span>Selecionar período…</span>
             )}
           </Button>
         </PopoverTrigger>

@@ -31,15 +31,18 @@ export const AppHeader = () => {
   };
 
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
-      <div className="flex h-20 items-center justify-between px-4">
-        <SidebarTrigger />
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b border-border/60 backdrop-blur">
+      <div className="flex h-14 items-center justify-between px-4">
+        <SidebarTrigger aria-label="Alternar barra lateral" />
 
         <div className="flex items-center gap-2">
-          {/* Avatar do usuário com dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-2"
+                aria-label="Menu da conta"
+              >
                 <Avatar>
                   <AvatarImage
                     src={session?.data?.user?.image as string}
@@ -59,25 +62,26 @@ export const AppHeader = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
+                <User aria-hidden="true" className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings aria-hidden="true" className="mr-2 h-4 w-4" />
                 Configurações
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut aria-hidden="true" className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* Botão de notificações */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            {/* Badge de notificação (opcional) */}
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500"></span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Notificações"
+          >
+            <Bell aria-hidden="true" className="h-5 w-5" />
           </Button>
 
           <ThemeToggle />

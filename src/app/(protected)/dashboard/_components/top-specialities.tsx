@@ -6,15 +6,13 @@ import {
   Eye,
   Hand,
   Heart,
-  Hospital,
   SearchX,
   Stethoscope,
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataNotFound } from "@/components/ui/data-not-found";
+import { PageSection } from "@/components/ui/page-section";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 
 interface TopSpecialitiesProps {
   topSpecialities: {
@@ -22,8 +20,6 @@ interface TopSpecialitiesProps {
     appointments: number;
   }[];
 }
-
-// ALTERAR ESSE COMPONENTE COM A LISTAGEM DE ESPECIALIDADES
 
 const getSpecialityIcon = (speciality: string) => {
   const specialityLower = speciality.toLowerCase();
@@ -47,96 +43,49 @@ const getSpecialityIcon = (speciality: string) => {
   return Stethoscope;
 };
 
-// const specialitiesAndIcons = [
-//   {
-//     speciality: "Cardiologista",
-//     icon: Heart,
-//   },
-//   {
-//     speciality: "Ginecologista",
-//     icon: Baby,
-//   },
-//   {
-//     speciality: "Pediatra",
-//     icon: Activity,
-//   },
-//   {
-//     speciality: "Dermatologista",
-//     icon: Hand,
-//   },
-//   {
-//     speciality: "Ortopedista",
-//     icon: Bone,
-//   },
-//   {
-//     speciality: "Oftalmologista",
-//     icon: Eye,
-//   },
-//   {
-//     speciality: "Neurologista",
-//     icon: Brain,
-//   },
-//   {
-//     speciality: "Traumatologista",
-//     icon: Bone,
-//   },
-//   {
-//     speciality: "Urologista",
-//     icon: Urology,
-//   },
-// ];
-
 export const TopSpecialities = ({ topSpecialities }: TopSpecialitiesProps) => {
   const maxAppointments = Math.max(
     ...topSpecialities.map((i) => i.appointments),
   );
   return (
-    <Card className="mx-auto w-full">
-      <CardHeader className="flex flex-row items-center gap-2">
-        <Hospital className="text-[var(--primary)]" />
-        <CardTitle>Top Especialidades</CardTitle>
-      </CardHeader>
-      <Separator />
-      <CardContent>
-        <div className="space-y-6">
-          {topSpecialities.length > 0 ? (
-            topSpecialities.map((speciality) => {
-              const Icon = getSpecialityIcon(speciality.speciality);
-              // Porcentagem de ocupação da especialidade baseando-se no maior número de agendamentos
-              const progressValue =
-                (speciality.appointments / maxAppointments) * 100;
+    <PageSection title="Especialidades em destaque">
+      <div className="space-y-6">
+        {topSpecialities.length > 0 ? (
+          topSpecialities.map((speciality) => {
+            const Icon = getSpecialityIcon(speciality.speciality);
+            const progressValue =
+              (speciality.appointments / maxAppointments) * 100;
 
-              return (
-                <div
-                  key={speciality.speciality}
-                  className="flex items-center gap-2"
-                >
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <Icon className="text-primary h-5 w-5" />
-                  </div>
-                  <div className="flex w-full flex-col justify-center">
-                    <div className="flex w-full justify-between">
-                      <h3 className="text-sm">{speciality.speciality}</h3>
-                      <div className="text-right">
-                        <span className="text-muted-foreground text-sm font-medium">
-                          {speciality.appointments} agend.
-                        </span>
-                      </div>
-                    </div>
-                    <Progress value={progressValue} className="w-full" />
-                  </div>
+            return (
+              <div
+                key={speciality.speciality}
+                className="flex items-center gap-2"
+              >
+                <div className="bg-muted text-muted-foreground flex h-10 w-10 items-center justify-center rounded-full">
+                  <Icon className="h-5 w-5" />
                 </div>
-              );
-            })
-          ) : (
-            <DataNotFound
-              title="Nenhuma especialidade cadastrada!"
-              description="Ainda não há especialidades cadastrados. Adicione uma especialidade ao sistema."
-              icon={<SearchX className="text-muted-foreground h-8 w-8" />}
-            />
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                <div className="flex w-full flex-col justify-center">
+                  <div className="flex w-full justify-between">
+                    <h3 className="text-sm">{speciality.speciality}</h3>
+                    <div className="text-right">
+                      <span className="text-muted-foreground text-sm font-medium">
+                        {speciality.appointments} consultas
+                      </span>
+                    </div>
+                  </div>
+                  <Progress value={progressValue} className="w-full" />
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <DataNotFound
+            title="Nenhuma especialidade cadastrada!"
+            description="Ainda não há especialidades cadastrados. Adicione uma especialidade ao sistema."
+            icon={<SearchX className="text-muted-foreground h-8 w-8" />}
+          />
+        )}
+      </div>
+    </PageSection>
   );
 };

@@ -72,52 +72,57 @@ export const AppSidebar = () => {
     });
   };
 
+  const activeNavClassName = "border-l-2 border-primary bg-muted/80";
+
   return (
     <Sidebar>
-      <SidebarHeader className="h-20 border-b p-4">
+      <SidebarHeader className="p-4">
         <Image
-          src={
-            typeof window !== "undefined" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? Logo2
-              : Logo
-          }
-          alt="logo-m-agendy"
-          width={200}
-          height={32}
+          src={Logo}
+          alt="M.Agendy"
+          width={140}
+          height={24}
           className="block dark:hidden"
         />
         <Image
           src={Logo2}
-          alt="logo-m-agendy"
-          width={200}
-          height={32}
+          alt="M.Agendy"
+          width={140}
+          height={24}
           className="hidden dark:block"
         />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-normal">
-            Menu Principal
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-widest text-muted-foreground/70">
+            Navegação
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title} className="rounded-md">
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = pathname === item.url;
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={isActive ? activeNavClassName : undefined}
+                    >
+                      <Link href={item.url}>
+                        <item.icon aria-hidden="true" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-normal">
-            Outros
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-widest text-muted-foreground/70">
+            Conta
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -125,9 +130,12 @@ export const AppSidebar = () => {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === "/subscription"}
+                  className={
+                    pathname === "/subscription" ? activeNavClassName : undefined
+                  }
                 >
                   <Link href="/subscription">
-                    <Gem />
+                    <Gem aria-hidden="true" />
                     <span>Assinatura</span>
                   </Link>
                 </SidebarMenuButton>
@@ -140,8 +148,8 @@ export const AppSidebar = () => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleSignOut}>
-              <LogOut />
-              <span>Sair</span>
+              <LogOut aria-hidden="true" />
+              <span>Encerrar sessão</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

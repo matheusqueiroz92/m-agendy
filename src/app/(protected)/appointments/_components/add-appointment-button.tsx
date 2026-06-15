@@ -25,7 +25,7 @@ export const AddAppointmentButton = ({
       <DialogTrigger asChild>
         <Button>
           <Plus />
-          Novo agendamento
+          Nova consulta
         </Button>
       </DialogTrigger>
       <UpsertAppointmentForm

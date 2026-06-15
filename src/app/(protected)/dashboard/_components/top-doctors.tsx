@@ -1,10 +1,8 @@
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-import { SearchX, Star } from "lucide-react";
+import { SearchX } from "lucide-react";
 
-import { AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataNotFound } from "@/components/ui/data-not-found";
-import { Separator } from "@/components/ui/separator";
+import { PageSection } from "@/components/ui/page-section";
 
 interface TopDoctorsProps {
   topDoctors: {
@@ -18,58 +16,51 @@ interface TopDoctorsProps {
 
 export const TopDoctors = ({ topDoctors }: TopDoctorsProps) => {
   return (
-    <Card className="mx-auto w-full">
-      <CardHeader className="flex flex-row items-center gap-2">
-        <Star className="text-[var(--primary)]" />
-        <CardTitle>Top Médicos</CardTitle>
-      </CardHeader>
-      <Separator />
-      <CardContent>
-        <div className="space-y-10">
-          {topDoctors.length > 0 ? (
-            topDoctors.map((doctor) => (
-              <div
-                key={doctor.id}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-8">
-                  <Avatar className="h-10 w-10">
-                    {doctor.avatarImageUrl ? (
-                      <AvatarImage src={doctor.avatarImageUrl} />
-                    ) : (
-                      <AvatarFallback className="rounded-full bg-gray-100 p-4 text-lg font-medium text-gray-600">
-                        {doctor.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
+    <PageSection title="Médicos em destaque">
+      <div className="space-y-6">
+        {topDoctors.length > 0 ? (
+          topDoctors.map((doctor) => (
+            <div
+              key={doctor.id}
+              className="flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  {doctor.avatarImageUrl ? (
+                    <AvatarImage src={doctor.avatarImageUrl} />
+                  ) : (
+                    <AvatarFallback className="text-muted-foreground text-lg font-medium">
+                      {doctor.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
 
-                  <div>
-                    <h3 className="text-sm">{doctor.name}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {doctor.speciality}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {doctor.appointments} agend.
-                  </span>
+                <div>
+                  <h3 className="text-sm">{doctor.name}</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {doctor.speciality}
+                  </p>
                 </div>
               </div>
-            ))
-          ) : (
-            <DataNotFound
-              title="Nenhum médico cadastrado!"
-              description="Ainda não há médicos cadastrados. Adicione um médico ao sistema."
-              icon={<SearchX className="text-muted-foreground h-8 w-8" />}
-            />
-          )}
-        </div>
-      </CardContent>
-    </Card>
+              <div className="text-right">
+                <span className="text-muted-foreground text-sm font-medium">
+                  {doctor.appointments} consultas
+                </span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <DataNotFound
+            title="Nenhum médico cadastrado!"
+            description="Ainda não há médicos cadastrados. Adicione um médico ao sistema."
+            icon={<SearchX className="text-muted-foreground h-8 w-8" />}
+          />
+        )}
+      </div>
+    </PageSection>
   );
 };

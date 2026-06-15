@@ -1,5 +1,5 @@
 export const PageContainer = ({ children }: { children: React.ReactNode }) => {
-  return <div className="w-full space-y-6 p-6">{children}</div>;
+  return <div className="w-full space-y-8 p-6 md:p-8">{children}</div>;
 };
 
 export const PageHeader = ({ children }: { children: React.ReactNode }) => {
@@ -17,7 +17,11 @@ export const PageHeaderContent = ({
 };
 
 export const PageTitle = ({ children }: { children: React.ReactNode }) => {
-  return <h1 className="text-2xl font-bold">{children}</h1>;
+  return (
+    <h1 className="text-2xl font-semibold tracking-tight text-balance">
+      {children}
+    </h1>
+  );
 };
 
 export const PageDescription = ({

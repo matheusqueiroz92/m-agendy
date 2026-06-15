@@ -55,7 +55,7 @@ const AppointmentsPage = async () => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
@@ -67,7 +67,7 @@ const AppointmentsPage = async () => {
         <PageHeaderContent>
           <PageTitle>Agendamentos</PageTitle>
           <PageDescription>
-            Gerencie os agendamentos da sua clínica
+            Consultas, horários e status em um só lugar.
           </PageDescription>
         </PageHeaderContent>
         <PageActions>

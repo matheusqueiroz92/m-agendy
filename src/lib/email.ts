@@ -173,3 +173,117 @@ export function createVerificationEmailTemplate(
 
   return { subject, html, text };
 }
+
+export function createPasswordResetEmailTemplate(
+  userName: string,
+  resetUrl: string,
+): { subject: string; html: string; text: string } {
+  const subject = "Redefinir sua senha - M.Agendy";
+
+  const html = `
+    <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Redefinir Senha</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            p,
+            h2 {
+              color: #fff;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background-color: #155dfc;
+              color: white;
+              padding: 20px;
+              border-radius: 8px 8px 0 0;
+            }
+            .content {
+              background-color: #09090b;
+              padding: 30px;
+              border-radius: 0 0 8px 8px;
+            }
+            .button {
+              display: inline-block;
+              background-color: #155dfc;
+              color: white;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 6px;
+              font-weight: bold;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 30px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0">M.Agendy</h1>
+            </div>
+            <div class="content">
+              <h2>Olá, ${userName}!</h2>
+              <p>
+                Recebemos uma solicitação para redefinir a senha da sua conta no
+                M.Agendy.
+              </p>
+
+              <p>Clique no botão abaixo para criar uma nova senha:</p>
+
+              <a href="${resetUrl}" class="button">Redefinir Senha</a>
+
+              <p>
+                Se o botão não funcionar, você pode copiar e colar o link abaixo no
+                seu navegador:
+              </p>
+              <p style="word-break: break-all; color: #4f46e5">${resetUrl}</p>
+
+              <p><strong>Este link expira em 1 hora.</strong></p>
+
+              <hr style="border: 1px solid #e5e7eb; margin: 30px 0" />
+
+              <p>
+                Se você não solicitou a redefinição de senha, pode ignorar este
+                e-mail com segurança. Sua senha permanecerá inalterada.
+              </p>
+            </div>
+            <div class="footer">
+              <p>© 2024 M.Agendy. Todos os direitos reservados.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+  `;
+
+  const text = `
+    Olá, ${userName}!
+
+    Recebemos uma solicitação para redefinir a senha da sua conta no M.Agendy.
+
+    Clique no link abaixo para criar uma nova senha:
+    ${resetUrl}
+
+    Este link expira em 1 hora.
+
+    Se você não solicitou a redefinição de senha, pode ignorar este e-mail com segurança.
+
+    © 2024 M.Agendy. Todos os direitos reservados.
+  `;
+
+  return { subject, html, text };
+}

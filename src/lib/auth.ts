@@ -7,7 +7,11 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { usersTable, usersToClinicsTable } from "@/db/schema";
 
-import { createVerificationEmailTemplate, sendEmail } from "./email";
+import {
+  createPasswordResetEmailTemplate,
+  createVerificationEmailTemplate,
+  sendEmail,
+} from "./email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -109,5 +113,21 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      const { subject, html, text } = createPasswordResetEmailTemplate(
+        user.name,
+        url,
+      );
+
+      void sendEmail({
+        to: user.email,
+        subject,
+        html,
+        text,
+      }).catch((error) => {
+        console.error("Erro ao enviar e-mail de redefinição de senha:", error);
+      });
+    },
   },
 });
