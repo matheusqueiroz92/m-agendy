@@ -19,8 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer } from "@/components/ui/page-container";
 
-import DashboardDarkImage from "../../../public/images/dashboard-dark-image.png";
-import DashboardLightImage from "../../../public/images/dashboard-light-image.png";
+import DashboardDarkImage from "../../../public/images/screenshots/dashboard-dark-image.png";
+import DashboardLightImage from "../../../public/images/screenshots/dashboard-light-image.png";
 
 const DemoPage = () => {
   return (
