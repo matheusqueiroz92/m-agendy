@@ -89,7 +89,7 @@ export function ContactSection() {
                 </div>
 
                 <p className="text-muted-foreground mb-6 text-sm leading-relaxed sm:text-base">
-                  Tem alguma dúvida antes de começar? Nossa equipe responde está pronta para tirar suas dúvidas.
+                  Tem alguma dúvida antes de começar? Nossa equipe está pronta para te atender.
                 </p>
 
                 <div className="mb-8 space-y-4">
@@ -109,7 +109,7 @@ export function ContactSection() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
-                      <Phone className="text-foreground size-5" aria-hidden="true" />
+                      <IconWhatsapp width={24} height={24} color="#000000" />
                     </div>
                     <div>
                       <p className="text-foreground text-sm font-medium">Telefone</p>
@@ -143,8 +143,8 @@ export function ContactSection() {
                   disabled={isSubmitting}
                   bgColor="cta-secondary"
                 >
-                  <IconWhatsapp width={24} height={24} />
-                  WhatsApp
+                  Falar com especialista
+                  <IconWhatsapp width={24} height={24} color="#ffffff" />
                 </CtaButton>
               </div>
             </div>
