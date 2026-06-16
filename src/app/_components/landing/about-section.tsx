@@ -7,12 +7,14 @@ import { BadgeInfo } from "@/components/badge-info";
 import { GlassCard } from "./glass-card";
 import { PulseButton } from "./pulse-button";
 import { ScrollReveal } from "./scroll-reveal";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const ABOUT_CARDS = [
   {
     title: "Agenda sempre cheia e organizada",
     description:
-      "Veja todos os agendamentos do dia, da semana e do mês num só ecrã. Sem Excel, sem papel, sem confusão.",
+      "Veja todos os agendamentos do dia, da semana e do mês numa só tela. Sem Excel, sem papel, sem confusão.",
     icon: CalendarCheck,
     iconClassName: "text-blue-500",
     iconBgClassName: "bg-blue-500/10",
@@ -20,7 +22,7 @@ const ABOUT_CARDS = [
   {
     title: "Lembretes que eliminam as faltas",
     description:
-      "Confirmações automáticas por WhatsApp, SMS e e-mail. Os pacientes confirmam com um clique — e a rececionista não precisa de ligar para ninguém.",
+      "Confirmações automáticas. Os pacientes confirmam com um clique e a recepcionista não precisa contatar ninguém.",
     icon: BellRing,
     iconClassName: "text-blue-500",
     iconBgClassName: "bg-blue-500/10",
@@ -36,7 +38,7 @@ const ABOUT_CARDS = [
   {
     title: "Pacientes agendam sozinhos, 24h por dia",
     description:
-      "Com o link de agendamento online, o paciente marca a consulta quando quiser — sem ligar, sem esperar, sem ocupar a receção.",
+      "Com o link de agendamento online, o paciente marca a consulta quando quiser, sem ligar, sem esperar, sem ocupar a recepcionista.",
     icon: UserCheck,
     iconClassName: "text-blue-500",
     iconBgClassName: "bg-blue-500/10",
@@ -49,7 +51,7 @@ export function AboutSection() {
       <div className="landing-section-glow pointer-events-none absolute inset-0" aria-hidden="true" />
 
       <div className="container relative mx-auto px-4">
-        <ScrollReveal className="mx-auto mb-10 max-w-3xl text-center sm:mb-16">
+        <ScrollReveal className="mx-auto mb-8 max-w-3xl text-center sm:mb-16">
           <h2 className="text-foreground mb-3 text-2xl font-semibold tracking-tight text-balance sm:mb-4 sm:text-3xl md:text-4xl">
           Menos trabalho manual. Mais consultas confirmadas.
           </h2>
@@ -74,10 +76,16 @@ export function AboutSection() {
           <span className="text-muted-foreground text-lg">
             Mais de 200 profissionais já pararam de perder consultas. Quer ser o próximo?
           </span>
-          <PulseButton href="#precos" className="gap-2">
-            <Gem className="size-5" aria-hidden="true" />
-            Conheça nossos planos
-          </PulseButton>
+          <Link
+            href="#precos"
+            className="flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Button className="cursor-pointer h-11 w-full rounded-lg px-12 text-sm sm:h-12 sm:w-auto   sm:px-8 sm:text-base sm:has-[>svg]:px-8">
+              Ver demonstração gratuita
+              <Gem className="ml-2 size-5" aria-hidden="true" />
+              
+            </Button>
+          </Link>
         </ScrollReveal>
       </div>
     </section>

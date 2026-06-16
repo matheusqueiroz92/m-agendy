@@ -1,10 +1,7 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
-
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { useThemeDetection } from "@/hooks/use-theme-detection";
+import { PainCalculatorCtaSection } from "@/components/sections/pain-calculator-cta-section";
+import { TestimonialsSection } from "@/components/sections/testimonials-section";
 
 import { AboutSection } from "./_components/landing/about-section";
 import { ContactSection } from "./_components/landing/contact-section";
@@ -17,47 +14,20 @@ import { PricingSection } from "./_components/landing/pricing-section";
 import { SocialProofSection } from "./_components/landing/social-proof-section";
 
 const HomePage = () => {
-  const pageRef = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
-  const { isDark } = useThemeDetection();
-
-  const { scrollYProgress } = useScroll({
-    target: pageRef,
-    offset: ["start start", "end end"],
-  });
-
-  const closingBackground = useTransform(
-    scrollYProgress,
-    [0.55, 0.75, 1],
-    reducedMotion || isDark
-      ? ["var(--background)", "var(--background)", "var(--background)"]
-      : [
-          "oklch(0.988 0.002 90)",
-          "oklch(0.94 0.02 245)",
-          "oklch(0.16 0.045 250)",
-        ],
-  );
-
   return (
-    <motion.div
-      ref={pageRef}
-      className="min-h-screen overflow-x-clip"
-      style={
-        reducedMotion
-          ? { backgroundColor: "var(--background)" }
-          : { backgroundColor: closingBackground }
-      }
-    >
+    <div className="bg-background min-h-screen overflow-x-clip">
       <LandingHeader />
       <HeroSection />
       <SocialProofSection />
       <AboutSection />
       <FeaturesSection />
+      <TestimonialsSection />
+      <PainCalculatorCtaSection />
       <PricingSection />
       <FaqSection />
       <ContactSection />
       <LandingFooter />
-    </motion.div>
+    </div>
   );
 };
 

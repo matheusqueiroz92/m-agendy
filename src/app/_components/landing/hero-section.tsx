@@ -1,40 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Eye, Globe } from "lucide-react";
-// import Image from "next/image";
-import Link from "next/link";
+import { Activity, ArrowRight, Globe } from "lucide-react";
 import { useRef } from "react";
 
 import { BadgeInfo } from "@/components/badge-info";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import IconWhatsapp from "@/components/ui/icons/icon-whatsapp";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useThemeDetection } from "@/hooks/use-theme-detection";
 
-// import DashboardDarkImage from "../../../../public/images/dashboard-dark-image.png";
-// import DashboardLightImage from "../../../../public/images/dashboard-light-image.png";
 import { WhatsAppMockup } from "./whatsapp-mockup";
+import { ScrollReveal } from "./scroll-reveal";
+import IconWhatsapp from "@/components/ui/icons/icon-whatsapp";
+import { CtaButton } from "@/components/ui/cta-button";
 
 const TITLE_WORDS = [
-  "Chega",
-  "de",
-  "agenda",
-  "com",
-  "buracos.",
-  "Acabe",
-  "com",
-  "as",
-  "faltas",
+  "O",
+  "assistente",
+  "que",
+  "confirma",
+  "lembra",
   "e",
-  "encha",
-  "o",
-  "seu",
-  "consultório",
-  "no",
-  "piloto",
-  "automático.",
+  "agenda",
+  "enquanto",
+  "você atende",
 ];
 
 function HeroBackground() {
@@ -132,30 +121,26 @@ export function HeroSection() {
               para o que realmente importa.
             </motion.p>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-              <Link
-                href="/demo"
-                className="flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Button className="cursor-pointer h-11 w-full rounded-lg px-6 text-sm sm:h-12 sm:w-auto sm:px-8 sm:text-base sm:has-[>svg]:px-8">
-                  Ver demonstração gratuita
-                  <Eye className="ml-2 size-5" aria-hidden="true" />
-                  
-                </Button>
-              </Link>
+            <ScrollReveal className="mt-10 flex flex-col items-start gap-4" delay={0.2}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <CtaButton
+                  className="w-full sm:h-12 sm:w-96 sm:px-8 sm:has-[>svg]:px-8"
+                  href="/demo"
+                  bgColor="cta"
+                >
+                  Quero ver como funciona
+                  <ArrowRight className="ml-2 size-5" aria-hidden="true" />
+                </CtaButton>
 
-              <Link
-                href="/whatsapp"
-                className="flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Button
-                  className="cursor-pointer h-11 w-full rounded-lg px-6 text-sm sm:h-12 sm:w-auto sm:px-8 sm:text-base sm:has-[>svg]:px-8 bg-[var(--cta-secondary)] hover:bg-[var(--cta-secondary)]/80"
+                <CtaButton
+                  href="/whatsapp"
+                  bgColor="cta-secondary"
                 >
                   Falar com consultor
                   <IconWhatsapp width={24} height={24} />
-                </Button>
-              </Link>
-            </div>
+                </CtaButton>
+              </div>
+            </ScrollReveal>
           </div>
 
           <div className="relative flex min-h-[220px] items-center justify-center sm:min-h-[300px] md:min-h-[360px] lg:min-h-[440px]">

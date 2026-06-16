@@ -175,6 +175,14 @@ export const patientsTableRelations = relations(
       references: [clinicsTable.id],
     }),
     appointments: many(appointmentsTable),
+    medicalRecord: one(medicalRecordsTable, {
+      fields: [patientsTable.id],
+      references: [medicalRecordsTable.patientId],
+    }),
+    clinicalAttendances: many(clinicalAttendancesTable),
+    diagnoses: many(diagnosesTable),
+    prescriptions: many(prescriptionsTable),
+    followUps: many(followUpsTable),
   }),
 );
 
@@ -197,7 +205,7 @@ export const appointmentsTable = pgTable("appointments", {
 
 export const appointmentsTableRelations = relations(
   appointmentsTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     clinic: one(clinicsTable, {
       fields: [appointmentsTable.clinicId],
       references: [clinicsTable.id],
@@ -209,6 +217,244 @@ export const appointmentsTableRelations = relations(
     doctor: one(doctorsTable, {
       fields: [appointmentsTable.doctorId],
       references: [doctorsTable.id],
+    }),
+    clinicalAttendances: many(clinicalAttendancesTable),
+  }),
+);
+
+/* -------------------------------------------------------------------------- */
+/*                          PRONTUÁRIO ELETRÔNICO                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Prontuário base do paciente: dados que mudam pouco e descrevem o histórico
+ * de saúde geral (antecedentes, alergias, hábitos, medicamentos em uso).
+ * Relação 1:1 com o paciente.
+ */
+export const medicalRecordsTable = pgTable("medical_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .unique()
+    .references(() => patientsTable.id, { onDelete: "cascade" }),
+  bloodType: text("blood_type"),
+  allergies: text("allergies"), // alergias
+  medicationsInUse: text("medications_in_use"), // medicamentos em uso
+  clinicalHistory: text("clinical_history"), // antecedentes clínicos
+  surgicalHistory: text("surgical_history"), // antecedentes cirúrgicos
+  familyHistory: text("family_history"), // antecedentes familiares
+  habits: text("habits"), // hábitos (tabagismo, álcool, atividade física...)
+  notes: text("notes"), // observações gerais
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const medicalRecordsTableRelations = relations(
+  medicalRecordsTable,
+  ({ one }) => ({
+    clinic: one(clinicsTable, {
+      fields: [medicalRecordsTable.clinicId],
+      references: [clinicsTable.id],
+    }),
+    patient: one(patientsTable, {
+      fields: [medicalRecordsTable.patientId],
+      references: [patientsTable.id],
+    }),
+  }),
+);
+
+/**
+ * Atendimento clínico: o que aconteceu numa consulta (anamnese, exame físico,
+ * conduta). Pode ou não estar vinculado a um agendamento existente.
+ */
+export const clinicalAttendancesTable = pgTable("clinical_attendances", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patientsTable.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").references(() => doctorsTable.id, {
+    onDelete: "set null",
+  }),
+  appointmentId: uuid("appointment_id").references(() => appointmentsTable.id, {
+    onDelete: "set null",
+  }),
+  date: timestamp("date").notNull().defaultNow(),
+  chiefComplaint: text("chief_complaint"), // queixa principal
+  historyOfPresentIllness: text("history_of_present_illness"), // história da doença atual
+  physicalExam: text("physical_exam"), // exame físico
+  conduct: text("conduct"), // conduta / plano
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const clinicalAttendancesTableRelations = relations(
+  clinicalAttendancesTable,
+  ({ one, many }) => ({
+    clinic: one(clinicsTable, {
+      fields: [clinicalAttendancesTable.clinicId],
+      references: [clinicsTable.id],
+    }),
+    patient: one(patientsTable, {
+      fields: [clinicalAttendancesTable.patientId],
+      references: [patientsTable.id],
+    }),
+    doctor: one(doctorsTable, {
+      fields: [clinicalAttendancesTable.doctorId],
+      references: [doctorsTable.id],
+    }),
+    appointment: one(appointmentsTable, {
+      fields: [clinicalAttendancesTable.appointmentId],
+      references: [appointmentsTable.id],
+    }),
+    diagnoses: many(diagnosesTable),
+    prescriptions: many(prescriptionsTable),
+  }),
+);
+
+export const diagnosisStatusEnum = pgEnum("diagnosis_status", [
+  "active", // ativo
+  "resolved", // resolvido
+  "chronic", // crônico
+]);
+
+export const diagnosesTable = pgTable("diagnoses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patientsTable.id, { onDelete: "cascade" }),
+  attendanceId: uuid("attendance_id").references(
+    () => clinicalAttendancesTable.id,
+    { onDelete: "set null" },
+  ),
+  description: text("description").notNull(),
+  cid10Code: text("cid10_code"), // código CID-10
+  status: diagnosisStatusEnum("status").notNull().default("active"),
+  date: timestamp("date").notNull().defaultNow(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const diagnosesTableRelations = relations(diagnosesTable, ({ one }) => ({
+  clinic: one(clinicsTable, {
+    fields: [diagnosesTable.clinicId],
+    references: [clinicsTable.id],
+  }),
+  patient: one(patientsTable, {
+    fields: [diagnosesTable.patientId],
+    references: [patientsTable.id],
+  }),
+  attendance: one(clinicalAttendancesTable, {
+    fields: [diagnosesTable.attendanceId],
+    references: [clinicalAttendancesTable.id],
+  }),
+}));
+
+export const prescriptionsTable = pgTable("prescriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patientsTable.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").references(() => doctorsTable.id, {
+    onDelete: "set null",
+  }),
+  attendanceId: uuid("attendance_id").references(
+    () => clinicalAttendancesTable.id,
+    { onDelete: "set null" },
+  ),
+  medication: text("medication").notNull(), // medicamento
+  dosage: text("dosage"), // dosagem (ex.: 500mg)
+  frequency: text("frequency"), // frequência (ex.: 8/8h)
+  duration: text("duration"), // duração (ex.: 7 dias)
+  instructions: text("instructions"), // instruções adicionais
+  date: timestamp("date").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const prescriptionsTableRelations = relations(
+  prescriptionsTable,
+  ({ one }) => ({
+    clinic: one(clinicsTable, {
+      fields: [prescriptionsTable.clinicId],
+      references: [clinicsTable.id],
+    }),
+    patient: one(patientsTable, {
+      fields: [prescriptionsTable.patientId],
+      references: [patientsTable.id],
+    }),
+    doctor: one(doctorsTable, {
+      fields: [prescriptionsTable.doctorId],
+      references: [doctorsTable.id],
+    }),
+    attendance: one(clinicalAttendancesTable, {
+      fields: [prescriptionsTable.attendanceId],
+      references: [clinicalAttendancesTable.id],
+    }),
+  }),
+);
+
+export const followUpStatusEnum = pgEnum("follow_up_status", [
+  "pending", // pendente
+  "in_progress", // em andamento
+  "completed", // concluído
+  "cancelled", // cancelado
+]);
+
+/**
+ * Acompanhamento: plano de seguimento do paciente (retornos, controle de
+ * medidas, metas terapêuticas, etc.).
+ */
+export const followUpsTable = pgTable("follow_ups", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patientsTable.id, { onDelete: "cascade" }),
+  title: text("title").notNull(), // título do acompanhamento
+  description: text("description"),
+  status: followUpStatusEnum("status").notNull().default("pending"),
+  scheduledDate: timestamp("scheduled_date"), // data prevista de retorno
+  completedDate: timestamp("completed_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const followUpsTableRelations = relations(
+  followUpsTable,
+  ({ one }) => ({
+    clinic: one(clinicsTable, {
+      fields: [followUpsTable.clinicId],
+      references: [clinicsTable.id],
+    }),
+    patient: one(patientsTable, {
+      fields: [followUpsTable.patientId],
+      references: [patientsTable.id],
     }),
   }),
 );

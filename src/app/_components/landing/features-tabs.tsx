@@ -21,7 +21,7 @@ const FEATURES: Feature[] = [
     id: 1,
     title: "Agendamento Online",
     description:
-      "O paciente marca a consulta sozinho, 24h por dia — sem contactar a recepção.",
+      "O paciente marca a consulta sozinho, 24h por dia, sem contatar a recepcionista.",
     icon: Calendar,
     screenshot: "/images/screenshots/agendamentos.png",
     screenshotAlt: "Tela de agendamento online do M.Agendy",

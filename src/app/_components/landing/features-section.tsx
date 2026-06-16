@@ -12,8 +12,7 @@ export function FeaturesSection() {
             Veja o M.Agendy em ação
           </h2>
           <p className="text-muted-foreground mx-auto max-w-xl text-sm sm:text-base">
-            Passe o mouse sobre cada funcionalidade e veja como é simples usar
-            o M.Agendy no dia a dia da sua clínica.
+            Explore cada recurso e veja como é simples usar.
           </p>
         </ScrollReveal>
 

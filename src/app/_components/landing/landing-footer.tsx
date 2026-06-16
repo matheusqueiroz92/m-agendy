@@ -1,11 +1,10 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useThemeDetection } from "@/hooks/use-theme-detection";
 
 import Logo2 from "../../../../public/images/logo-m-agendy-com-nome-2.png";
@@ -32,29 +31,12 @@ const POLICY_LINKS = [
 
 export function LandingFooter() {
   const footerRef = useRef<HTMLElement>(null);
-  const reducedMotion = useReducedMotion();
   const { mounted } = useThemeDetection();
-
-  const { scrollYProgress } = useScroll({
-    target: footerRef,
-    offset: ["start end", "end end"],
-  });
-
-  const backgroundOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.4, 1],
-    reducedMotion ? [1, 1, 1] : [0.85, 0.95, 1],
-  );
 
   return (
     <motion.footer
       ref={footerRef}
-      className="landing-footer text-white"
-      style={
-        reducedMotion
-          ? undefined
-          : { opacity: backgroundOpacity, willChange: "opacity" }
-      }
+      className="bg-blue-950 text-white"
     >
       <div className="container mx-auto px-4 py-10 sm:py-12 md:py-16">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">

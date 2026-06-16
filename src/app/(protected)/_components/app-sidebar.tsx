@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  FileText,
   Gem,
   LayoutDashboard,
   LogOut,
@@ -50,6 +51,11 @@ const items = [
     title: "Pacientes",
     url: "/patients",
     icon: UsersRound,
+  },
+  {
+    title: "Prontuários",
+    url: "/medical-records",
+    icon: FileText,
   },
   {
     title: "Configurações",
