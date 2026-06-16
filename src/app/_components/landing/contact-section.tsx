@@ -124,7 +124,7 @@ export function ContactSection() {
 
                   <div className="flex items-center gap-4">
                     <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
-                      <IconInstagram width={24} height={24} />
+                      <IconInstagram width={24} height={24} color="#000000" />
                     </div>
                     <div>
                       <p className="text-foreground text-sm font-medium">Instagram</p>
