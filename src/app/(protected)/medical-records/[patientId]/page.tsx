@@ -25,6 +25,9 @@ import {
   patientsTable,
   prescriptionsTable,
 } from "@/db/schema";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeLogMedicalRecordAccess } from "@/core/modules/medical-records/infra/factories/make-log-medical-record-access";
+import { ForbiddenError } from "@/core/shared/domain/errors";
 import { auth } from "@/lib/auth";
 
 import { MedicalRecordHeader } from "./_components/medical-record-header";
@@ -54,6 +57,21 @@ const MedicalRecordPage = async ({ params }: MedicalRecordPageProps) => {
   }
 
   const clinicId = session.user.clinic.id;
+
+  // RBAC de leitura (staff é barrado) + auditoria de acesso (LGPD).
+  const actor = await getAuthenticatedActor();
+  const access = await makeLogMedicalRecordAccess()
+    .execute({ actor, clinicId, patientId })
+    .then(() => "ok" as const)
+    .catch((error) =>
+      error instanceof ForbiddenError ? "forbidden" : "notfound",
+    );
+  if (access === "forbidden") {
+    redirect("/dashboard");
+  }
+  if (access === "notfound") {
+    notFound();
+  }
 
   const patient = await db.query.patientsTable.findFirst({
     where: and(

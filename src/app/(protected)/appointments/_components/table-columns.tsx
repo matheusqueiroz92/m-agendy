@@ -26,6 +26,7 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 export const createAppointmentsTableColumns = (
   doctors: (typeof doctorsTable.$inferSelect)[],
   patients: (typeof patientsTable.$inferSelect)[],
+  professionalLabel: string,
 ): ColumnDef<AppointmentWithRelations>[] => [
   {
     id: "patient",
@@ -46,7 +47,7 @@ export const createAppointmentsTableColumns = (
   {
     id: "doctor",
     accessorKey: "doctor.name",
-    header: "Médico",
+    header: professionalLabel,
     cell: (params) => {
       const appointment = params.row.original;
       return <p>{appointment.doctor.name}</p>;

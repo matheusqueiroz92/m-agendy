@@ -13,6 +13,7 @@ interface StatsCardsProps {
   totalAppointments: number;
   totalPatients: number;
   totalDoctors: number;
+  professionalsLabel: string;
 }
 
 export const StatsCards = ({
@@ -20,6 +21,7 @@ export const StatsCards = ({
   totalAppointments,
   totalPatients,
   totalDoctors,
+  professionalsLabel,
 }: StatsCardsProps) => {
   const stats = [
     {
@@ -38,7 +40,7 @@ export const StatsCards = ({
       icon: UserIcon,
     },
     {
-      label: "Médicos",
+      label: professionalsLabel,
       value: totalDoctors.toString(),
       icon: UsersIcon,
     },

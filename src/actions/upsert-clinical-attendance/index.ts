@@ -1,54 +1,40 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { db } from "@/db";
-import { clinicalAttendancesTable } from "@/db/schema";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeUpsertClinicalAttendance } from "@/core/modules/medical-records/infra/factories/make-clinical-attendance-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { actionClient } from "@/lib/next-safe-action";
 
-import { assertPatientAccess } from "../_helpers/medical-record-auth";
 import { upsertClinicalAttendanceSchema } from "./schema";
 
+/** Delivery shell. Regra no UpsertClinicalAttendanceUseCase. */
 export const upsertClinicalAttendance = actionClient
   .schema(upsertClinicalAttendanceSchema)
   .action(async ({ parsedInput }) => {
-    const { clinicId } = await assertPatientAccess(parsedInput.patientId);
-
-    if (parsedInput.id) {
-      await db
-        .update(clinicalAttendancesTable)
-        .set({
-          doctorId: parsedInput.doctorId,
-          appointmentId: parsedInput.appointmentId,
-          date: parsedInput.date,
-          chiefComplaint: parsedInput.chiefComplaint,
-          historyOfPresentIllness: parsedInput.historyOfPresentIllness,
-          physicalExam: parsedInput.physicalExam,
-          conduct: parsedInput.conduct,
-          notes: parsedInput.notes,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(clinicalAttendancesTable.id, parsedInput.id),
-            eq(clinicalAttendancesTable.clinicId, clinicId),
-          ),
-        );
-    } else {
-      await db.insert(clinicalAttendancesTable).values({
-        clinicId,
-        patientId: parsedInput.patientId,
-        doctorId: parsedInput.doctorId,
-        appointmentId: parsedInput.appointmentId,
-        date: parsedInput.date,
-        chiefComplaint: parsedInput.chiefComplaint,
-        historyOfPresentIllness: parsedInput.historyOfPresentIllness,
-        physicalExam: parsedInput.physicalExam,
-        conduct: parsedInput.conduct,
-        notes: parsedInput.notes,
-      });
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
     }
+
+    const clinicId = resolveCurrentClinicId(actor);
+
+    await makeUpsertClinicalAttendance().execute({
+      actor,
+      clinicId,
+      id: parsedInput.id,
+      patientId: parsedInput.patientId,
+      doctorId: parsedInput.doctorId,
+      appointmentId: parsedInput.appointmentId,
+      date: parsedInput.date,
+      chiefComplaint: parsedInput.chiefComplaint,
+      historyOfPresentIllness: parsedInput.historyOfPresentIllness,
+      physicalExam: parsedInput.physicalExam,
+      conduct: parsedInput.conduct,
+      notes: parsedInput.notes,
+    });
 
     revalidatePath(`/medical-records/${parsedInput.patientId}`);
   });

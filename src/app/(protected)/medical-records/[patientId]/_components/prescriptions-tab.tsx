@@ -1,5 +1,7 @@
 "use client";
 
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
 import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
@@ -115,6 +117,7 @@ export const PrescriptionsTab = ({
   prescriptions,
   doctors,
 }: PrescriptionsTabProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   return (
@@ -154,7 +157,7 @@ export const PrescriptionsTab = ({
                 <TableHead>Data</TableHead>
                 <TableHead>Medicamento</TableHead>
                 <TableHead>Posologia</TableHead>
-                <TableHead>Médico</TableHead>
+                <TableHead>{professionalLabel}</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
 import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
@@ -57,6 +59,7 @@ export const AttendancesTab = ({
   appointments,
   doctors,
 }: AttendancesTabProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -106,7 +109,7 @@ export const AttendancesTab = ({
                     {formatDateTime(attendance.date)}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {attendance.doctor?.name ?? "Médico não informado"}
+                    {attendance.doctor?.name ?? `${professionalLabel} não informado`}
                   </p>
                 </div>
                 <div className="flex gap-1">

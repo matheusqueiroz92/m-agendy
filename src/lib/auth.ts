@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
+import { resolveClinicAccess } from "@/core/modules/clinics/domain/clinic-access";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { usersTable, usersToClinicsTable } from "@/db/schema";
@@ -66,16 +67,43 @@ export const auth = betterAuth({
       ]);
       // TODO: Ao adaptar para o usuário ter múltiplas clínicas, deve-se mudar esse código
       const clinic = clinics?.[0];
+      const clinicRow = clinic?.clinic;
+
+      // Acesso efetivo da clínica: status (bloqueio) + override de plano da
+      // plataforma têm precedência sobre o plano "de base" do dono.
+      const access = clinicRow
+        ? resolveClinicAccess({
+            status: clinicRow.status,
+            planOverride: clinicRow.planOverride ?? null,
+            planOverrideExpiresAt: clinicRow.planOverrideExpiresAt ?? null,
+            basePlan: userData?.plan ?? null,
+            now: new Date(),
+          })
+        : null;
+
       return {
         user: {
           ...user,
-          plan: userData?.plan,
+          // Plano efetivo: respeita cortesia/override concedido pela plataforma.
+          plan: access ? access.effectivePlan : userData?.plan,
+          platformRole: userData?.platformRole ?? "member",
+          // Mantido por compatibilidade (clínica "atual" = primeira).
           clinic: clinic?.clinicId
             ? {
                 id: clinic?.clinicId,
-                name: clinic?.clinic?.name,
+                name: clinicRow?.name,
+                type: clinicRow?.type,
+                status: clinicRow?.status,
+                blockedReason: clinicRow?.blockedReason ?? null,
               }
             : undefined,
+          // Todas as clínicas do usuário com o papel em cada uma.
+          clinics: clinics.map((membership) => ({
+            id: membership.clinicId,
+            name: membership.clinic?.name,
+            type: membership.clinic?.type,
+            role: membership.role,
+          })),
         },
         session,
       };
@@ -97,6 +125,11 @@ export const auth = betterAuth({
       plan: {
         type: "string",
         fieldName: "plan",
+        required: false,
+      },
+      platformRole: {
+        type: "string",
+        fieldName: "platformRole",
         required: false,
       },
     },

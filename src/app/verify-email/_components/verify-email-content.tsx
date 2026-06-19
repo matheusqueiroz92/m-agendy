@@ -37,7 +37,7 @@ export const VerifyEmailContent = () => {
 
         if (response.ok) {
           toast.success("E-mail verificado com sucesso!");
-          router.push("/dashboard");
+          router.push("/entrar");
         } else {
           toast.error("Link de verificação inválido ou expirado.");
         }

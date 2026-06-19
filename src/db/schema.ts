@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -9,6 +10,36 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+
+export const userPlatformRoleEnum = pgEnum("user_platform_role", [
+  "platform_admin",
+  "member",
+]);
+
+export const clinicRoleEnum = pgEnum("clinic_role", [
+  "owner",
+  "manager",
+  "professional",
+  "staff",
+]);
+
+export const clinicTypeEnum = pgEnum("clinic_type", [
+  "medical",
+  "dental",
+  "physiotherapy",
+  "nutrition",
+  "psychology",
+  "multidisciplinary",
+]);
+
+export const clinicStatusEnum = pgEnum("clinic_status", ["active", "blocked"]);
+
+export const appointmentStatusEnum = pgEnum("appointment_status", [
+  "pending",
+  "confirmed",
+  "cancelled",
+  "no_show",
+]);
 
 export const userPlanEnum = pgEnum("user_plan", [
   "trial",
@@ -27,6 +58,9 @@ export const usersTable = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   plan: text("plan"), // modificar aqui para adcionar os planos
+  platformRole: userPlatformRoleEnum("platform_role")
+    .notNull()
+    .default("member"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -78,6 +112,19 @@ export const verificationsTable = pgTable("verifications", {
 export const clinicsTable = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
+  type: clinicTypeEnum("type").notNull().default("medical"),
+  // Status de acesso da clínica (gestão da plataforma). "blocked" suspende o
+  // acesso de todos os usuários da clínica.
+  status: clinicStatusEnum("status").notNull().default("active"),
+  blockedReason: text("blocked_reason"),
+  // Override de plano concedido pela plataforma (ex.: cortesia/desconto),
+  // independente do gateway de pagamento. Tem precedência sobre o plano do dono
+  // enquanto válido. Vazio = sem override (usa o plano do dono).
+  planOverride: text("plan_override"),
+  planOverrideExpiresAt: timestamp("plan_override_expires_at"),
+  // ID do número do WhatsApp (Meta) que atende esta clínica. Permite rotear o
+  // webhook multi-tenant: cada clínica tem seu próprio número.
+  whatsappPhoneNumberId: text("whatsapp_phone_number_id").unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -91,6 +138,7 @@ export const usersToClinicsTable = pgTable("users_to_clinics", {
   clinicId: uuid("clinic_id")
     .notNull()
     .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  role: clinicRoleEnum("role").notNull().default("owner"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -161,6 +209,9 @@ export const patientsTable = pgTable("patients", {
   email: text("email").notNull().unique(),
   phoneNumber: text("phone_number").notNull(),
   sex: patientSexEnum("sex").notNull(),
+  userId: text("user_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -190,6 +241,7 @@ export const appointmentsTable = pgTable("appointments", {
   id: uuid("id").defaultRandom().primaryKey(),
   date: timestamp("date").notNull(),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
+  status: appointmentStatusEnum("status").notNull().default("pending"),
   clinicId: uuid("clinic_id")
     .notNull()
     .references(() => clinicsTable.id, { onDelete: "cascade" }),
@@ -458,3 +510,46 @@ export const followUpsTableRelations = relations(
     }),
   }),
 );
+
+export const auditLogsTable = pgTable("audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id").references(() => clinicsTable.id, {
+    onDelete: "set null",
+  }),
+  actorUserId: text("actor_user_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
+  action: text("action").notNull(),
+  entityType: text("entity_type"),
+  entityId: text("entity_id"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const notificationsTable = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  appointmentId: uuid("appointment_id").references(() => appointmentsTable.id, {
+    onDelete: "set null",
+  }),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const whatsappConversationsTable = pgTable("whatsapp_conversations", {
+  phone: text("phone").primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  step: text("step").notNull(),
+  data: jsonb("data"),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

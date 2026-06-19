@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Bell, Globe, Lock, Shield, User } from "lucide-react";
+import { Bell, Globe, Lock, MessageCircle, Shield, User } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
@@ -45,6 +45,7 @@ const settingsSchema = z.object({
   email: z.string().email("Email inválido"),
   phoneNumber: z.string().optional(),
   clinicName: z.string().min(1, "Nome da clínica é obrigatório"),
+  whatsappPhoneNumberId: z.string().optional(),
   language: z.string(),
   timezone: z.string(),
   emailNotifications: z.boolean(),
@@ -68,9 +69,15 @@ interface SettingsFormProps {
       name: string;
     };
   };
+  canManageClinic?: boolean;
+  clinicWhatsappPhoneNumberId?: string;
 }
 
-export const SettingsForm = ({ user }: SettingsFormProps) => {
+export const SettingsForm = ({
+  user,
+  canManageClinic = false,
+  clinicWhatsappPhoneNumberId = "",
+}: SettingsFormProps) => {
   const updateSettingsAction = useAction(updateSettings, {
     onSuccess: () => {
       toast.success("Configurações atualizadas com sucesso!");
@@ -88,6 +95,7 @@ export const SettingsForm = ({ user }: SettingsFormProps) => {
       email: user.email || "",
       phoneNumber: user.phoneNumber || "",
       clinicName: user.clinic?.name || "",
+      whatsappPhoneNumberId: clinicWhatsappPhoneNumberId || "",
       language: "pt-BR",
       timezone: "America/Sao_Paulo",
       emailNotifications: true,
@@ -221,6 +229,44 @@ export const SettingsForm = ({ user }: SettingsFormProps) => {
                   />
                 </CardContent>
               </Card>
+
+              {canManageClinic && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5" />
+                      Integração WhatsApp
+                    </CardTitle>
+                    <CardDescription>
+                      Vincule o número da sua clínica para confirmações e
+                      agendamento pelo WhatsApp.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <FormField
+                      control={form.control}
+                      name="whatsappPhoneNumberId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ID do número do WhatsApp (Meta)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Ex.: 123456789012345"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            O <strong>phone_number_id</strong> do número no Meta
+                            WhatsApp Cloud API. Roteia as mensagens recebidas
+                            para esta clínica. Deixe em branco para desvincular.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Aba Notificações */}

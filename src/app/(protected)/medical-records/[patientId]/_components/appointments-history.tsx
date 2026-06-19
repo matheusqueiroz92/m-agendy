@@ -1,5 +1,7 @@
 "use client";
 
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
 import { CalendarDays } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,7 @@ interface AppointmentsHistoryProps {
 export const AppointmentsHistory = ({
   appointments,
 }: AppointmentsHistoryProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
   return (
     <Card>
       <CardHeader>
@@ -49,7 +52,7 @@ export const AppointmentsHistory = ({
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
-                <TableHead>Médico</TableHead>
+                <TableHead>{professionalLabel}</TableHead>
                 <TableHead>Especialidade</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Situação</TableHead>

@@ -4,6 +4,7 @@ import { CalendarX } from "lucide-react";
 
 import { DataNotFound } from "@/components/ui/data-not-found";
 import { DataTable } from "@/components/ui/data-table";
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 
 import { createAppointmentsTableColumns } from "./table-columns";
@@ -33,9 +34,11 @@ export const AppointmentsTable = ({
   doctors,
   patients,
 }: AppointmentsTableProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
   const appointmentsTableColumns = createAppointmentsTableColumns(
     doctors,
     patients,
+    professionalLabel,
   );
 
   if (appointments.length === 0) {

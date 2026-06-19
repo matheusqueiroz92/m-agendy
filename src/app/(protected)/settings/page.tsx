@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,6 +17,9 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { db } from "@/db";
+import { clinicsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import { SettingsForm } from "./_components/settings-form";
@@ -36,6 +40,18 @@ const SettingsPage = async () => {
   if (!session.user.plan) {
     redirect("/new-subscription");
   }
+
+  const clinicId = session.user.clinic.id;
+
+  // Apenas gestores (owner/manager) ou admin de plataforma configuram a
+  // integração do WhatsApp (número da clínica).
+  const actor = await getAuthenticatedActor();
+  const canManageClinic = actor?.canManageClinic(clinicId) ?? false;
+
+  const clinic = await db.query.clinicsTable.findFirst({
+    where: eq(clinicsTable.id, clinicId),
+    columns: { whatsappPhoneNumberId: true },
+  });
 
   return (
     <PageContainer>
@@ -59,7 +75,11 @@ const SettingsPage = async () => {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <SettingsForm user={session.user} />
+        <SettingsForm
+          user={session.user}
+          canManageClinic={canManageClinic}
+          clinicWhatsappPhoneNumberId={clinic?.whatsappPhoneNumberId ?? ""}
+        />
       </PageContent>
     </PageContainer>
   );

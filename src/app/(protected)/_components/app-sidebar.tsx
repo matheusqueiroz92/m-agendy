@@ -1,19 +1,24 @@
 "use client";
 
 import {
+  Bell,
   CalendarDays,
   FileText,
   Gem,
   LayoutDashboard,
   LogOut,
   Settings,
+  ShieldCheck,
   Stethoscope,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useEffect } from "react";
 
+import { countUnreadNotifications } from "@/actions/count-unread-notifications";
 import {
   Sidebar,
   SidebarContent,
@@ -23,50 +28,64 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { getProfessionalLabels } from "@/core/modules/clinics/domain/clinic-type";
 import { authClient } from "@/lib/auth-client";
 
 import Logo from "../../../../public/images/logo-m-agendy-com-nome.png";
 import Logo2 from "../../../../public/images/logo-m-agendy-com-nome-2.png";
 
 const items = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Agendamentos",
-    url: "/appointments",
-    icon: CalendarDays,
-  },
-  {
-    title: "Médicos",
-    url: "/doctors",
-    icon: Stethoscope,
-  },
-  {
-    title: "Pacientes",
-    url: "/patients",
-    icon: UsersRound,
-  },
-  {
-    title: "Prontuários",
-    url: "/medical-records",
-    icon: FileText,
-  },
-  {
-    title: "Configurações",
-    url: "/settings",
-    icon: Settings,
-  },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Agendamentos", url: "/appointments", icon: CalendarDays },
+  { title: "Médicos", url: "/doctors", icon: Stethoscope },
+  { title: "Pacientes", url: "/patients", icon: UsersRound },
+  { title: "Prontuários", url: "/medical-records", icon: FileText },
+  { title: "Notificações", url: "/notifications", icon: Bell },
+  { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
 export const AppSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const isPlatformAdmin = session?.user?.platformRole === "platform_admin";
+  const professionalsLabel = getProfessionalLabels(
+    session?.user?.clinic?.type,
+  ).plural;
+
+  const user = session?.user as
+    | {
+        clinic?: { id?: string };
+        clinics?: { id: string; role: string }[];
+      }
+    | undefined;
+  const clinicRole = user?.clinics?.find(
+    (membership) => membership.id === user?.clinic?.id,
+  )?.role;
+  // Recepção (staff) não acessa dados clínicos: oculta Prontuários.
+  const canAccessClinicalData =
+    isPlatformAdmin || (clinicRole != null && clinicRole !== "staff");
+
+  const { execute: refreshUnread, result: unreadResult } = useAction(
+    countUnreadNotifications,
+  );
+  const unreadCount = unreadResult?.data?.count ?? 0;
+
+  // Atualiza o badge ao montar, ao trocar de rota (ex.: sair de /notifications,
+  // que marca tudo como lido) e a cada 60s.
+  useEffect(() => {
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 60_000);
+    return () => clearInterval(interval);
+  }, [pathname, refreshUnread]);
+
+  const visibleItems = items.filter(
+    (item) => item.url !== "/medical-records" || canAccessClinicalData,
+  );
 
   const handleSignOut = () => {
     authClient.signOut({
@@ -105,11 +124,15 @@ export const AppSidebar = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive = pathname === item.url;
+                const title =
+                  item.url === "/doctors" ? professionalsLabel : item.title;
+                const showBadge =
+                  item.url === "/notifications" && unreadCount > 0;
 
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
@@ -117,9 +140,14 @@ export const AppSidebar = () => {
                     >
                       <Link href={item.url}>
                         <item.icon aria-hidden="true" />
-                        <span>{item.title}</span>
+                        <span>{title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {showBadge && (
+                      <SidebarMenuBadge className="bg-primary text-primary-foreground">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </SidebarMenuBadge>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -149,6 +177,31 @@ export const AppSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {isPlatformAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] uppercase tracking-widest text-muted-foreground/70">
+              Plataforma
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === "/admin"}
+                    className={
+                      pathname === "/admin" ? activeNavClassName : undefined
+                    }
+                  >
+                    <Link href="/admin">
+                      <ShieldCheck aria-hidden="true" />
+                      <span>Administração</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

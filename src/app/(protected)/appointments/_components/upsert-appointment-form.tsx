@@ -37,13 +37,14 @@ import {
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 import { useAvailableTimeSlots } from "@/hooks/use-available-time-slots";
 import { useInvalidateTimeSlots } from "@/hooks/use-invalidate-time-slots";
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
 
 const formSchema = z.object({
   patientId: z.string().min(1, {
     message: "Paciente é obrigatório.",
   }),
   doctorId: z.string().min(1, {
-    message: "Médico é obrigatório.",
+    message: "Profissional é obrigatório.",
   }),
   appointmentPriceInCents: z.number().min(1, {
     message: "Valor da consulta é obrigatório.",
@@ -104,6 +105,7 @@ export const UpsertAppointmentForm = ({
   });
 
   const watchedDate = form.watch("date");
+  const { singular: professionalLabel } = useProfessionalLabels();
 
   // Hook para buscar horários disponíveis
   const {
@@ -293,11 +295,13 @@ export const UpsertAppointmentForm = ({
             name="doctorId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Médico</FormLabel>
+                <FormLabel>{professionalLabel}</FormLabel>
                 <Select onValueChange={handleDoctorChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um médico" />
+                      <SelectValue
+                        placeholder={`Selecione um ${professionalLabel.toLowerCase()}`}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

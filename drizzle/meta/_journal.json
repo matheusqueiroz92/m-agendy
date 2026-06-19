@@ -22,6 +22,41 @@
       "when": 1781544407611,
       "tag": "0002_military_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781698600683,
+      "tag": "0003_overconfident_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781703729787,
+      "tag": "0004_dapper_albert_cleary",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781751356963,
+      "tag": "0005_worried_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781753591876,
+      "tag": "0006_cynical_marrow",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781754581433,
+      "tag": "0007_illegal_ultimatum",
+      "breakpoints": true
     }
   ]
 }

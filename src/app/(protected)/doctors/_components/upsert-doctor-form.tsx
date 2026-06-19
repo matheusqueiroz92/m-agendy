@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
@@ -33,9 +35,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getClinicTypeConfig } from "@/core/modules/clinics/domain/clinic-type";
 import { doctorsTable } from "@/db/schema";
-
-import { medicalSpecialties } from "../_constants";
+import { authClient } from "@/lib/auth-client";
 
 const formSchema = z
   .object({
@@ -82,6 +84,11 @@ export const UpsertDoctorForm = ({
   doctor,
   onSuccess,
 }: UpsertDoctorFormProps) => {
+  const { data: session } = authClient.useSession();
+  const config = getClinicTypeConfig(session?.user?.clinic?.type);
+  const singular = config.professionalSingular;
+  const singularLower = singular.toLowerCase();
+
   const form = useForm<z.infer<typeof formSchema>>({
     shouldUnregister: true,
     resolver: zodResolver(formSchema),
@@ -103,15 +110,13 @@ export const UpsertDoctorForm = ({
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
       toast.success(
-        doctor
-          ? "Médico atualizado com sucesso."
-          : "Médico adicionado com sucesso.",
+        `${singular} ${doctor ? "atualizado" : "adicionado"} com sucesso.`,
       );
       onSuccess?.();
     },
     onError: (error) => {
       console.log(error);
-      toast.error("Erro ao salvar médico.");
+      toast.error(`Erro ao salvar ${singularLower}.`);
     },
   });
 
@@ -130,11 +135,13 @@ export const UpsertDoctorForm = ({
   return (
     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>{doctor ? doctor.name : "Adicionar médico"}</DialogTitle>
+        <DialogTitle>
+          {doctor ? doctor.name : `Adicionar ${singularLower}`}
+        </DialogTitle>
         <DialogDescription>
           {doctor
-            ? "Edite as informações desse médico."
-            : "Adicione um novo médico."}
+            ? `Edite as informações desse ${singularLower}.`
+            : `Adicione um novo ${singularLower}.`}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -144,7 +151,7 @@ export const UpsertDoctorForm = ({
             name="avatarImageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Foto do médico</FormLabel>
+                <FormLabel>Foto do {singularLower}</FormLabel>
                 <FormControl>
                   <ImageUpload
                     value={field.value}
@@ -201,26 +208,21 @@ export const UpsertDoctorForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Especialidade</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione uma especialidade" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {medicalSpecialties.map((speciality) => (
-                      <SelectItem
-                        key={speciality.value}
-                        value={speciality.value}
-                      >
-                        {speciality.label}
-                      </SelectItem>
+                <FormControl>
+                  <Input
+                    {...field}
+                    list="speciality-suggestions"
+                    placeholder="Digite ou selecione a especialidade"
+                    disabled={upsertDoctorAction.isPending}
+                  />
+                </FormControl>
+                {config.specialties.length > 0 && (
+                  <datalist id="speciality-suggestions">
+                    {config.specialties.map((speciality) => (
+                      <option key={speciality} value={speciality} />
                     ))}
-                  </SelectContent>
-                </Select>
+                  </datalist>
+                )}
                 <FormMessage />
               </FormItem>
             )}

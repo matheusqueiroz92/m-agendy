@@ -1,15 +1,17 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
 
-import { db } from "@/db";
-import { doctorsTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeDeleteProfessional } from "@/core/modules/professionals/infra/factories/make-professional-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { actionClient } from "@/lib/next-safe-action";
 
+/**
+ * Delivery shell do delete de profissional. Regra no DeleteProfessionalUseCase.
+ */
 export const deleteDoctor = actionClient
   .schema(
     z.object({
@@ -17,27 +19,18 @@ export const deleteDoctor = actionClient
     }),
   )
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({
-      headers: await headers(),
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
+    }
+
+    const clinicId = resolveCurrentClinicId(actor);
+
+    await makeDeleteProfessional().execute({
+      actor,
+      clinicId,
+      professionalId: parsedInput.id,
     });
-
-    if (!session?.user) {
-      throw new Error("Unauthorized");
-    }
-
-    const doctor = await db.query.doctorsTable.findFirst({
-      where: eq(doctorsTable.id, parsedInput.id),
-    });
-
-    if (!doctor) {
-      throw new Error("Médico não encontrado");
-    }
-
-    if (doctor.clinicId !== session.user.clinic?.id) {
-      throw new Error("Médico não encontrado");
-    }
-
-    await db.delete(doctorsTable).where(eq(doctorsTable.id, parsedInput.id));
 
     revalidatePath("/doctors");
   });

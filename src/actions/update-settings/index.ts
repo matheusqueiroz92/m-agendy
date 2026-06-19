@@ -31,6 +31,7 @@ export const updateSettings = actionClient
       email,
       // phoneNumber,
       clinicName,
+      whatsappPhoneNumberId,
       // As configurações de notificação e preferências poderiam ser salvas
       // em uma tabela separada de configurações, por enquanto vamos apenas
       // atualizar os dados básicos do usuário e clínica
@@ -48,11 +49,14 @@ export const updateSettings = actionClient
       })
       .where(eq(usersTable.id, session.user.id));
 
-    // Atualizar nome da clínica
+    // Atualizar dados da clínica (nome + ID do número do WhatsApp).
+    // Campo do WhatsApp é trim; vazio vira null (desvincula o número).
+    const normalizedWhatsappId = whatsappPhoneNumberId?.trim() || null;
     await db
       .update(clinicsTable)
       .set({
         name: clinicName,
+        whatsappPhoneNumberId: normalizedWhatsappId,
         updatedAt: new Date(),
       })
       .where(eq(clinicsTable.id, session.user.clinic.id));

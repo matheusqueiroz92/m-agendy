@@ -20,6 +20,7 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
+import { getClinicTypeConfig } from "@/core/modules/clinics/domain/clinic-type";
 import { db } from "@/db";
 import { doctorsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -44,6 +45,10 @@ const DoctorsPage = async () => {
     redirect("/new-subscription");
   }
 
+  const config = getClinicTypeConfig(session.user.clinic.type);
+  const plural = config.professionalPlural;
+  const singular = config.professionalSingular.toLowerCase();
+
   const doctors = await db.query.doctorsTable.findMany({
     where: eq(doctorsTable.clinicId, session.user.clinic.id),
   });
@@ -57,14 +62,16 @@ const DoctorsPage = async () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Médicos
+            {plural}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Médicos</PageTitle>
-          <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
+          <PageTitle>{plural}</PageTitle>
+          <PageDescription>
+            Gerencie os profissionais da sua clínica
+          </PageDescription>
         </PageHeaderContent>
         <PageActions>
           <AddDoctorButton />
@@ -79,8 +86,8 @@ const DoctorsPage = async () => {
           </div>
         ) : (
           <DataNotFound
-            title="Nenhum médico cadastrado!"
-            description="Ainda não há médicos cadastrados. Adicione um médico ao sistema."
+            title={`Nenhum ${singular} cadastrado!`}
+            description={`Ainda não há ${plural.toLowerCase()} cadastrados. Adicione um ${singular} ao sistema.`}
             icon={<SearchX className="text-muted-foreground h-8 w-8" />}
           />
         )}

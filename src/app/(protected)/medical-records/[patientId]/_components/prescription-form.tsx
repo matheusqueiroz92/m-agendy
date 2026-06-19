@@ -1,5 +1,7 @@
 "use client";
 
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
@@ -63,6 +65,7 @@ export const PrescriptionForm = ({
   prescription,
   onSuccess,
 }: PrescriptionFormProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -184,7 +187,7 @@ export const PrescriptionForm = ({
             name="doctorId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Médico responsável (opcional)</FormLabel>
+                <FormLabel>{professionalLabel} responsável (opcional)</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -192,7 +195,7 @@ export const PrescriptionForm = ({
                 >
                   <FormControl>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione o médico" />
+                      <SelectValue placeholder={`Selecione o ${professionalLabel.toLowerCase()}`} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

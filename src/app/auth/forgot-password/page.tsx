@@ -15,7 +15,7 @@ const ForgotPasswordPage = async () => {
   });
 
   if (session?.user) {
-    redirect("/dashboard");
+    redirect("/entrar");
   }
 
   return (

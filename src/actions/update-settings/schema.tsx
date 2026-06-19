@@ -5,6 +5,7 @@ export const updateSettingsSchema = z.object({
   email: z.string().email("Email inválido"),
   phoneNumber: z.string().optional(),
   clinicName: z.string().min(1, "Nome da clínica é obrigatório"),
+  whatsappPhoneNumberId: z.string().optional(),
   language: z.string(),
   timezone: z.string(),
   emailNotifications: z.boolean(),

@@ -58,7 +58,7 @@ const LoginForm = () => {
       },
       {
         onSuccess: () => {
-          router.push("/dashboard");
+          router.push("/entrar");
         },
         onError: () => {
           toast.error("E-mail ou senha inválidos.");
@@ -70,14 +70,14 @@ const LoginForm = () => {
   const handleGoogleLogin = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: "/entrar",
     });
   };
 
   const handleGithubLogin = async () => {
     await authClient.signIn.social({
       provider: "github",
-      callbackURL: "/dashboard",
+      callbackURL: "/entrar",
     });
   };
 

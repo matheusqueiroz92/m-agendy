@@ -1,6 +1,5 @@
 "use client";
 
-import { loadStripe } from "@stripe/stripe-js";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
@@ -18,6 +17,8 @@ import {
 interface PricingCardProps {
   active?: boolean;
   userEmail?: string;
+  /** Id do plano no catálogo (essential/premium/gold...). */
+  planId?: string;
   planName?: string;
   price?: number;
   features?: string[];
@@ -27,6 +28,7 @@ interface PricingCardProps {
 export const SubscriptionPlan = ({
   active,
   userEmail,
+  planId = "premium",
   planName,
   features,
   price,
@@ -35,29 +37,17 @@ export const SubscriptionPlan = ({
   const router = useRouter();
 
   const createStripeCheckoutAction = useAction(createStripeCheckout, {
-    onSuccess: async ({ data }) => {
-      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-        throw new Error("Stripe publishable key is not set");
+    onSuccess: ({ data }) => {
+      // Redireciona para o checkout hospedado do gateway ativo. Agnóstico de
+      // provedor: a UI só precisa da URL devolvida pelo caso de uso.
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
       }
-
-      const stripe = await loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-      );
-
-      if (!stripe) {
-        throw new Error("Stripe is not loaded");
-      }
-
-      if (!data?.sessionId) {
-        throw new Error("Session ID is not found");
-      }
-
-      await stripe?.redirectToCheckout({ sessionId: data?.sessionId });
     },
   });
 
   const handleSubscribeClick = async () => {
-    createStripeCheckoutAction.execute();
+    createStripeCheckoutAction.execute({ plan: planId });
   };
 
   const handleManageSubscriptionClick = () => {

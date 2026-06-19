@@ -27,6 +27,8 @@ import { AppointmentsTable } from "../appointments/_components/appointments-tabl
 import { AppointmentsChart } from "./_components/appointments-chart";
 import { DatePicker } from "./_components/date-picker";
 import { StatsCards } from "./_components/stats-cards";
+import { getClinicTypeConfig } from "@/core/modules/clinics/domain/clinic-type";
+import { planHasFeature } from "@/core/modules/billing/domain/entitlements";
 import { TopDoctors } from "./_components/top-doctors";
 import { TopSpecialities } from "./_components/top-specialities";
 
@@ -49,6 +51,10 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
   if (!session.user.clinic) {
     redirect("/clinic-form");
   }
+
+  const professionalConfig = getClinicTypeConfig(
+    session.user.clinic.type,
+  );
 
   if (!session.user.plan) {
     redirect("/new-subscription");
@@ -90,6 +96,8 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     },
   });
 
+  const showDetailedMetrics = planHasFeature(session.user.plan, "detailedMetrics");
+
   return (
     <PageContainer>
       <Breadcrumb>
@@ -120,12 +128,27 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
           totalAppointments={totalAppointments.total}
           totalPatients={totalPatients.total}
           totalDoctors={totalDoctors.total}
+          professionalsLabel={professionalConfig.professionalPlural}
         />
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
-          <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
-          <TopDoctors topDoctors={topDoctors} />
-        </div>
+        {showDetailedMetrics ? (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+            <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
+            <TopDoctors
+              topDoctors={topDoctors}
+              professionalsLabel={professionalConfig.professionalPlural}
+              professionalSingular={professionalConfig.professionalSingular}
+            />
+          </div>
+        ) : (
+          <PageSection title="Métricas detalhadas">
+            <p className="text-muted-foreground text-sm">
+              Gráficos e rankings de desempenho estão disponíveis nos planos
+              Premium e Gold. Faça upgrade na página de Assinatura para
+              desbloquear as métricas detalhadas.
+            </p>
+          </PageSection>
+        )}
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
           <PageSection title="Consultas recentes">
@@ -135,7 +158,9 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
               patients={patients}
             />
           </PageSection>
-          <TopSpecialities topSpecialities={topSpecialities} />
+          {showDetailedMetrics && (
+            <TopSpecialities topSpecialities={topSpecialities} />
+          )}
         </div>
       </PageContent>
     </PageContainer>

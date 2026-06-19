@@ -12,11 +12,17 @@ interface TopDoctorsProps {
     speciality: string;
     appointments: number;
   }[];
+  professionalsLabel: string;
+  professionalSingular: string;
 }
 
-export const TopDoctors = ({ topDoctors }: TopDoctorsProps) => {
+export const TopDoctors = ({
+  topDoctors,
+  professionalsLabel,
+  professionalSingular,
+}: TopDoctorsProps) => {
   return (
-    <PageSection title="Médicos em destaque">
+    <PageSection title={`${professionalsLabel} em destaque`}>
       <div className="space-y-6">
         {topDoctors.length > 0 ? (
           topDoctors.map((doctor) => (
@@ -55,8 +61,8 @@ export const TopDoctors = ({ topDoctors }: TopDoctorsProps) => {
           ))
         ) : (
           <DataNotFound
-            title="Nenhum médico cadastrado!"
-            description="Ainda não há médicos cadastrados. Adicione um médico ao sistema."
+            title={`Nenhum ${professionalSingular.toLowerCase()} cadastrado!`}
+            description={`Ainda não há ${professionalsLabel.toLowerCase()} cadastrados. Adicione um ${professionalSingular.toLowerCase()} ao sistema.`}
             icon={<SearchX className="text-muted-foreground h-8 w-8" />}
           />
         )}

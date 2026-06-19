@@ -1,48 +1,37 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { db } from "@/db";
-import { followUpsTable } from "@/db/schema";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeUpsertFollowUp } from "@/core/modules/medical-records/infra/factories/make-follow-up-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { actionClient } from "@/lib/next-safe-action";
 
-import { assertPatientAccess } from "../_helpers/medical-record-auth";
 import { upsertFollowUpSchema } from "./schema";
 
+/** Delivery shell. Regra no UpsertFollowUpUseCase. */
 export const upsertFollowUp = actionClient
   .schema(upsertFollowUpSchema)
   .action(async ({ parsedInput }) => {
-    const { clinicId } = await assertPatientAccess(parsedInput.patientId);
-
-    if (parsedInput.id) {
-      await db
-        .update(followUpsTable)
-        .set({
-          title: parsedInput.title,
-          description: parsedInput.description,
-          status: parsedInput.status,
-          scheduledDate: parsedInput.scheduledDate,
-          completedDate: parsedInput.completedDate,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(followUpsTable.id, parsedInput.id),
-            eq(followUpsTable.clinicId, clinicId),
-          ),
-        );
-    } else {
-      await db.insert(followUpsTable).values({
-        clinicId,
-        patientId: parsedInput.patientId,
-        title: parsedInput.title,
-        description: parsedInput.description,
-        status: parsedInput.status,
-        scheduledDate: parsedInput.scheduledDate,
-        completedDate: parsedInput.completedDate,
-      });
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
     }
+
+    const clinicId = resolveCurrentClinicId(actor);
+
+    await makeUpsertFollowUp().execute({
+      actor,
+      clinicId,
+      id: parsedInput.id,
+      patientId: parsedInput.patientId,
+      title: parsedInput.title,
+      description: parsedInput.description,
+      status: parsedInput.status,
+      scheduledDate: parsedInput.scheduledDate,
+      completedDate: parsedInput.completedDate,
+    });
 
     revalidatePath(`/medical-records/${parsedInput.patientId}`);
   });

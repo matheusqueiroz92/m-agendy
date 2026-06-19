@@ -16,6 +16,14 @@ const NewSubscriptionPage = async () => {
     redirect("/auth");
   }
 
+  // Clínica bloqueada não deve cair na tela de assinatura: vai para a suspensão.
+  if (
+    (session.user.clinic as { status?: string } | undefined)?.status ===
+    "blocked"
+  ) {
+    redirect("/clinic-suspended");
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-12">
@@ -48,6 +56,7 @@ const NewSubscriptionPage = async () => {
           <div className="w-full max-w-md">
             <SubscriptionPlan
               userEmail={session.user.email}
+              planId="essential"
               planName="Essential"
               features={PlanFeatures.essential}
               price={39}
@@ -58,6 +67,7 @@ const NewSubscriptionPage = async () => {
           <div className="w-full max-w-md">
             <SubscriptionPlan
               userEmail={session.user.email}
+              planId="premium"
               planName="Premium"
               features={PlanFeatures.premium}
               price={59}
@@ -68,6 +78,7 @@ const NewSubscriptionPage = async () => {
           <div className="w-full max-w-md">
             <SubscriptionPlan
               userEmail={session.user.email}
+              planId="gold"
               planName="Gold"
               features={PlanFeatures.gold}
               price={99}

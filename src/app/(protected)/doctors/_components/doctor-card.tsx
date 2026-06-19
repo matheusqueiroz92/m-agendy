@@ -1,5 +1,7 @@
 "use client";
 
+import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
 import {
   CalendarIcon,
   ClockIcon,
@@ -44,14 +46,16 @@ interface DoctorCardProps {
 }
 
 export const DoctorCard = ({ doctor }: DoctorCardProps) => {
+  const { singular: professionalLabel } = useProfessionalLabels();
+  const professionalLower = professionalLabel.toLowerCase();
   const [isUpsertDoctorDialogOpen, setIsUpsertDoctorDialogOpen] =
     useState(false);
   const deleteDoctorAction = useAction(deleteDoctor, {
     onSuccess: () => {
-      toast.success("Médico deletado com sucesso.");
+      toast.success(`${professionalLabel} deletado com sucesso.`);
     },
     onError: () => {
-      toast.error("Erro ao deletar médico.");
+      toast.error(`Erro ao deletar ${professionalLower}.`);
     },
   });
   const handleDeleteDoctorClick = () => {
@@ -116,16 +120,16 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
           <AlertDialogTrigger asChild>
             <Button variant="outline" className="w-full">
               <TrashIcon />
-              Deletar médico
+              Deletar {professionalLower}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                Tem certeza que deseja deletar esse médico?
+                Tem certeza que deseja deletar esse {professionalLower}?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Essa ação não pode ser revertida. Isso irá deletar o médico e
+                Essa ação não pode ser revertida. Isso irá deletar o {professionalLower} e
                 todas as consultas agendadas.
               </AlertDialogDescription>
             </AlertDialogHeader>

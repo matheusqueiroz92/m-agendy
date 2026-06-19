@@ -1,15 +1,17 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
 
-import { db } from "@/db";
-import { patientsTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeDeletePatient } from "@/core/modules/patients/infra/factories/make-patient-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { actionClient } from "@/lib/next-safe-action";
 
+/**
+ * Delivery shell do delete de paciente. Regra no DeletePatientUseCase.
+ */
 export const deletePatient = actionClient
   .schema(
     z.object({
@@ -17,27 +19,18 @@ export const deletePatient = actionClient
     }),
   )
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({
-      headers: await headers(),
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
+    }
+
+    const clinicId = resolveCurrentClinicId(actor);
+
+    await makeDeletePatient().execute({
+      actor,
+      clinicId,
+      patientId: parsedInput.id,
     });
-
-    if (!session?.user) {
-      throw new Error("Unauthorized");
-    }
-
-    const patient = await db.query.patientsTable.findFirst({
-      where: eq(patientsTable.id, parsedInput.id),
-    });
-
-    if (!patient) {
-      throw new Error("Paciente não encontrado");
-    }
-
-    if (patient.clinicId !== session.user.clinic?.id) {
-      throw new Error("Paciente não encontrado");
-    }
-
-    await db.delete(patientsTable).where(eq(patientsTable.id, parsedInput.id));
 
     revalidatePath("/patients");
   });

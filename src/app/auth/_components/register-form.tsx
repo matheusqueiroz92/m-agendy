@@ -59,7 +59,7 @@ const RegisterForm = () => {
         email: data.email,
         password: data.password,
         name: data.name,
-        callbackURL: "/dashboard",
+        callbackURL: "/entrar",
       },
       {
         onSuccess: () => {

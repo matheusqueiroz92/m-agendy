@@ -1,17 +1,17 @@
 "use server";
 
-import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 
-import { db } from "@/db";
-import { appointmentsTable } from "@/db/schema";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeUpsertAppointment } from "@/core/modules/scheduling/infra/factories/make-appointment-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { auth } from "@/lib/auth";
+import { actionClient } from "@/lib/next-safe-action";
 
-const createAppointmentSchema = z.object({
+const schema = z.object({
   id: z.string().uuid().optional(),
   patientId: z.string().uuid(),
   doctorId: z.string().uuid(),
@@ -20,88 +20,38 @@ const createAppointmentSchema = z.object({
   time: z.string().min(1),
 });
 
-const actionClient = createSafeActionClient();
-
+/**
+ * Delivery shell do agendamento (painel). Combina data + horário e delega ao
+ * UpsertAppointmentUseCase, que detém a regra (autorização, conflito, tenant).
+ */
 export const upsertAppointment = actionClient
-  .schema(createAppointmentSchema)
-  .action(
-    async ({
-      parsedInput: {
-        id,
-        patientId,
-        doctorId,
-        appointmentPriceInCents,
-        date,
-        time,
-      },
-    }) => {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+  .schema(schema)
+  .action(async ({ parsedInput }) => {
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
+    }
 
-      if (!session?.user) {
-        redirect("/auth");
-      }
+    const clinicId = resolveCurrentClinicId(actor);
+    const session = await auth.api.getSession({ headers: await headers() });
 
-      if (!session?.user?.clinic) {
-        redirect("/clinic-form");
-      }
+    const [hours, minutes] = parsedInput.time.split(":").map(Number);
+    const scheduledAt = new Date(parsedInput.date);
+    scheduledAt.setHours(hours, minutes, 0, 0);
 
-      // Combina a data com o horário para criar o timestamp completo
-      const [hours, minutes] = time.split(":").map(Number);
-      const appointmentDateTime = new Date(date);
-      appointmentDateTime.setHours(hours, minutes, 0, 0);
+    const result = await makeUpsertAppointment().execute({
+      actor,
+      clinicId,
+      plan: session?.user?.plan ?? null,
+      id: parsedInput.id,
+      patientId: parsedInput.patientId,
+      doctorId: parsedInput.doctorId,
+      scheduledAt,
+      priceInCents: parsedInput.appointmentPriceInCents,
+    });
 
-      // VALIDAÇÃO DE CONFLITO: Verificar se já existe agendamento no mesmo horário para o mesmo médico
-      const existingAppointment = await db.query.appointmentsTable.findFirst({
-        where: and(
-          eq(appointmentsTable.doctorId, doctorId),
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          eq(appointmentsTable.date, appointmentDateTime),
-          // Se estiver editando, excluir o próprio agendamento da verificação
-          id ? ne(appointmentsTable.id, id) : undefined,
-        ),
-      });
+    revalidatePath("/appointments");
+    revalidatePath("/dashboard");
 
-      if (existingAppointment) {
-        throw new Error(
-          `Já existe um agendamento para este médico no horário ${time}. Por favor, escolha outro horário.`,
-        );
-      }
-
-      let appointment;
-
-      if (id) {
-        // Atualizar agendamento existente
-        appointment = await db
-          .update(appointmentsTable)
-          .set({
-            patientId,
-            doctorId,
-            clinicId: session.user.clinic.id,
-            date: appointmentDateTime,
-            appointmentPriceInCents,
-            updatedAt: new Date(),
-          })
-          .where(eq(appointmentsTable.id, id))
-          .returning();
-      } else {
-        // Criar novo agendamento
-        appointment = await db
-          .insert(appointmentsTable)
-          .values({
-            patientId,
-            doctorId,
-            clinicId: session.user.clinic.id,
-            date: appointmentDateTime,
-            appointmentPriceInCents,
-          })
-          .returning();
-      }
-
-      revalidatePath("/appointments");
-      revalidatePath("/dashboard");
-
-      return { appointment: appointment[0] };
-    },
-  );
+    return { appointmentId: result.appointmentId };
+  });

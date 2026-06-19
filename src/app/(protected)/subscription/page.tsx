@@ -58,6 +58,7 @@ const SubscriptionPage = async () => {
           <SubscriptionPlan
             active={session.user.plan === "premium"}
             userEmail={session.user.email}
+            planId="premium"
             planName="Premium"
             price={59}
             features={PlanFeatures.premium}

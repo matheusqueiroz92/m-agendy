@@ -1,38 +1,32 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 
-import { db } from "@/db";
-import { appointmentsTable } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
+import { makeDeleteAppointment } from "@/core/modules/scheduling/infra/factories/make-appointment-use-cases";
+import { UnauthorizedError } from "@/core/shared/domain/errors";
+import { actionClient } from "@/lib/next-safe-action";
 
-const deleteAppointmentSchema = z.object({
-  id: z.string().uuid(),
-});
-
-const actionClient = createSafeActionClient();
-
+/**
+ * Delivery shell do delete de agendamento. Regra no DeleteAppointmentUseCase.
+ */
 export const deleteAppointment = actionClient
-  .schema(deleteAppointmentSchema)
-  .action(async ({ parsedInput: { id } }) => {
-    const session = await auth.api.getSession({
-      headers: await headers(),
+  .schema(z.object({ id: z.string().uuid() }))
+  .action(async ({ parsedInput }) => {
+    const actor = await getAuthenticatedActor();
+    if (!actor) {
+      throw new UnauthorizedError();
+    }
+
+    const clinicId = resolveCurrentClinicId(actor);
+
+    await makeDeleteAppointment().execute({
+      actor,
+      clinicId,
+      appointmentId: parsedInput.id,
     });
-
-    if (!session?.user) {
-      redirect("/auth");
-    }
-
-    if (!session?.user?.clinic) {
-      redirect("/clinic-form");
-    }
-
-    await db.delete(appointmentsTable).where(eq(appointmentsTable.id, id));
 
     revalidatePath("/appointments");
 

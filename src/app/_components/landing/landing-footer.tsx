@@ -7,7 +7,7 @@ import { useRef } from "react";
 
 import { useThemeDetection } from "@/hooks/use-theme-detection";
 
-import Logo2 from "../../../../public/images/logo-m-agendy-com-nome-2.png";
+import LogoFooter from "../../../../public/images/logo-m-agendy-com-nome-4.png";
 
 const QUICK_LINKS = [
   { href: "#recursos", label: "Recursos" },
@@ -44,11 +44,11 @@ export function LandingFooter() {
             <div className="mb-4">
               {mounted ? (
                 <Image
-                  src={Logo2}
+                  src={LogoFooter}
                   alt="M.Agendy"
                   width={160}
                   height={48}
-                  className="h-10 w-auto brightness-0 invert"
+                  className="h-10 w-auto"
                 />
               ) : (
                 <span className="text-lg font-semibold">M.Agendy</span>

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/page-container";
 import { db } from "@/db";
 import { patientsTable } from "@/db/schema";
+import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
 import { auth } from "@/lib/auth";
 
 import { PatientRecordsList } from "./_components/patient-records-list";
@@ -39,6 +40,12 @@ const MedicalRecordsPage = async () => {
 
   if (!session.user.plan) {
     redirect("/new-subscription");
+  }
+
+  // Dados clínicos: recepção (staff) não acessa prontuários.
+  const actor = await getAuthenticatedActor();
+  if (!actor?.canAccessClinicalData(session.user.clinic.id)) {
+    redirect("/dashboard");
   }
 
   const patients = await db.query.patientsTable.findMany({

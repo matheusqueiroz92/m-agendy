@@ -135,9 +135,10 @@ export function HeroSection() {
                 <CtaButton
                   href="/whatsapp"
                   bgColor="cta-secondary"
+                  className="sm:h-12 sm:px-8 sm:has-[>svg]:px-8"
                 >
                   Falar com consultor
-                  <IconWhatsapp width={24} height={24} />
+                  <IconWhatsapp width={24} height={24} color="#ffffff" />
                 </CtaButton>
               </div>
             </ScrollReveal>

@@ -1,0 +1,2 @@
+CREATE TYPE "public"."clinic_type" AS ENUM('medical', 'dental', 'physiotherapy', 'nutrition', 'psychology', 'multidisciplinary');--> statement-breakpoint
+ALTER TABLE "clinics" ADD COLUMN "type" "clinic_type" DEFAULT 'medical' NOT NULL;
