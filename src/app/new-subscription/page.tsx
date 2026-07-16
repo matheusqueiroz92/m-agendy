@@ -1,7 +1,11 @@
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
+import { PLAN_CATALOG } from "@/core/modules/billing/domain/plans";
+import { db } from "@/db";
+import { usersTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import { PlanFeatures } from "../(protected)/_contants/plan-features";
@@ -23,6 +27,16 @@ const NewSubscriptionPage = async () => {
   ) {
     redirect("/clinic-suspended");
   }
+
+  // O plano efetivo (session.user.plan) já reflete cortesia/trial vigente,
+  // mas `hasUsedTrial` não é exposto na sessão — busca direto para decidir
+  // quais planos ainda podem oferecer trial self-service a este usuário.
+  const userRow = await db.query.usersTable.findFirst({
+    where: eq(usersTable.id, session.user.id),
+  });
+
+  const currentPlan = session.user.plan ?? null;
+  const trialEligible = !currentPlan && !userRow?.hasUsedTrial;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
@@ -61,6 +75,11 @@ const NewSubscriptionPage = async () => {
               features={PlanFeatures.essential}
               price={39}
               description="Perfeito para negócios em crescimento e profissionais autônomos"
+              active={currentPlan === "essential"}
+              trialDays={PLAN_CATALOG.find((p) => p.id === "essential")?.trialDays}
+              trialEligible={trialEligible}
+              isTrialActive={currentPlan === "essential" && !!userRow?.planExpiresAt}
+              planExpiresAt={userRow?.planExpiresAt ?? null}
             />
           </div>
 
@@ -71,36 +90,4 @@ const NewSubscriptionPage = async () => {
               planName="Premium"
               features={PlanFeatures.premium}
               price={59}
-              description="Ideal para empressas e profissionais com um número maior de agendamentos"
-            />
-          </div>
-
-          <div className="w-full max-w-md">
-            <SubscriptionPlan
-              userEmail={session.user.email}
-              planId="gold"
-              planName="Gold"
-              features={PlanFeatures.gold}
-              price={99}
-              description="Para empresas buscam rescursos avançados e desejam uma solução e personalizada"
-            />
-          </div>
-        </div>
-
-        {/* Rodapé */}
-        <footer className="mt-12 w-full border-t border-slate-200 py-8 text-center text-sm text-slate-500">
-          <p>
-            © {new Date().getFullYear()} M.Agendy. Todos os direitos
-            reservados.
-          </p>
-          <p className="mt-1">
-            Desenvolvido por{" "}
-            <span className="font-medium">Matheus Queiroz</span>
-          </p>
-        </footer>
-      </div>
-    </div>
-  );
-};
-
-export default NewSubscriptionPage;
+              description="Ideal para empressas e profissionais com um 

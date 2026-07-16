@@ -24,6 +24,12 @@ export interface PlanDefinition {
   monthlyPriceInBRL: number;
   /** Nome da env com o price ID na Stripe (planos pagos). */
   stripePriceEnv?: string;
+  /**
+   * Dias de teste grátis sem cartão (self-service, via `StartTrialUseCase`).
+   * Ausente/undefined = plano não oferece trial self-service (ex.: Gold, que
+   * é vendido por consultor).
+   */
+  trialDays?: number;
   entitlements: PlanEntitlements;
 }
 
@@ -34,6 +40,7 @@ export const PLAN_CATALOG = [
     description: "Para negócios em crescimento e profissionais autônomos.",
     monthlyPriceInBRL: 39,
     stripePriceEnv: "STRIPE_ESSENTIAL_PLAN_PRICE_ID",
+    trialDays: 7,
     entitlements: {
       maxProfessionals: 3,
       maxAppointmentsPerMonth: 100,
@@ -47,6 +54,7 @@ export const PLAN_CATALOG = [
     description: "Para clínicas com maior volume de agendamentos.",
     monthlyPriceInBRL: 59,
     stripePriceEnv: "STRIPE_PREMIUM_PLAN_PRICE_ID",
+    trialDays: 14,
     entitlements: {
       maxProfessionals: 10,
       maxAppointmentsPerMonth: null,
@@ -60,6 +68,7 @@ export const PLAN_CATALOG = [
     description: "Recursos avançados e suporte personalizado.",
     monthlyPriceInBRL: 99,
     stripePriceEnv: "STRIPE_GOLD_PLAN_PRICE_ID",
+    // Sem trialDays: plano vendido por consultor (contato), não self-service.
     entitlements: {
       maxProfessionals: null,
       maxAppointmentsPerMonth: null,
@@ -73,11 +82,4 @@ export type PlanId = (typeof PLAN_CATALOG)[number]["id"];
 
 export const PLAN_IDS = PLAN_CATALOG.map((p) => p.id) as PlanId[];
 
-export const isValidPlan = (value: string | null | undefined): value is PlanId =>
-  !!value && PLAN_IDS.includes(value as PlanId);
-
-export const getPlan = (id: string): PlanDefinition | undefined =>
-  PLAN_CATALOG.find((p) => p.id === id);
-
-export const getPlanLabel = (id: string | null | undefined): string =>
-  (id && getPlan(id)?.label) || "—";
+export co

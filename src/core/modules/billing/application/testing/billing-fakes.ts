@@ -7,6 +7,7 @@ import {
   PaymentGateway,
 } from "../ports/payment-gateway";
 import { SubscriptionRepository } from "../ports/subscription-repository";
+import { TrialEligibility, TrialRepository } from "../ports/trial-repository";
 
 /** Gateway de pagamento falso, configurável, para testes de caso de uso. */
 export class FakePaymentGateway implements PaymentGateway {
@@ -49,7 +50,4 @@ export class InMemorySubscriptionRepository implements SubscriptionRepository {
     this.activated.push(params);
   }
 
-  async deactivate(params: { userId: string }): Promise<void> {
-    this.deactivated.push(params.userId);
-  }
-}
+  async deactivate(params: { user

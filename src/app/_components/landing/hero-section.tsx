@@ -8,6 +8,7 @@ import { BadgeInfo } from "@/components/badge-info";
 import { Badge } from "@/components/ui/badge";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useThemeDetection } from "@/hooks/use-theme-detection";
+import { buildWhatsAppContactLink } from "@/lib/contact";
 
 import { WhatsAppMockup } from "./whatsapp-mockup";
 import { ScrollReveal } from "./scroll-reveal";
@@ -133,7 +134,9 @@ export function HeroSection() {
                 </CtaButton>
 
                 <CtaButton
-                  href="/whatsapp"
+                  href={buildWhatsAppContactLink(
+                    "Olá! Quero saber mais sobre o M.Agendy.",
+                  )}
                   bgColor="cta-secondary"
                   className="sm:h-12 sm:px-8 sm:has-[>svg]:px-8"
                 >
@@ -148,13 +151,4 @@ export function HeroSection() {
               <div className="overflow-hidden rounded-2xl">
                 {mounted ? (
                   <WhatsAppMockup />
-                ) : (
-                  <WhatsAppMockup />
-                )}
-              </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+        

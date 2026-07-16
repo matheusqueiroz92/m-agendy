@@ -167,6 +167,27 @@ Mapa mental: **`plans.ts`** = o que cada plano é/libera; **`entitlements.ts`** 
 as funções que respondem "pode?" (`canAddProfessional`, `canCreateAppointment`,
 `planHasFeature`, `entitlementsOf`); os **use cases** chamam essas funções.
 
+## Teste grátis sem cartão (trial)
+
+Planos com `trialDays` no catálogo (hoje Essential = 7, Premium = 14; Gold não
+tem, é vendido por consultor) podem ser iniciados sem passar pela Stripe:
+
+- Caso de uso: `StartTrialUseCase` (`billing/application/use-cases/start-trial.ts`),
+  chamado pela action `src/actions/start-trial`. Grava `users.plan` +
+  `users.plan_expires_at` direto, e marca `users.has_used_trial = true` (o
+  trial só pode ser usado uma vez por conta, mesmo depois de expirar).
+- `resolveClinicAccess` (`clinics/domain/clinic-access.ts`) trata `basePlan`
+  como inativo quando `basePlanExpiresAt` já passou — é isso que faz o acesso
+  cair automaticamente quando o trial vence, sem job/cron algum: a checagem
+  acontece na sessão (`auth.ts`) a cada request.
+- Ao virar pagante (webhook da Stripe ativa a assinatura), `planExpiresAt` é
+  zerado (`DrizzleSubscriptionRepository.activate`), então o plano pago nunca
+  expira "sozinho" por essa checagem.
+- `(protected)/layout.tsx` redireciona para `/new-subscription` sempre que a
+  clínica não tem plano ativo (inclusive trial vencido) — antes disso só o
+  `/entrar` pós-login fazia esse roteamento; o guard no layout garante que o
+  painel não fique acessível depois que o trial expira.
+
 ## Venda de planos pagos (Stripe, multiplano)
 
 - Cada plano aponta para a env do seu price ID (`stripePriceEnv`).

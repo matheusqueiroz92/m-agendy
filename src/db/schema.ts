@@ -58,6 +58,13 @@ export const usersTable = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   plan: text("plan"), // modificar aqui para adcionar os planos
+  // Validade do plano "de base" (hoje só usado pelo trial gratuito). null =
+  // sem expiração (ex.: assinatura paga via gateway). Espelha o par
+  // planOverride/planOverrideExpiresAt da clínica.
+  planExpiresAt: timestamp("plan_expires_at"),
+  // Marca se o usuário já iniciou um teste grátis alguma vez (evita reiniciar
+  // o trial após expirar ou cancelar).
+  hasUsedTrial: boolean("has_used_trial").notNull().default(false),
   platformRole: userPlatformRoleEnum("platform_role")
     .notNull()
     .default("member"),
@@ -540,16 +547,5 @@ export const notificationsTable = pgTable("notifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const whatsappConversationsTable = pgTable("whatsapp_conversations", {
-  phone: text("phone").primaryKey(),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
-  step: text("step").notNull(),
-  data: jsonb("data"),
-  updatedAt: timestamp("updated_at")
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+/**
+ * Ra

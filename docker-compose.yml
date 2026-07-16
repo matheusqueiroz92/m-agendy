@@ -1,0 +1,54 @@
+# Sobe a aplicação (imagem de produção, via Dockerfile) + Postgres, para
+# validar o build containerizado localmente antes de um deploy em cloud.
+#
+# Uso:
+#   docker compose up --build
+#
+# Para desenvolvimento do dia a dia (hot reload), continue usando `npm run
+# dev` direto na máquina, apontando DATABASE_URL para o serviço "postgres"
+# abaixo (ex.: postgresql://postgres:postgres@localhost:5432/m_agendy) ou para
+# o Neon. Este compose serve para rodar a imagem "de verdade" (a mesma que vai
+# para produção) e para os testes de integração no CI (ver
+# .github/workflows/ci.yml).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: m_agendy
+    ports:
+      - "5432:5432"
+    volumes:
+      - m_agendy_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/m_agendy
+        NEXT_PUBLIC_APP_URL: http://localhost:3000
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # Sobrescreve o DATABASE_URL do .env para apontar para o Postgres deste
+      # compose em vez do banco remoto (Neon) usado em desenvolvimento normal.
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/m_agendy
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  m_agendy_postgres_data:

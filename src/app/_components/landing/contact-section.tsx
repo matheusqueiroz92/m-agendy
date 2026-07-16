@@ -14,6 +14,7 @@ import { Label } from "@radix-ui/react-label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import IconInstagram from "@/components/ui/icons/icon-instagram";
+import { buildWhatsAppContactLink } from "@/lib/contact";
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -142,6 +143,9 @@ export function ContactSection() {
                   className="mt-auto w-full"
                   disabled={isSubmitting}
                   bgColor="cta-secondary"
+                  href={buildWhatsAppContactLink(
+                    "Olá! Tenho uma dúvida sobre o M.Agendy.",
+                  )}
                 >
                   Falar com especialista
                   <IconWhatsapp width={24} height={24} color="#ffffff" />
@@ -258,14 +262,4 @@ export function ContactSection() {
                     bgColor="cta"
                   >
                     {isSubmitting ? "Enviando…" : "Enviar mensagem"}
-                    <Send className="ml-2 size-5" aria-hidden="true" />
-                  </CtaButton>
-                </form>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-      </div>
-    </section>
-  );
-}
+                    <Send className="ml-2 size-5"

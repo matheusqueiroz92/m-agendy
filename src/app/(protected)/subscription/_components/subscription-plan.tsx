@@ -1,10 +1,13 @@
 "use client";
 
+import dayjs from "dayjs";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
 
 import { createStripeCheckout } from "@/actions/create-stripe-checkout";
+import { startTrial } from "@/actions/start-trial";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +26,14 @@ interface PricingCardProps {
   price?: number;
   features?: string[];
   description?: string;
+  /** Dias de teste grátis self-service (undefined = sem trial neste plano). */
+  trialDays?: number;
+  /** Usuário pode iniciar o trial deste plano (sem plano ativo e nunca usou). */
+  trialEligible?: boolean;
+  /** O plano ativo do usuário É este plano E ainda está em período de trial. */
+  isTrialActive?: boolean;
+  /** Validade do plano ativo, quando em trial (para exibir a contagem). */
+  planExpiresAt?: Date | null;
 }
 
 export const SubscriptionPlan = ({
@@ -33,6 +44,10 @@ export const SubscriptionPlan = ({
   features,
   price,
   description,
+  trialDays,
+  trialEligible,
+  isTrialActive,
+  planExpiresAt,
 }: PricingCardProps) => {
   const router = useRouter();
 
@@ -44,10 +59,28 @@ export const SubscriptionPlan = ({
         window.location.href = data.checkoutUrl;
       }
     },
+    onError: ({ error }) => {
+      toast.error(error.serverError ?? "Não foi possível iniciar a assinatura.");
+    },
   });
 
-  const handleSubscribeClick = async () => {
+  const startTrialAction = useAction(startTrial, {
+    onSuccess: () => {
+      toast.success(`Teste grátis de ${trialDays} dias iniciado. Aproveite!`);
+      router.push("/dashboard");
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      toast.error(error.serverError ?? "Não foi possível iniciar o teste grátis.");
+    },
+  });
+
+  const handleSubscribeClick = () => {
     createStripeCheckoutAction.execute({ plan: planId });
+  };
+
+  const handleStartTrialClick = () => {
+    startTrialAction.execute({ plan: planId });
   };
 
   const handleManageSubscriptionClick = () => {
@@ -56,62 +89,33 @@ export const SubscriptionPlan = ({
     );
   };
 
+  const showTrialButton = !active && trialDays && trialEligible;
+  // Em trial não existe assinatura na Stripe ainda: o botão precisa levar ao
+  // checkout (vira pagante), não ao portal de gerenciamento.
+  const manageIsCheckout = active && isTrialActive;
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <h3 className="text-3xl font-bold">{planName}</h3>
-          {active && (
+          {isTrialActive ? (
             <Badge
               variant="secondary"
-              className="bg-chart-2/10 text-chart-2 hover:bg-chart-2/20"
+              className="bg-cta/10 text-cta hover:bg-cta/20"
             >
-              Atual
+              Teste grátis
             </Badge>
+          ) : (
+            active && (
+              <Badge
+                variant="secondary"
+                className="bg-chart-2/10 text-chart-2 hover:bg-chart-2/20"
+              >
+                Atual
+              </Badge>
+            )
           )}
         </div>
         <p className="text-muted-foreground text-sm">{description}</p>
-      </CardHeader>
-
-      <CardContent className="pb-6">
-        <div className="mb-6">
-          <span className="text-3xl font-bold">
-            <span className="text-muted-foreground text-xl">R$</span>
-            {price}
-          </span>
-          <span className="text-muted-foreground ml-1">/mês</span>
-        </div>
-
-        <ul className="space-y-3">
-          {features?.map((feature, index) => (
-            <li key={index} className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <CheckCircle className="text-chart-2 h-5 w-5" />
-              </div>
-              <span className="text-muted-foreground text-sm">{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-
-      <CardFooter>
-        <Button
-          className="relative w-full overflow-hidden rounded-full border-2 border-neutral-300 bg-white/80 text-sm font-semibold shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg focus:ring-2 focus:ring-blue-200"
-          variant={active ? "outline" : "default"}
-          onClick={
-            active ? handleManageSubscriptionClick : handleSubscribeClick
-          }
-          disabled={createStripeCheckoutAction.isExecuting}
-        >
-          {createStripeCheckoutAction.isExecuting ? (
-            <Loader2 className="h4 mr-1 w-4 animate-spin" />
-          ) : active ? (
-            <span className="relative z-10">Gerenciar Assinatura</span>
-          ) : (
-            <span className="relative z-10">Fazer Assinatura</span>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-};
+        {isT

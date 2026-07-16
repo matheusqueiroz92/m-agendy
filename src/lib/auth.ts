@@ -77,6 +77,7 @@ export const auth = betterAuth({
             planOverride: clinicRow.planOverride ?? null,
             planOverrideExpiresAt: clinicRow.planOverrideExpiresAt ?? null,
             basePlan: userData?.plan ?? null,
+            basePlanExpiresAt: userData?.planExpiresAt ?? null,
             now: new Date(),
           })
         : null;
@@ -159,8 +160,4 @@ export const auth = betterAuth({
         html,
         text,
       }).catch((error) => {
-        console.error("Erro ao enviar e-mail de redefinição de senha:", error);
-      });
-    },
-  },
-});
+        console.error("Erro ao enviar e-mail

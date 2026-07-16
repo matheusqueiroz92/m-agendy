@@ -32,8 +32,13 @@ npm run dev            # http://localhost:3000
 | `npm run build` | Build de produção |
 | `npm run start` | Sobe o build de produção |
 | `npm run lint` | ESLint |
-| `npm run test` | Testes (Vitest, uma vez) |
-| `npm run test:watch` | Testes em watch |
+| `npm run test` | Testes unitários (Vitest, uma vez) |
+| `npm run test:watch` | Testes unitários em watch |
+| `npm run test:coverage` | Testes unitários com relatório de cobertura |
+| `npm run test:integration` | Testes de integração (exige `TEST_DATABASE_URL`; ver `docs/10-estrategia-de-testes.md`) |
+| `npm run test:e2e` | Testes E2E (Playwright; sobe o app via `npm run start`) |
+| `npm run test:e2e:ui` | Testes E2E em modo interativo (debug) |
+| `npm run docker:build` / `docker:up` / `docker:down` | Ver seção Docker abaixo |
 
 ## Migrações de banco
 
@@ -59,11 +64,31 @@ apply-fase-6-status-notifications.sql      # status de agendamento + notificaç�
 apply-fase-6-chatbot-conversations.sql     # conversas do chatbot
 apply-refino-whatsapp-multitenant.sql      # clinics.whatsapp_phone_number_id
 apply-fase-8-platform-admin.sql            # status + override de plano por clínica
+apply-fase-9-trial-e-lembretes.sql         # trial sem cartão + cancelamento real de lembretes
 ```
 
 > **Ordem de aplicação:** se for montar um ambiente do zero, prefira
 > `npx drizzle-kit push` (aplica tudo de uma vez a partir do schema). Os SQLs
 > manuais existem para aplicar **incrementos** num banco que já está em produção.
+
+## Docker
+
+Para rodar a aplicação em container (paridade com produção, ou como base para
+deploy em qualquer cloud que aceite imagens Docker):
+
+```bash
+# Sobe app + Postgres juntos (build da imagem de produção)
+npm run docker:up
+# equivalente a: docker compose up --build
+
+# Ou só a imagem, sem compose (aponte DATABASE_URL para um banco já existente)
+npm run docker:build
+docker run -p 3000:3000 --env-file .env m-agendy
+```
+
+Detalhes do multi-stage build (deps → builder → runner, output `standalone`
+do Next.js) estão comentados no `Dockerfile` da raiz. O `next.config.ts` tem
+`output: "standalone"` justamente para a imagem final ficar mínima.
 
 ## Primeiro acesso
 

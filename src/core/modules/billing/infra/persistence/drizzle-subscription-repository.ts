@@ -20,18 +20,13 @@ export class DrizzleSubscriptionRepository implements SubscriptionRepository {
         stripeCustomerId: params.customerId,
         stripeSubscriptionId: params.subscriptionId,
         plan: params.plan,
+        // Assinatura paga via gateway não expira por aqui (o cancelamento
+        // chega pelo webhook); limpa uma eventual expiração de trial anterior.
+        planExpiresAt: null,
       })
       .where(eq(usersTable.id, params.userId));
   }
 
   async deactivate(params: { userId: string }): Promise<void> {
     await db
-      .update(usersTable)
-      .set({
-        stripeCustomerId: null,
-        stripeSubscriptionId: null,
-        plan: null,
-      })
-      .where(eq(usersTable.id, params.userId));
-  }
-}
+   

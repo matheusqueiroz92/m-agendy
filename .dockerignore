@@ -1,0 +1,35 @@
+# Dependências e builds (reinstalados/reconstruídos dentro da imagem)
+node_modules
+.next
+out
+
+# Controle de versão e editores
+.git
+.gitignore
+.vscode
+.cursor
+.agents
+
+# Segredos e ambiente local — nunca devem ir para dentro da imagem.
+# As variáveis de runtime são injetadas via --env-file/secret do orquestrador.
+.env
+.env.*
+!.env.example
+
+# Testes e ferramentas de desenvolvimento (não fazem parte da imagem final)
+playwright-report
+test-results
+.agent-browser-screenshots
+coverage
+
+# Documentação e artefatos que não afetam o build
+docs
+README*.md
+*.md
+!README.md
+Images M.Agendy
+
+# Diversos
+tsconfig.tsbuildinfo
+npm-debug.log*
+.DS_Store

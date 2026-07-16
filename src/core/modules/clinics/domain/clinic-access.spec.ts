@@ -11,6 +11,7 @@ describe("resolveClinicAccess", () => {
       planOverride: "premium",
       planOverrideExpiresAt: null,
       basePlan: "premium",
+      basePlanExpiresAt: null,
       now,
     });
     expect(r).toEqual({ isBlocked: true, effectivePlan: null, hasActivePlan: false });
@@ -22,6 +23,7 @@ describe("resolveClinicAccess", () => {
       planOverride: "premium",
       planOverrideExpiresAt: new Date("2026-12-31T00:00:00.000Z"),
       basePlan: null,
+      basePlanExpiresAt: null,
       now,
     });
     expect(r.effectivePlan).toBe("premium");
@@ -34,6 +36,7 @@ describe("resolveClinicAccess", () => {
       planOverride: "premium",
       planOverrideExpiresAt: new Date("2026-01-01T00:00:00.000Z"),
       basePlan: null,
+      basePlanExpiresAt: null,
       now,
     });
     expect(r.effectivePlan).toBeNull();
@@ -46,6 +49,7 @@ describe("resolveClinicAccess", () => {
       planOverride: null,
       planOverrideExpiresAt: null,
       basePlan: "premium",
+      basePlanExpiresAt: null,
       now,
     });
     expect(r.effectivePlan).toBe("premium");
@@ -56,10 +60,4 @@ describe("resolveClinicAccess", () => {
     const r = resolveClinicAccess({
       status: "active",
       planOverride: "premium",
-      planOverrideExpiresAt: null,
-      basePlan: null,
-      now,
-    });
-    expect(r.hasActivePlan).toBe(true);
-  });
-});
+  

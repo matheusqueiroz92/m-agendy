@@ -9,6 +9,12 @@ export interface ResolveClinicAccessInput {
   planOverrideExpiresAt: Date | null;
   /** Plano "de base" (ex.: o que veio do gateway, no dono da clínica). */
   basePlan: string | null;
+  /**
+   * Validade do plano de base (ou null = sem expiração). Hoje só é usado pelo
+   * trial gratuito (`plan = 'trial'`); planos pagos via gateway não expiram
+   * por aqui (o cancelamento chega pelo webhook e zera o `basePlan`).
+   */
+  basePlanExpiresAt: Date | null;
   now: Date;
 }
 
@@ -26,25 +32,11 @@ export interface ClinicAccess {
  * Regras:
  * - bloqueada → sem acesso e sem plano efetivo;
  * - override de plano válido (não expirado) tem precedência sobre o plano base;
- * - sem override válido, vale o plano base (ex.: assinatura via gateway).
+ * - sem override válido, vale o plano base — mas só enquanto não expirado
+ *   (ex.: trial gratuito vencido deixa de contar como plano ativo).
  */
 export const resolveClinicAccess = (
   input: ResolveClinicAccessInput,
 ): ClinicAccess => {
   if (input.status === "blocked") {
-    return { isBlocked: true, effectivePlan: null, hasActivePlan: false };
-  }
-
-  const overrideActive =
-    !!input.planOverride &&
-    (input.planOverrideExpiresAt === null ||
-      input.planOverrideExpiresAt.getTime() > input.now.getTime());
-
-  const effectivePlan = overrideActive ? input.planOverride : input.basePlan;
-
-  return {
-    isBlocked: false,
-    effectivePlan,
-    hasActivePlan: !!effectivePlan,
-  };
-};
+    return { isBlocked: true, effectivePlan: null, hasActivePlan: false

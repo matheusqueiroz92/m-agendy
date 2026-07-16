@@ -9,12 +9,8 @@ import { makeHandleBillingWebhook } from "@/core/modules/billing/infra/factories
  * O path /api/stripe/webhook é mantido para não exigir reconfiguração no
  * provedor atual; ao adotar outro gateway, basta apontar o webhook dele para cá
  * (ou criar um path equivalente) — o handler é agnóstico.
- */
-export const POST = async (request: Request) => {
-  const rawBody = await request.text();
-  const signature = request.headers.get("stripe-signature");
-
-  await makeHandleBillingWebhook().execute({ rawBody, signature });
-
-  return NextResponse.json({ received: true });
-};
+ *
+ * SEGURANÇA: assinatura inválida/ausente (ou payload que o gateway rejeite)
+ * vira 400 aqui — sem o try/catch, o erro do gateway subiria sem tratamento e
+ * o Next.js responderia 500, fazendo a Stripe reter isso como falha do nosso
+ * lado e reenviar o evento indefin

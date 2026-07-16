@@ -1,14 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-    ],
-  },
-};
-
-export default nextConfig;
+  // Build "standalone": empacota só o necessário para rodar (server.js +
+  // node_modules mínimos) em `.next/standalone`. Reduz drasticamente o
+  

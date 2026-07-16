@@ -1,3 +1,8 @@
+import { eq } from "drizzle-orm";
+
+import { db } from "@/db";
+import { appointmentRemindersTable } from "@/db/schema";
+
 import {
   AppointmentReminder,
   ReminderScheduler,
@@ -67,14 +72,8 @@ export class QStashReminderScheduler implements ReminderScheduler {
     if (!response.ok) {
       throw new Error(`Falha ao agendar lembrete no QStash: ${response.status}`);
     }
-  }
 
-  async cancelForAppointment(appointmentId: string): Promise<void> {
-    // Para cancelar no QStash é preciso guardar os messageIds retornados em
-    // schedule() (ex.: numa tabela) e chamar DELETE /v2/messages/{id}.
-    // Mantido como ponto de extensão.
-    console.info(
-      `[qstash:dev] cancelar lembretes do agendamento ${appointmentId} (no-op)`,
-    );
-  }
-}
+    // Guarda o messageId retornado para poder cancelar de verdade depois
+    // (remarcação/cancelamento da consulta), via cancelForAppointment.
+    const body: { messageId?: string } = await response.json().catch(() => ({}));
+    if (body.messageId) {

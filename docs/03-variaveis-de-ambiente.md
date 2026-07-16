@@ -62,3 +62,10 @@ enviar de verdade). Isso permite rodar o app localmente sem configurar tudo.
 | `CONTACT_EMAIL` | Destino do formulário de contato. |
 
 Detalhes de e-mail em `EMAIL_SETUP.md` (na raiz).
+
+## Testes (integração e E2E)
+
+| Variável | Descrição |
+|---|---|
+| `TEST_DATABASE_URL` | Postgres de TESTE (nunca aponte para dev/produção). Exigida por `npm run test:integration` e pelo `global-setup` do Playwright — os testes fazem `TRUNCATE` entre casos. Ver `docs/10-estrategia-de-testes.md`. |
+| `E2E_BASE_URL` | URL onde o Playwright espera o app rodando (default `http://localhost:3000`). Útil para rodar os E2E contra um preview deploy em vez de subir o servidor localmente. |
