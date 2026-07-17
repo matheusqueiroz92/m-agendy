@@ -29,4 +29,13 @@ export class DrizzleSubscriptionRepository implements SubscriptionRepository {
 
   async deactivate(params: { userId: string }): Promise<void> {
     await db
-   
+      .update(usersTable)
+      .set({
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        plan: null,
+        planExpiresAt: null,
+      })
+      .where(eq(usersTable.id, params.userId));
+  }
+}

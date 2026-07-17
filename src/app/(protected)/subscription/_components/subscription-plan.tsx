@@ -118,4 +118,76 @@ export const SubscriptionPlan = ({
           )}
         </div>
         <p className="text-muted-foreground text-sm">{description}</p>
-        {isT
+        {isTrialActive && planExpiresAt && (
+          <p className="text-cta text-xs font-medium">
+            Termina em {dayjs(planExpiresAt).format("DD/MM/YYYY")} — assine para
+            continuar depois.
+          </p>
+        )}
+      </CardHeader>
+
+      <CardContent className="pb-6">
+        <div className="mb-6">
+          <span className="text-3xl font-bold">
+            <span className="text-muted-foreground text-xl">R$</span>
+            {price}
+          </span>
+          <span className="text-muted-foreground ml-1">/mês</span>
+        </div>
+
+        <ul className="space-y-3">
+          {features?.map((feature, index) => (
+            <li key={index} className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="text-chart-2 h-5 w-5" />
+              </div>
+              <span className="text-muted-foreground text-sm">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+
+      <CardFooter className="flex flex-col gap-2">
+        {showTrialButton && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleStartTrialClick}
+            disabled={startTrialAction.isExecuting}
+          >
+            {startTrialAction.isExecuting ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              `Começar grátis por ${trialDays} dias`
+            )}
+          </Button>
+        )}
+
+        <Button
+          className="relative w-full overflow-hidden rounded-full border-2 border-neutral-300 bg-white/80 text-sm font-semibold shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 hover:shadow-lg focus:ring-2 focus:ring-blue-200"
+          variant={active && !manageIsCheckout ? "outline" : "default"}
+          onClick={
+            manageIsCheckout
+              ? handleSubscribeClick
+              : active
+                ? handleManageSubscriptionClick
+                : handleSubscribeClick
+          }
+          disabled={createStripeCheckoutAction.isExecuting}
+        >
+          {createStripeCheckoutAction.isExecuting ? (
+            <Loader2 className="h4 mr-1 w-4 animate-spin" />
+          ) : manageIsCheckout ? (
+            <span className="relative z-10">Assinar agora</span>
+          ) : active ? (
+            <span className="relative z-10">Gerenciar Assinatura</span>
+          ) : (
+            <span className="relative z-10">
+              {showTrialButton ? "Assinar agora (sem trial)" : "Fazer Assinatura"}
+            </span>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};

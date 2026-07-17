@@ -9,4 +9,15 @@ import { makePaymentGateway } from "./make-payment-gateway";
 
 /** Composition root do checkout de assinatura. */
 export const makeCreateCheckoutSession = () =>
-  new CreateCheckoutSessionUseCase(makePaymentGateway()
+  new CreateCheckoutSessionUseCase(makePaymentGateway());
+
+/** Composition root do processamento de webhooks de cobrança. */
+export const makeHandleBillingWebhook = () =>
+  new HandleBillingWebhookUseCase(
+    makePaymentGateway(),
+    new DrizzleSubscriptionRepository(),
+  );
+
+/** Composition root do início do teste grátis sem cartão. */
+export const makeStartTrial = () =>
+  new StartTrialUseCase(new DrizzleTrialRepository(), new SystemClock());

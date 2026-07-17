@@ -50,4 +50,34 @@ export class InMemorySubscriptionRepository implements SubscriptionRepository {
     this.activated.push(params);
   }
 
-  async deactivate(params: { user
+  async deactivate(params: { userId: string }): Promise<void> {
+    this.deactivated.push(params.userId);
+  }
+}
+
+interface StartTrialRecord {
+  userId: string;
+  plan: SubscriptionPlan;
+  expiresAt: Date;
+}
+
+/** Repositório de trial em memória, configurável por usuário. */
+export class InMemoryTrialRepository implements TrialRepository {
+  started: StartTrialRecord[] = [];
+
+  constructor(
+    private readonly eligibilityByUser: Record<string, TrialEligibility> = {},
+  ) {}
+
+  async getEligibility(userId: string): Promise<TrialEligibility> {
+    return this.eligibilityByUser[userId] ?? { plan: null, hasUsedTrial: false };
+  }
+
+  async start(params: StartTrialRecord): Promise<void> {
+    this.started.push(params);
+    this.eligibilityByUser[params.userId] = {
+      plan: params.plan,
+      hasUsedTrial: true,
+    };
+  }
+}

@@ -60,4 +60,50 @@ describe("resolveClinicAccess", () => {
     const r = resolveClinicAccess({
       status: "active",
       planOverride: "premium",
-  
+      planOverrideExpiresAt: null,
+      basePlan: null,
+      basePlanExpiresAt: null,
+      now,
+    });
+    expect(r.hasActivePlan).toBe(true);
+  });
+
+  it("trial ativo (expiração no futuro) conta como plano válido", () => {
+    const r = resolveClinicAccess({
+      status: "active",
+      planOverride: null,
+      planOverrideExpiresAt: null,
+      basePlan: "trial",
+      basePlanExpiresAt: new Date("2026-06-26T12:00:00.000Z"),
+      now,
+    });
+    expect(r.effectivePlan).toBe("trial");
+    expect(r.hasActivePlan).toBe(true);
+  });
+
+  it("trial expirado não conta como plano válido, mesmo sem override", () => {
+    const r = resolveClinicAccess({
+      status: "active",
+      planOverride: null,
+      planOverrideExpiresAt: null,
+      basePlan: "trial",
+      basePlanExpiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      now,
+    });
+    expect(r.effectivePlan).toBeNull();
+    expect(r.hasActivePlan).toBe(false);
+  });
+
+  it("trial expirado, mas cortesia (override) ativa libera acesso", () => {
+    const r = resolveClinicAccess({
+      status: "active",
+      planOverride: "gold",
+      planOverrideExpiresAt: null,
+      basePlan: "trial",
+      basePlanExpiresAt: new Date("2026-06-01T00:00:00.000Z"),
+      now,
+    });
+    expect(r.effectivePlan).toBe("gold");
+    expect(r.hasActivePlan).toBe(true);
+  });
+});
