@@ -1,8 +1,13 @@
 import { WhatsAppMessenger } from "../../application/ports/chatbot-ports";
+import { ClinicWhatsAppDirectory } from "../../application/ports/clinic-whatsapp-directory";
 
 /**
  * Envio genérico de mensagens de texto no WhatsApp (Meta Cloud API).
  * Sem credenciais, opera em modo dev (apenas registra no console).
+ *
+ * MULTI-TENANT: quando `clinicId` vem no envio e há um `ClinicWhatsAppDirectory`
+ * injetado, usa o número próprio da clínica; senão cai no `phoneNumberId`
+ * global do `config` (fallback compartilhado).
  */
 export class HttpWhatsAppMessenger implements WhatsAppMessenger {
   constructor(
@@ -11,10 +16,15 @@ export class HttpWhatsAppMessenger implements WhatsAppMessenger {
       phoneNumberId?: string;
       accessToken?: string;
     } = {},
+    private readonly directory?: ClinicWhatsAppDirectory,
   ) {}
 
-  async sendText(params: { to: string; body: string }): Promise<void> {
-    const { apiUrl, phoneNumberId, accessToken } = this.config;
+  async sendText(params: { to: string; body: string; clinicId?: string }): Promise<void> {
+    const { apiUrl, accessToken } = this.config;
+    const clinicPhoneNumberId = params.clinicId
+      ? await this.directory?.getPhoneNumberId(params.clinicId)
+      : null;
+    const phoneNumberId = clinicPhoneNumberId ?? this.config.phoneNumberId;
 
     if (!apiUrl || !phoneNumberId || !accessToken) {
       console.info(`[whatsapp:dev] -> ${params.to}: ${params.body}`);

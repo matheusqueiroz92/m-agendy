@@ -55,6 +55,7 @@ export class CancelAppointmentUseCase {
 
       if (contact?.patientPhoneNumber) {
         await this.notifier.notifyCancelled({
+          clinicId: input.clinicId,
           to: contact.patientPhoneNumber,
           patientName: contact.patientName,
           scheduledAt: existing.scheduledAt,

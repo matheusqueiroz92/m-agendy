@@ -17,6 +17,7 @@ import { verifyQStashSignature } from "@/core/shared/security/qstash-signature";
  */
 const payloadSchema = z.object({
   appointmentId: z.string().uuid(),
+  clinicId: z.string().uuid(),
   to: z.string().min(1),
   patientName: z.string().default(""),
   doctorName: z.string().optional(),
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
   const useCase = makeSendAppointmentReminder();
   const result = await useCase.execute({
     appointmentId: parsed.data.appointmentId,
+    clinicId: parsed.data.clinicId,
     to: parsed.data.to,
     patientName: parsed.data.patientName,
     doctorName: parsed.data.doctorName,

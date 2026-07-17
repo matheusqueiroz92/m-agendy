@@ -130,6 +130,7 @@ export class UpsertAppointmentUseCase {
 
       if (contact?.patientPhoneNumber) {
         await this.notifier.notifyScheduled({
+          clinicId: input.clinicId,
           to: contact.patientPhoneNumber,
           patientName: contact.patientName,
           scheduledAt: appointment.scheduledAt,
@@ -139,6 +140,7 @@ export class UpsertAppointmentUseCase {
         for (const runAt of computeReminderTimes(appointment.scheduledAt, now)) {
           await this.reminders.schedule({
             appointmentId: appointment.id,
+            clinicId: input.clinicId,
             runAt,
             to: contact.patientPhoneNumber,
             patientName: contact.patientName,

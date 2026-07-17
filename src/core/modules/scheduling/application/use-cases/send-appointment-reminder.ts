@@ -3,6 +3,7 @@ import { AppointmentRepository } from "../ports/appointment-repository";
 
 export interface SendAppointmentReminderInput {
   appointmentId: string;
+  clinicId: string;
   to: string;
   patientName: string;
   scheduledAt: Date;
@@ -37,6 +38,7 @@ export class SendAppointmentReminderUseCase {
     }
 
     await this.notifier.notifyReminder({
+      clinicId: input.clinicId,
       to: input.to,
       patientName: input.patientName,
       scheduledAt: input.scheduledAt,

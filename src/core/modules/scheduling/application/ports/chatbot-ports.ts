@@ -50,7 +50,9 @@ export interface ChatScheduler {
 
 /** Envio de mensagens de saída no WhatsApp. */
 export interface WhatsAppMessenger {
-  sendText(params: { to: string; body: string }): Promise<void>;
+  /** `clinicId` resolve o número de envio (o da clínica, com fallback pro
+   * compartilhado); omitido quando a clínica ainda não foi identificada. */
+  sendText(params: { to: string; body: string; clinicId?: string }): Promise<void>;
 }
 
 /** Resolve a clínica dona do número que recebeu a mensagem. */

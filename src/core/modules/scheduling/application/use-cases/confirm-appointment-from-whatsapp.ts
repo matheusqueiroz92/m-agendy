@@ -57,6 +57,9 @@ export class ConfirmAppointmentFromWhatsAppUseCase {
 
       await this.messenger.sendText({
         to: input.fromPhone,
+        // Melhor esforço: usa a clínica da primeira candidata. Casos raros de
+        // ambiguidade cruzando clínicas diferentes ficam com o número dela.
+        clinicId: candidates[0].clinicId,
         body:
           `Encontrei mais de uma consulta pendente para confirmar:\n\n${list}\n\n` +
           "Para confirmar, entre em contato com a clínica informando a data.",

@@ -78,8 +78,8 @@ export class FakeChatScheduler implements ChatScheduler {
 }
 
 export class FakeWhatsAppMessenger implements WhatsAppMessenger {
-  public sent: { to: string; body: string }[] = [];
-  async sendText(params: { to: string; body: string }) {
+  public sent: { to: string; body: string; clinicId?: string }[] = [];
+  async sendText(params: { to: string; body: string; clinicId?: string }) {
     this.sent.push(params);
   }
   last() {

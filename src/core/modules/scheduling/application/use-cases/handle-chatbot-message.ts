@@ -47,9 +47,19 @@ export class HandleChatbotMessageUseCase {
   async execute(input: HandleChatbotMessageInput): Promise<void> {
     const phone = input.fromPhone;
     const text = input.text.trim();
-    const reply = (body: string) => this.messenger.sendText({ to: phone, body });
 
     const convo = await this.store.get(phone);
+
+    // Resolvida antes do cancelamento para que a própria resposta de
+    // cancelamento já saia pelo número da clínica (quando ela tiver um).
+    const clinicId =
+      convo?.clinicId ??
+      (await this.clinicResolver.resolveInboundClinicId({
+        phoneNumberId: input.phoneNumberId,
+      }));
+
+    const reply = (body: string) =>
+      this.messenger.sendText({ to: phone, body, clinicId: clinicId ?? undefined });
 
     if (isCancel(text)) {
       if (convo) await this.store.clear(phone);
@@ -57,11 +67,6 @@ export class HandleChatbotMessageUseCase {
       return;
     }
 
-    const clinicId =
-      convo?.clinicId ??
-      (await this.clinicResolver.resolveInboundClinicId({
-        phoneNumberId: input.phoneNumberId,
-      }));
     if (!clinicId) return;
 
     const patient = await this.patients.findByPhone({ clinicId, phone });

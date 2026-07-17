@@ -36,6 +36,7 @@ export class QStashReminderScheduler implements ReminderScheduler {
 
     const payload = {
       appointmentId: reminder.appointmentId,
+      clinicId: reminder.clinicId,
       to: reminder.to,
       patientName: reminder.patientName,
       doctorName: reminder.doctorName,

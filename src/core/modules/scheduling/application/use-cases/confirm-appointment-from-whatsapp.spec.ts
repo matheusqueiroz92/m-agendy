@@ -11,9 +11,9 @@ import { ConfirmAppointmentFromWhatsAppUseCase } from "./confirm-appointment-fro
 
 /** Messenger fake que apenas registra as mensagens enviadas, para asserções. */
 class FakeWhatsAppMessenger {
-  public readonly sent: { to: string; body: string }[] = [];
+  public readonly sent: { to: string; body: string; clinicId?: string }[] = [];
 
-  async sendText(params: { to: string; body: string }): Promise<void> {
+  async sendText(params: { to: string; body: string; clinicId?: string }): Promise<void> {
     this.sent.push(params);
   }
 }
@@ -108,5 +108,6 @@ describe("ConfirmAppointmentFromWhatsAppUseCase", () => {
     expect(messenger.sent).toHaveLength(1);
     expect(messenger.sent[0].to).toBe("+5511999999999");
     expect(messenger.sent[0].body).toContain("mais de uma consulta pendente");
+    expect(messenger.sent[0].clinicId).toBe("clinic-1");
   });
 });

@@ -30,6 +30,7 @@ describe("SendAppointmentReminderUseCase", () => {
 
     const result = await useCase.execute({
       appointmentId: appointment.id,
+      clinicId: "clinic-1",
       to: "+5511999999999",
       patientName: "Maria",
       scheduledAt,
@@ -38,11 +39,13 @@ describe("SendAppointmentReminderUseCase", () => {
     expect(result.sent).toBe(true);
     expect(notifier.reminders).toHaveLength(1);
     expect(notifier.reminders[0].to).toBe("+5511999999999");
+    expect(notifier.reminders[0].clinicId).toBe("clinic-1");
   });
 
   it("não envia quando o agendamento não existe mais (cancelado)", async () => {
     const result = await useCase.execute({
       appointmentId: "inexistente",
+      clinicId: "clinic-1",
       to: "+5511999999999",
       patientName: "Maria",
       scheduledAt,

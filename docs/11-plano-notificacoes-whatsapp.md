@@ -212,3 +212,36 @@ seria necessário reaproveitar a máquina de estados do chatbot
 uma parcela de esforço bem maior para um caso hoje raro (poucos pacientes têm
 mais de uma consulta pendente ao mesmo tempo). Fica como evolução futura se
 isso se mostrar frequente na prática.
+
+## Multi-tenant: número de WhatsApp por clínica ✅ implementado (17/07/2026)
+
+O sistema é usado por várias clínicas, e cada uma pode ter (ou não) seu
+próprio número de WhatsApp cadastrado na Meta. O roteamento de mensagens
+**recebidas** (`DrizzleChatClinicResolver`) já identificava a clínica dona do
+número a partir do `clinics.whatsapp_phone_number_id` — mas o envio de
+mensagens (confirmação, lembrete, cancelamento e as respostas do chatbot) era
+hardcoded para o número global (`WHATSAPP_PHONE_NUMBER_ID`), ignorando o
+número próprio da clínica, mesmo quando ela já tinha um cadastrado em
+Configurações.
+
+Correção: `WhatsAppAppointmentNotifier` e `HttpWhatsAppMessenger` agora
+recebem opcionalmente um `ClinicWhatsAppDirectory`
+(`DrizzleClinicWhatsAppDirectory`, que consulta `clinics.whatsapp_phone_number_id`)
+e resolvem o número de envio por clínica a cada mensagem: usam o número
+próprio da clínica quando ela tem um cadastrado, e caem no
+`WHATSAPP_PHONE_NUMBER_ID` global como fallback quando não tem. Isso exigiu
+propagar `clinicId` por toda a cadeia de notificação/lembrete
+(`AppointmentScheduledNotification`, `AppointmentReminder`, o payload
+persistido no QStash e o schema do endpoint `/api/reminders/dispatch`).
+
+**Sobre o modelo da Meta**: uma única WABA (WhatsApp Business Account) pode
+hospedar vários números de telefone, e os templates aprovados são
+compartilhados entre todos os números daquela WABA — não é preciso recriar
+e reaprovar os templates para cada clínica. Um único token de acesso (System
+User) pode ter permissão sobre todos os números da WABA.
+
+**Decisão operacional**: o código já suporta múltiplos números desde já; o
+trabalho de cadastrar/verificar números reais de cada clínica na Meta fica
+para quando houver demanda real de clientes — o lançamento pode seguir com
+todas as clínicas usando o número compartilhado (fallback), sem dívida
+técnica para migrar depois.

@@ -106,6 +106,7 @@ describe("UpsertAppointmentUseCase", () => {
     await appointments.save(existing);
     reminders.scheduled.push({
       appointmentId: existing.id,
+      clinicId: "clinic-1",
       runAt: now,
       to: "+5511999999999",
       patientName: "Maria",

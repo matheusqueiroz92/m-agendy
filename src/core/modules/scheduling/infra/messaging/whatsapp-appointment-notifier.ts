@@ -6,9 +6,12 @@ import {
   AppointmentReminderNotification,
   AppointmentScheduledNotification,
 } from "../../application/ports/appointment-notifier";
+import { ClinicWhatsAppDirectory } from "../../application/ports/clinic-whatsapp-directory";
 
 export interface WhatsAppAppointmentNotifierConfig {
   apiUrl?: string;
+  /** Número (phone_number_id) compartilhado, usado como fallback quando a
+   * clínica não tem um número próprio cadastrado (ver `directory`). */
   phoneNumberId?: string;
   accessToken?: string;
   /** Código de idioma do template na Meta (ex.: "pt_BR"). Default "pt_BR". */
@@ -39,10 +42,17 @@ export interface WhatsAppAppointmentNotifierConfig {
  *
  * Em produção, recomenda-se enfileirar o envio (retentativa/desacoplamento) em
  * vez de enviar de forma síncrona aqui.
+ *
+ * MULTI-TENANT: se um `ClinicWhatsAppDirectory` for injetado, cada envio
+ * resolve primeiro o número (`phone_number_id`) próprio da clínica; se ela não
+ * tiver um cadastrado (ou nenhum diretório for injetado), usa o `phoneNumberId`
+ * global do `config` como fallback — todas as clínicas compartilham o mesmo
+ * número até configurarem o seu.
  */
 export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   constructor(
     private readonly config: WhatsAppAppointmentNotifierConfig = {},
+    private readonly directory?: ClinicWhatsAppDirectory,
   ) {}
 
   async notifyScheduled(
@@ -50,6 +60,7 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   ): Promise<void> {
     await this.sendTemplate({
       to: notification.to,
+      clinicId: notification.clinicId,
       templateName: this.config.confirmationTemplateName,
       params: this.buildParams(notification),
       devLabel: "confirmação",
@@ -61,6 +72,7 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   ): Promise<void> {
     await this.sendTemplate({
       to: notification.to,
+      clinicId: notification.clinicId,
       templateName: this.config.reminderTemplateName,
       params: this.buildParams(notification),
       devLabel: "lembrete",
@@ -72,10 +84,17 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   ): Promise<void> {
     await this.sendTemplate({
       to: notification.to,
+      clinicId: notification.clinicId,
       templateName: this.config.cancellationTemplateName,
       params: this.buildParams(notification),
       devLabel: "cancelamento",
     });
+  }
+
+  /** Número da clínica quando configurado, senão o compartilhado (fallback). */
+  private async resolvePhoneNumberId(clinicId: string): Promise<string | undefined> {
+    const clinicPhoneNumberId = await this.directory?.getPhoneNumberId(clinicId);
+    return clinicPhoneNumberId ?? this.config.phoneNumberId;
   }
 
   /** Monta os parâmetros posicionais do body do template: {{1}}, {{2}}, {{3}}. */
@@ -93,12 +112,14 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   /** Envio efetivo (ou modo dev). Centraliza a chamada à API para os dois tipos. */
   private async sendTemplate(params: {
     to: string;
+    clinicId: string;
     templateName?: string;
     params: string[];
     devLabel: string;
   }): Promise<void> {
-    const { apiUrl, phoneNumberId, accessToken, templateLanguage } = this.config;
-    const { to, templateName, devLabel } = params;
+    const { apiUrl, accessToken, templateLanguage } = this.config;
+    const { to, clinicId, templateName, devLabel } = params;
+    const phoneNumberId = await this.resolvePhoneNumberId(clinicId);
 
     // Sem credenciais ou sem o template configurado, apenas registra
     // (modo desenvolvimento) — degrada com elegância em vez de falhar.

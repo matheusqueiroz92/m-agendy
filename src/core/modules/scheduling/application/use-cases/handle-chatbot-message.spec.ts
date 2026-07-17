@@ -57,6 +57,11 @@ describe("HandleChatbotMessageUseCase", () => {
     expect(store.map.size).toBe(0);
   });
 
+  it("envia as respostas com o clinicId resolvido (roteamento multi-tenant do número de envio)", async () => {
+    await useCase.execute({ fromPhone: phone, text: "oi" });
+    expect(messenger.sent[0].clinicId).toBe("clinic-1");
+  });
+
   it("fluxo completo: profissional → data → horário → agendado", async () => {
     await useCase.execute({ fromPhone: phone, text: "oi" });
     expect(messenger.last()).toContain("1. Dr. House");

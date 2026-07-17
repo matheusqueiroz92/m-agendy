@@ -98,6 +98,7 @@ export class ScheduleAppointmentUseCase {
       // Confirmação imediata ("best-effort": não desfaz o agendamento).
       try {
         await this.notifier.notifyScheduled({
+          clinicId: input.clinicId,
           to: input.patientPhoneNumber,
           patientName,
           scheduledAt: appointment.scheduledAt,
@@ -112,6 +113,7 @@ export class ScheduleAppointmentUseCase {
       for (const runAt of reminderTimes) {
         await this.reminders.schedule({
           appointmentId: appointment.id,
+          clinicId: input.clinicId,
           runAt,
           to: input.patientPhoneNumber,
           patientName,

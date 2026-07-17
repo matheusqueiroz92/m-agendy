@@ -6,6 +6,7 @@ import {
   AppointmentReminderNotification,
   AppointmentScheduledNotification,
 } from "../ports/appointment-notifier";
+import { ClinicWhatsAppDirectory } from "../ports/clinic-whatsapp-directory";
 import {
   AppointmentReminder,
   ReminderScheduler,
@@ -66,5 +67,18 @@ export class FakeClinicPlanProvider {
   constructor(private readonly plan: string | null = null) {}
   async getEffectivePlan(): Promise<string | null> {
     return this.plan;
+  }
+}
+
+/** ClinicWhatsAppDirectory fake: números por clínica configuráveis em memória. */
+export class FakeClinicWhatsAppDirectory implements ClinicWhatsAppDirectory {
+  private readonly numbers = new Map<string, string>();
+
+  set(clinicId: string, phoneNumberId: string): void {
+    this.numbers.set(clinicId, phoneNumberId);
+  }
+
+  async getPhoneNumberId(clinicId: string): Promise<string | null> {
+    return this.numbers.get(clinicId) ?? null;
   }
 }

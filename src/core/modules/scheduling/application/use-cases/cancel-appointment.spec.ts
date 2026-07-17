@@ -55,6 +55,7 @@ describe("CancelAppointmentUseCase", () => {
     await appointments.save(appointment);
     reminders.scheduled.push({
       appointmentId: appointment.id,
+      clinicId: "clinic-1",
       runAt: new Date(),
       to: "+5511999999999",
       patientName: "Maria",

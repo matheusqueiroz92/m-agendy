@@ -1,5 +1,7 @@
 export interface AppointmentReminder {
   appointmentId: string;
+  /** Clínica dona do agendamento (resolve o número de WhatsApp de envio). */
+  clinicId: string;
   /** Quando o lembrete deve ser disparado. */
   runAt: Date;
   /** Dados denormalizados no payload para o worker não precisar reconsultar. */

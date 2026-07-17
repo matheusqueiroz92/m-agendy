@@ -120,6 +120,7 @@ export class BookAppointmentUseCase {
     // Confirmação + lembretes não devem derrubar o agendamento.
     try {
       await this.notifier.notifyScheduled({
+        clinicId: input.clinicId,
         to: input.patientPhoneNumber,
         patientName: input.patientName,
         scheduledAt: appointment.scheduledAt,
@@ -129,6 +130,7 @@ export class BookAppointmentUseCase {
       for (const runAt of computeReminderTimes(appointment.scheduledAt, now)) {
         await this.reminders.schedule({
           appointmentId: appointment.id,
+          clinicId: input.clinicId,
           runAt,
           to: input.patientPhoneNumber,
           patientName: input.patientName,

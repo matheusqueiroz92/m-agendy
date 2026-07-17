@@ -1,4 +1,7 @@
 export interface AppointmentScheduledNotification {
+  /** Clínica dona do agendamento — usada para resolver o número de WhatsApp
+   * de envio (cada clínica pode ter o seu, com fallback pro compartilhado). */
+  clinicId: string;
   to: string; // telefone do paciente (E.164 / formato do provedor)
   patientName: string;
   scheduledAt: Date;

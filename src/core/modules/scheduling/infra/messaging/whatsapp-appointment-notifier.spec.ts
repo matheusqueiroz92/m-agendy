@@ -1,9 +1,11 @@
 import dayjs from "dayjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { FakeClinicWhatsAppDirectory } from "../../application/testing/fakes";
 import { WhatsAppAppointmentNotifier } from "./whatsapp-appointment-notifier";
 
 const notification = {
+  clinicId: "clinic-1",
   to: "5511999998888",
   patientName: "Maria",
   doctorName: "Dr. João",
@@ -154,6 +156,48 @@ describe("WhatsAppAppointmentNotifier", () => {
 
     await expect(notifier.notifyScheduled(notification)).rejects.toThrow(
       "Falha ao enviar template no WhatsApp: 401",
+    );
+  });
+
+  it("usa o número próprio da clínica quando o directory tem um cadastrado", async () => {
+    const directory = new FakeClinicWhatsAppDirectory();
+    directory.set("clinic-1", "999888777");
+    const notifier = new WhatsAppAppointmentNotifier(
+      {
+        apiUrl: "https://graph.facebook.com/v20.0",
+        phoneNumberId: "123", // fallback compartilhado — não deve ser usado aqui
+        accessToken: "token",
+        confirmationTemplateName: "confirmacao_agendamento",
+      },
+      directory,
+    );
+
+    await notifier.notifyScheduled(notification);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://graph.facebook.com/v20.0/999888777/messages",
+      expect.anything(),
+    );
+  });
+
+  it("cai no número compartilhado (fallback) quando a clínica não tem número próprio", async () => {
+    const directory = new FakeClinicWhatsAppDirectory();
+    // Nenhum número cadastrado para "clinic-1".
+    const notifier = new WhatsAppAppointmentNotifier(
+      {
+        apiUrl: "https://graph.facebook.com/v20.0",
+        phoneNumberId: "123",
+        accessToken: "token",
+        confirmationTemplateName: "confirmacao_agendamento",
+      },
+      directory,
+    );
+
+    await notifier.notifyScheduled(notification);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://graph.facebook.com/v20.0/123/messages",
+      expect.anything(),
     );
   });
 });
