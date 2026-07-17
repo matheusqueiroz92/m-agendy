@@ -37,6 +37,7 @@ export class DrizzleClinicPlanProvider implements ClinicPlanProvider {
       planOverrideExpiresAt: clinic.planOverrideExpiresAt ?? null,
       basePlan: owner?.user?.plan ?? null,
       now: new Date(),
+      basePlanExpiresAt: null
     }).effectivePlan;
   }
 }
