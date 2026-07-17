@@ -25,13 +25,21 @@ const AuthenticationPage = async () => {
       {/* Coluna da esquerda */}
       <div className="bg-muted/40 border-border relative hidden flex-col items-center justify-center overflow-hidden border-r px-8 py-12 lg:flex">
         <div className="flex flex-col items-center justify-center text-center">
-          <Image
-            src="/images/ficha.png"
-            alt="Calendário"
-            width={500}
-            height={400}
-            className="mb-8"
-          />
+          <div className="relative mb-8 aspect-[5/4] w-full max-w-[500px]">
+            <Image
+              src="/images/ficha.png"
+              alt=""
+              fill
+              aria-hidden="true"
+              className="scale-[1.02] object-cover blur-[10px] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_55%,transparent_100%)] [mask-image:radial-gradient(ellipse_at_center,black_55%,transparent_100%)]"
+            />
+            <Image
+              src="/images/ficha.png"
+              alt="Calendário"
+              fill
+              className=" object-cover [-webkit-mask-image:radial-gradient(ellipse_at_center,black_64%,transparent_94%)] [mask-image:radial-gradient(ellipse_at_center,black_64%,transparent_94%)]"
+            />
+          </div>
 
           <h2 className="text-foreground mb-4 text-2xl font-semibold tracking-tight">
             Transforme a gestão da sua clínica

@@ -57,6 +57,13 @@
       "when": 1781754581433,
       "tag": "0007_illegal_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784211542413,
+      "tag": "0008_perpetual_venus",
+      "breakpoints": true
     }
   ]
 }

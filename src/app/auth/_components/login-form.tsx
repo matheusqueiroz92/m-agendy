@@ -140,7 +140,7 @@ const LoginForm = () => {
         <div className="flex flex-col gap-3">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full cursor-pointer bg-blue-600 text-white hover:bg-blue-800"
             disabled={loginForm.formState.isSubmitting}
           >
             {loginForm.formState.isSubmitting ? (
@@ -153,7 +153,7 @@ const LoginForm = () => {
             variant="outline"
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full"
+            className="w-full cursor-pointer"
           >
             <GoogleIcon />
             Entrar com Google
@@ -162,7 +162,7 @@ const LoginForm = () => {
             variant="outline"
             type="button"
             onClick={handleGithubLogin}
-            className="w-full"
+            className="w-full cursor-pointer"
           >
             {resolvedTheme === "dark" ? (
               <GithubIconWhite />

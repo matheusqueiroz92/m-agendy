@@ -10,6 +10,7 @@ export const SignOutButton = () => {
   return (
     <Button
       variant="outline"
+      className="cursor-pointer"
       onClick={() =>
         authClient.signOut({
           fetchOptions: { onSuccess: () => router.push("/auth") },
