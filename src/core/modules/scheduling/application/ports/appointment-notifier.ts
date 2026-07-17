@@ -8,6 +8,9 @@ export interface AppointmentScheduledNotification {
 /** Mesma forma da notificação de agendamento, usada para o lembrete. */
 export type AppointmentReminderNotification = AppointmentScheduledNotification;
 
+/** Mesma forma da notificação de agendamento, usada para o cancelamento. */
+export type AppointmentCancelledNotification = AppointmentScheduledNotification;
+
 /**
  * Porta de notificação de agendamentos (driven port).
  *
@@ -20,4 +23,6 @@ export interface AppointmentNotifier {
   notifyScheduled(notification: AppointmentScheduledNotification): Promise<void>;
   /** Lembrete enviado próximo da data (disparado pelo agendador). */
   notifyReminder(notification: AppointmentReminderNotification): Promise<void>;
+  /** Aviso de cancelamento, enviado quando a clínica cancela o agendamento. */
+  notifyCancelled(notification: AppointmentCancelledNotification): Promise<void>;
 }

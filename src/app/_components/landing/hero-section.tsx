@@ -151,4 +151,13 @@ export function HeroSection() {
               <div className="overflow-hidden rounded-2xl">
                 {mounted ? (
                   <WhatsAppMockup />
-        
+                ) : (
+                  <WhatsAppMockup />
+                )}
+              </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

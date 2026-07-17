@@ -64,4 +64,31 @@ const SubscriptionPage = async () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PageHea
+      <PageHeader>
+        <PageHeaderContent>
+          <PageTitle>Assinatura</PageTitle>
+          <PageDescription>Gerencie seu plano de assinatura</PageDescription>
+        </PageHeaderContent>
+      </PageHeader>
+      <PageContent>
+        <div className="flex justify-start">
+          <SubscriptionPlan
+            active
+            userEmail={session.user.email}
+            planId={currentPlan}
+            planName={planDef?.label ?? currentPlan}
+            price={planDef?.monthlyPriceInBRL}
+            description={planDef?.description}
+            features={
+              PlanFeatures[currentPlan as keyof typeof PlanFeatures] ?? []
+            }
+            isTrialActive={isTrialActive}
+            planExpiresAt={userRow?.planExpiresAt ?? null}
+          />
+        </div>
+      </PageContent>
+    </PageContainer>
+  );
+};
+
+export default SubscriptionPage;

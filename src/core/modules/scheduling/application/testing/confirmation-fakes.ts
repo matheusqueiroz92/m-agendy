@@ -7,21 +7,22 @@ import {
   ConfirmationLookup,
 } from "../ports/confirmation-lookup";
 
-/** Lookup de confirmação fake, configurável por telefone. */
+/** Lookup de confirmação fake, configurável por telefone (uma ou mais candidatas). */
 export class FakeConfirmationLookup implements ConfirmationLookup {
   constructor(
-    private readonly byPhone: Map<string, ConfirmableAppointment> = new Map(),
+    private readonly byPhone: Map<string, ConfirmableAppointment[]> = new Map(),
   ) {}
 
-  set(phone: string, appointment: ConfirmableAppointment) {
-    this.byPhone.set(phone, appointment);
+  /** Define as candidatas de um telefone. Chame de novo com várias para simular ambiguidade. */
+  set(phone: string, ...appointments: ConfirmableAppointment[]) {
+    this.byPhone.set(phone, appointments);
   }
 
-  async findConfirmableByPhone(params: {
+  async findConfirmableAppointmentsByPhone(params: {
     phone: string;
     now: Date;
-  }): Promise<ConfirmableAppointment | null> {
-    return this.byPhone.get(params.phone) ?? null;
+  }): Promise<ConfirmableAppointment[]> {
+    return this.byPhone.get(params.phone) ?? [];
   }
 }
 

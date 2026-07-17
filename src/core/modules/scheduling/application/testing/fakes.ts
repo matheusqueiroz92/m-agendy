@@ -1,6 +1,7 @@
 import { Clock } from "@/core/shared/application/ports/clock";
 
 import {
+  AppointmentCancelledNotification,
   AppointmentNotifier,
   AppointmentReminderNotification,
   AppointmentScheduledNotification,
@@ -14,6 +15,7 @@ import {
 export class FakeAppointmentNotifier implements AppointmentNotifier {
   public readonly scheduled: AppointmentScheduledNotification[] = [];
   public readonly reminders: AppointmentReminderNotification[] = [];
+  public readonly cancelled: AppointmentCancelledNotification[] = [];
 
   async notifyScheduled(
     notification: AppointmentScheduledNotification,
@@ -25,6 +27,12 @@ export class FakeAppointmentNotifier implements AppointmentNotifier {
     notification: AppointmentReminderNotification,
   ): Promise<void> {
     this.reminders.push(notification);
+  }
+
+  async notifyCancelled(
+    notification: AppointmentCancelledNotification,
+  ): Promise<void> {
+    this.cancelled.push(notification);
   }
 }
 

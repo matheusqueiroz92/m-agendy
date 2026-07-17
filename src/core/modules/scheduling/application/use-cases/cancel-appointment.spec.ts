@@ -6,15 +6,18 @@ import { FakeAuditLog } from "@/core/shared/application/testing/fake-audit-log";
 import { ForbiddenError, NotFoundError } from "@/core/shared/domain/errors";
 
 import { Appointment } from "../../domain/appointment";
-import { InMemoryReminderScheduler } from "../testing/fakes";
+import { FakeAppointmentContactDirectory } from "../testing/fake-appointment-contact-directory";
+import { FakeAppointmentNotifier, InMemoryReminderScheduler } from "../testing/fakes";
 import { InMemoryAppointmentRepository } from "../testing/in-memory-appointment-repository";
-import { DeleteAppointmentUseCase } from "./delete-appointment";
+import { CancelAppointmentUseCase } from "./cancel-appointment";
 
-describe("DeleteAppointmentUseCase", () => {
+describe("CancelAppointmentUseCase", () => {
   let appointments: InMemoryAppointmentRepository;
   let audit: FakeAuditLog;
   let reminders: InMemoryReminderScheduler;
-  let useCase: DeleteAppointmentUseCase;
+  let notifier: FakeAppointmentNotifier;
+  let contacts: FakeAppointmentContactDirectory;
+  let useCase: CancelAppointmentUseCase;
 
   const manager = new AuthenticatedActor({
     userId: "u1",
@@ -35,15 +38,19 @@ describe("DeleteAppointmentUseCase", () => {
     appointments = new InMemoryAppointmentRepository();
     audit = new FakeAuditLog();
     reminders = new InMemoryReminderScheduler();
-    useCase = new DeleteAppointmentUseCase(
+    notifier = new FakeAppointmentNotifier();
+    contacts = new FakeAppointmentContactDirectory();
+    useCase = new CancelAppointmentUseCase(
       appointments,
       new Authorizer(),
       audit,
       reminders,
+      notifier,
+      contacts,
     );
   });
 
-  it("remove o agendamento, cancela lembretes e registra auditoria", async () => {
+  it("cancela o agendamento (preserva o registro), cancela lembretes, avisa o paciente e registra auditoria", async () => {
     const appointment = makeAppointment();
     await appointments.save(appointment);
     reminders.scheduled.push({
@@ -53,6 +60,11 @@ describe("DeleteAppointmentUseCase", () => {
       patientName: "Maria",
       scheduledAt: appointment.toPrimitives().scheduledAt,
     });
+    contacts.setContact({
+      patientName: "Maria",
+      patientPhoneNumber: "+5511999999999",
+      doctorName: "Dr. João",
+    });
 
     await useCase.execute({
       actor: manager,
@@ -60,11 +72,32 @@ describe("DeleteAppointmentUseCase", () => {
       appointmentId: appointment.id,
     });
 
-    expect(appointments.items).toHaveLength(0);
+    const updated = await appointments.findById(appointment.id);
+    expect(updated).not.toBeNull();
+    expect(updated?.toPrimitives().status).toBe("cancelled");
     expect(
       reminders.scheduled.filter((r) => r.appointmentId === appointment.id),
     ).toHaveLength(0);
-    expect(audit.entries[0].action).toBe("appointment.deleted");
+    expect(notifier.cancelled).toHaveLength(1);
+    expect(notifier.cancelled[0].to).toBe("+5511999999999");
+    expect(audit.entries[0].action).toBe("appointment.cancelled");
+  });
+
+  it("não avisa o paciente quando não há telefone de contato", async () => {
+    const appointment = makeAppointment();
+    await appointments.save(appointment);
+    contacts.setContact(null);
+
+    await useCase.execute({
+      actor: manager,
+      clinicId: "clinic-1",
+      appointmentId: appointment.id,
+    });
+
+    expect(notifier.cancelled).toHaveLength(0);
+    expect((await appointments.findById(appointment.id))?.toPrimitives().status).toBe(
+      "cancelled",
+    );
   });
 
   it("falha quando o agendamento é de outra clínica", async () => {
@@ -78,7 +111,9 @@ describe("DeleteAppointmentUseCase", () => {
         appointmentId: appointment.id,
       }),
     ).rejects.toBeInstanceOf(NotFoundError);
-    expect(appointments.items).toHaveLength(1);
+    expect((await appointments.findById(appointment.id))?.toPrimitives().status).not.toBe(
+      "cancelled",
+    );
   });
 
   it("nega quando o ator não pode gerenciar a clínica", async () => {
@@ -97,6 +132,5 @@ describe("DeleteAppointmentUseCase", () => {
         appointmentId: appointment.id,
       }),
     ).rejects.toBeInstanceOf(ForbiddenError);
-    expect(appointments.items).toHaveLength(1);
   });
 });

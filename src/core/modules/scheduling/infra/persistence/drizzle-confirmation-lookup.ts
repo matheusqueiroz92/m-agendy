@@ -11,14 +11,14 @@ import {
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
 
 /**
- * Adapter Drizzle: a partir do telefone, acha o paciente e a próxima consulta
- * pendente (futura). Compara telefones apenas por dígitos para tolerar máscara.
+ * Adapter Drizzle: a partir do telefone, acha o paciente e TODAS as consultas
+ * pendentes (futuras). Compara telefones apenas por dígitos para tolerar máscara.
  */
 export class DrizzleConfirmationLookup implements ConfirmationLookup {
-  async findConfirmableByPhone(params: {
+  async findConfirmableAppointmentsByPhone(params: {
     phone: string;
     now: Date;
-  }): Promise<ConfirmableAppointment | null> {
+  }): Promise<ConfirmableAppointment[]> {
     const target = onlyDigits(params.phone);
 
     const candidates = await db.query.patientsTable.findMany({
@@ -30,10 +30,10 @@ export class DrizzleConfirmationLookup implements ConfirmationLookup {
     );
 
     if (!patient) {
-      return null;
+      return [];
     }
 
-    const appointment = await db.query.appointmentsTable.findFirst({
+    const appointments = await db.query.appointmentsTable.findMany({
       where: and(
         eq(appointmentsTable.patientId, patient.id),
         eq(appointmentsTable.status, "pending"),
@@ -42,15 +42,11 @@ export class DrizzleConfirmationLookup implements ConfirmationLookup {
       orderBy: [asc(appointmentsTable.date)],
     });
 
-    if (!appointment) {
-      return null;
-    }
-
-    return {
+    return appointments.map((appointment) => ({
       appointmentId: appointment.id,
       clinicId: appointment.clinicId,
       patientName: patient.name,
       scheduledAt: appointment.date,
-    };
+    }));
   }
 }

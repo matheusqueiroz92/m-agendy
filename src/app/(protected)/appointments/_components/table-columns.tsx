@@ -98,6 +98,31 @@ export const createAppointmentsTableColumns = (
     },
   },
   {
+    id: "status",
+    accessorKey: "status",
+    header: "Status",
+    cell: (params) => {
+      const appointment = params.row.original;
+      const status = appointment.status;
+      const label: Record<typeof status, string> = {
+        pending: "Pendente",
+        confirmed: "Confirmado",
+        cancelled: "Cancelado",
+        no_show: "Falta",
+      };
+      const variant: Record<
+        typeof status,
+        "outline" | "default" | "destructive" | "secondary"
+      > = {
+        pending: "outline",
+        confirmed: "default",
+        cancelled: "secondary",
+        no_show: "destructive",
+      };
+      return <Badge variant={variant[status]}>{label[status]}</Badge>;
+    },
+  },
+  {
     id: "actions",
     cell: (params) => {
       const appointment = params.row.original;

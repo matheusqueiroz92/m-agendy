@@ -1,11 +1,12 @@
 "use client";
 
-import { EditIcon, MoreVerticalIcon, TrashIcon } from "lucide-react";
+import { CalendarXIcon, EditIcon, MoreVerticalIcon, XCircleIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deleteAppointment } from "@/actions/delete-appointment";
+import { cancelAppointment } from "@/actions/cancel-appointment";
+import { markAppointmentNoShow } from "@/actions/mark-appointment-no-show";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,18 +59,32 @@ export const AppointmentTableActions = ({
 }: AppointmentTableActionsProps) => {
   const [upsertDialogIsOpen, setUpsertDialogIsOpen] = useState(false);
 
-  const deleteAppointmentAction = useAction(deleteAppointment, {
+  const cancelAppointmentAction = useAction(cancelAppointment, {
     onSuccess: () => {
-      toast.success("Agendamento deletado com sucesso.");
+      toast.success("Agendamento cancelado. O paciente foi avisado por WhatsApp.");
     },
     onError: () => {
-      toast.error("Erro ao deletar agendamento.");
+      toast.error("Erro ao cancelar agendamento.");
     },
   });
 
-  const handleDeleteAppointmentClick = () => {
+  const markNoShowAction = useAction(markAppointmentNoShow, {
+    onSuccess: () => {
+      toast.success("Agendamento marcado como falta.");
+    },
+    onError: () => {
+      toast.error("Erro ao marcar falta.");
+    },
+  });
+
+  const handleCancelAppointmentClick = () => {
     if (!appointment) return;
-    deleteAppointmentAction.execute({ id: appointment.id });
+    cancelAppointmentAction.execute({ id: appointment.id });
+  };
+
+  const handleMarkNoShowClick = () => {
+    if (!appointment) return;
+    markNoShowAction.execute({ id: appointment.id });
   };
 
   return (
@@ -88,36 +103,69 @@ export const AppointmentTableActions = ({
           <DropdownMenuItem onClick={() => setUpsertDialogIsOpen(true)}>
             <EditIcon className="h-4 w-4" /> Editar
           </DropdownMenuItem>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <TrashIcon className="h-4 w-4" /> Excluir
-              </DropdownMenuItem>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Tem certeza que deseja deletar esse agendamento?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Essa ação não pode ser revertida. Isso irá deletar o
-                  agendamento de {appointment.patient.name} com{" "}
-                  {appointment.doctor.name}.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAppointmentClick}
-                  disabled={deleteAppointmentAction.isPending}
-                >
-                  {deleteAppointmentAction.isPending
-                    ? "Deletando..."
-                    : "Deletar"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {appointment.status !== "no_show" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <CalendarXIcon className="h-4 w-4" /> Marcar falta
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Marcar falta de {appointment.patient.name}?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O agendamento com {appointment.doctor.name} será marcado
+                    como falta. Isso não remove o registro nem envia aviso ao
+                    paciente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleMarkNoShowClick}
+                    disabled={markNoShowAction.isPending}
+                  >
+                    {markNoShowAction.isPending ? "Marcando..." : "Marcar falta"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {appointment.status !== "cancelled" &&
+            appointment.status !== "no_show" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <XCircleIcon className="h-4 w-4" /> Cancelar agendamento
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Cancelar o agendamento de {appointment.patient.name}?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O agendamento com {appointment.doctor.name} será
+                      marcado como cancelado (o histórico é mantido) e o
+                      paciente será avisado por WhatsApp.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Voltar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleCancelAppointmentClick}
+                      disabled={cancelAppointmentAction.isPending}
+                    >
+                      {cancelAppointmentAction.isPending
+                        ? "Cancelando..."
+                        : "Cancelar agendamento"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
         </DropdownMenuContent>
       </DropdownMenu>
 

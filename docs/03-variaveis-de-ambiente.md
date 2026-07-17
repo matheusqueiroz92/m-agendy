@@ -43,6 +43,10 @@ enviar de verdade). Isso permite rodar o app localmente sem configurar tudo.
 | `WHATSAPP_VERIFY_TOKEN` | Token do handshake de verificação do webhook (GET). |
 | `WHATSAPP_APP_SECRET` | App secret para validar a assinatura `X-Hub-Signature-256` (POST). |
 | `WHATSAPP_DEFAULT_CLINIC_ID` | Clínica padrão quando o número recebido não está mapeado (fallback do roteamento multi-tenant). |
+| `WHATSAPP_TEMPLATE_LANGUAGE` | Código de idioma do template na Meta (default `pt_BR`). |
+| `WHATSAPP_TEMPLATE_CONFIRMATION_NAME` | Nome do template aprovado no WhatsApp Manager para a confirmação imediata de agendamento. Sem ele, a confirmação cai em modo dev mesmo com as demais credenciais preenchidas — ver [docs/11](11-plano-notificacoes-whatsapp.md). |
+| `WHATSAPP_TEMPLATE_REMINDER_NAME` | Nome do template aprovado no WhatsApp Manager para o lembrete (24h/2h antes). Mesma regra acima. |
+| `WHATSAPP_TEMPLATE_CANCELLATION_NAME` | Nome do template aprovado no WhatsApp Manager para o aviso de cancelamento. Mesma regra acima. |
 
 ## Lembretes (fila)
 
@@ -50,6 +54,7 @@ enviar de verdade). Isso permite rodar o app localmente sem configurar tudo.
 |---|---|
 | `QSTASH_TOKEN` | Token do Upstash QStash (agenda HTTP atrasado para os lembretes). |
 | `REMINDER_DISPATCH_URL` | URL que o QStash chama para disparar o lembrete (`/api/reminders/dispatch`). |
+| `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | Chaves de assinatura do QStash (console da Upstash), validam o header `Upstash-Signature` em `/api/reminders/dispatch`. Sem elas, o endpoint aceita qualquer requisição (modo dev) — ver [docs/11](11-plano-notificacoes-whatsapp.md). |
 
 ## E-mail (SMTP / contato)
 

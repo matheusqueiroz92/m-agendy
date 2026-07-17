@@ -262,4 +262,14 @@ export function ContactSection() {
                     bgColor="cta"
                   >
                     {isSubmitting ? "Enviando…" : "Enviar mensagem"}
-                    <Send className="ml-2 size-5"
+                    <Send className="ml-2 size-5" aria-hidden="true" />
+                  </CtaButton>
+                </form>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -160,4 +160,8 @@ export const auth = betterAuth({
         html,
         text,
       }).catch((error) => {
-        console.error("Erro ao enviar e-mail
+        console.error("Erro ao enviar e-mail de redefinição de senha:", error);
+      });
+    },
+  },
+});

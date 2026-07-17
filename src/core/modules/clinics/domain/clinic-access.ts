@@ -39,4 +39,28 @@ export const resolveClinicAccess = (
   input: ResolveClinicAccessInput,
 ): ClinicAccess => {
   if (input.status === "blocked") {
-    return { isBlocked: true, effectivePlan: null, hasActivePlan: false
+    return { isBlocked: true, effectivePlan: null, hasActivePlan: false };
+  }
+
+  const overrideActive =
+    !!input.planOverride &&
+    (input.planOverrideExpiresAt === null ||
+      input.planOverrideExpiresAt.getTime() > input.now.getTime());
+
+  const baseActive =
+    !!input.basePlan &&
+    (input.basePlanExpiresAt === null ||
+      input.basePlanExpiresAt.getTime() > input.now.getTime());
+
+  const effectivePlan = overrideActive
+    ? input.planOverride
+    : baseActive
+      ? input.basePlan
+      : null;
+
+  return {
+    isBlocked: false,
+    effectivePlan,
+    hasActivePlan: !!effectivePlan,
+  };
+};

@@ -548,4 +548,31 @@ export const notificationsTable = pgTable("notifications", {
 });
 
 /**
- * Ra
+ * Rastreia os lembretes agendados no QStash por consulta, para permitir
+ * cancelamento real (DELETE na fila) quando a consulta é remarcada/cancelada.
+ * Sem isso, `cancelForAppointment` não teria como saber quais mensagens
+ * cancelar no provedor de fila.
+ */
+export const appointmentRemindersTable = pgTable("appointment_reminders", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  appointmentId: uuid("appointment_id")
+    .notNull()
+    .references(() => appointmentsTable.id, { onDelete: "cascade" }),
+  qstashMessageId: text("qstash_message_id").notNull(),
+  runAt: timestamp("run_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const whatsappConversationsTable = pgTable("whatsapp_conversations", {
+  phone: text("phone").primaryKey(),
+  clinicId: uuid("clinic_id")
+    .notNull()
+    .references(() => clinicsTable.id, { onDelete: "cascade" }),
+  step: text("step").notNull(),
+  data: jsonb("data"),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

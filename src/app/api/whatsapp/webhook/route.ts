@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { isConfirmationReply } from "@/core/modules/scheduling/domain/confirmation-reply";
 import { makeConfirmAppointmentFromWhatsApp } from "@/core/modules/scheduling/infra/factories/make-confirm-appointment-from-whatsapp";
 import { makeHandleChatbotMessage } from "@/core/modules/scheduling/infra/factories/make-handle-chatbot-message";
 import { verifyMetaSignature } from "@/core/shared/security/meta-signature";
@@ -9,14 +10,14 @@ import { verifyMetaSignature } from "@/core/shared/security/meta-signature";
  *
  * GET  → verificação do webhook (handshake do Meta).
  * POST → mensagens recebidas:
- *        - "CONFIRMAR/SIM/OK" → confirma a próxima consulta pendente e avisa a clínica.
- *        - demais textos      → encaminha ao chatbot de agendamento.
+ *        - confirmação de presença (ver `isConfirmationReply`) → confirma a
+ *          consulta pendente e avisa a clínica.
+ *        - demais textos → encaminha ao chatbot de agendamento.
  *
  * SEGURANÇA: a assinatura `X-Hub-Signature-256` é validada contra o app secret
  * (WHATSAPP_APP_SECRET). Sem o segredo configurado, opera em modo dev (sem
  * validação) e registra um aviso.
  */
-const CONFIRM_WORDS = ["confirmar", "confirmado", "sim", "ok"];
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -41,9 +42,6 @@ interface InboundMessage {
   message: IncomingMessage;
   phoneNumberId?: string;
 }
-
-const isConfirmation = (text: string): boolean =>
-  CONFIRM_WORDS.some((word) => text === word);
 
 export async function POST(request: NextRequest) {
   // Corpo CRU é necessário para validar a assinatura antes de confiar no payload.
@@ -102,10 +100,9 @@ export async function POST(request: NextRequest) {
   for (const { message, phoneNumberId } of inbound) {
     if (message.type !== "text" || !message.from) continue;
     const raw = message.text?.body ?? "";
-    const normalized = raw.trim().toLowerCase();
 
     try {
-      if (isConfirmation(normalized)) {
+      if (isConfirmationReply(raw)) {
         await confirmUseCase.execute({ fromPhone: message.from });
       } else {
         await chatbot.execute({

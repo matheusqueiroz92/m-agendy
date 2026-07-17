@@ -82,4 +82,11 @@ export type PlanId = (typeof PLAN_CATALOG)[number]["id"];
 
 export const PLAN_IDS = PLAN_CATALOG.map((p) => p.id) as PlanId[];
 
-export co
+export const isValidPlan = (value: string | null | undefined): value is PlanId =>
+  !!value && PLAN_IDS.includes(value as PlanId);
+
+export const getPlan = (id: string): PlanDefinition | undefined =>
+  PLAN_CATALOG.find((p) => p.id === id);
+
+export const getPlanLabel = (id: string | null | undefined): string =>
+  (id && getPlan(id)?.label) || "—";

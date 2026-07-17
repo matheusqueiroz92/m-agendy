@@ -1,6 +1,6 @@
 import { SendAppointmentReminderUseCase } from "../../application/use-cases/send-appointment-reminder";
-import { WhatsAppAppointmentNotifier } from "../messaging/whatsapp-appointment-notifier";
 import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment-repository";
+import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
 
 /**
  * Composition root do caso de uso de envio de lembrete, usado pelo Route
@@ -9,9 +9,5 @@ import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment
 export const makeSendAppointmentReminder = () =>
   new SendAppointmentReminderUseCase(
     new DrizzleAppointmentRepository(),
-    new WhatsAppAppointmentNotifier({
-      apiUrl: process.env.WHATSAPP_API_URL,
-      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
-      accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
-    }),
+    makeWhatsAppAppointmentNotifier(),
   );

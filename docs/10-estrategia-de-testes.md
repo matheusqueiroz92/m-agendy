@@ -444,3 +444,34 @@ manualmente arquivo a arquivo, mas **rode a suíte completa localmente antes de
 confiar nela em produção** — em especial `booking.spec.ts` (calendário) e o
 `e2e/global-setup.ts` (hash de senha do BetterAuth), que são as partes com
 maior chance de precisar de um ajuste fino na primeira execução real.
+
+### Incidente (16/07/2026): `npm test` truncou o banco Neon real
+
+Ao rodar `npm test` pela primeira vez localmente, os testes de integração
+(`*.integration.spec.ts`) executaram junto com os de unidade. Causa raiz:
+`vitest.config.ts` tinha `include: ["src/**/*.spec.ts"]`, e esse glob casa por
+**sufixo** — `route.integration.spec.ts` também termina em `.spec.ts`. Como a
+trava que aponta `DATABASE_URL` para `TEST_DATABASE_URL`
+(`vitest.integration.setup.ts`) só é carregada por `vitest.integration.config.ts`,
+os testes de integração rodaram contra o `DATABASE_URL` real do `.env`
+(Neon) — e várias suítes chamam `resetTestDatabase()`, que faz
+`TRUNCATE TABLE ... CASCADE` em 18 tabelas da aplicação entre casos. Rodar em
+paralelo (sem a trava `fileParallelism: false` do config de integração) ainda
+causou corridas entre arquivos, explicando os erros de FK observados.
+
+**Correção aplicada:**
+1. `vitest.config.ts` agora tem `exclude: [...configDefaults.exclude, "src/**/*.integration.spec.ts"]`
+   explícito, além do `include`.
+2. `resetTestDatabase()` (`src/core/shared/infra/testing/reset-test-database.ts`)
+   ganhou uma trava em profundidade: recusa rodar o `TRUNCATE` a menos que
+   `process.env.DATABASE_URL === process.env.TEST_DATABASE_URL`, mesmo que um
+   config de teste errado volte a incluir os arquivos de integração no futuro.
+
+**Se isso aconteceu com você**: as tabelas `users`, `clinics`,
+`users_to_clinics`, `doctors`, `patients`, `appointments`,
+`medical_records`/`clinical_attendances`/`diagnoses`/`prescriptions`/`follow_ups`,
+`notifications`, `audit_logs`, `whatsapp_conversations`,
+`appointment_reminders`, `sessions`, `accounts` e `verifications` foram
+esvaziadas no banco apontado por `DATABASE_URL`. Verifique se o Neon tem
+Point-in-Time Restore/branch de restauração disponível antes de recriar os
+dados manualmente.

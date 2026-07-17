@@ -90,4 +90,42 @@ const NewSubscriptionPage = async () => {
               planName="Premium"
               features={PlanFeatures.premium}
               price={59}
-              description="Ideal para empressas e profissionais com um 
+              description="Ideal para empressas e profissionais com um número maior de agendamentos"
+              active={currentPlan === "premium"}
+              trialDays={PLAN_CATALOG.find((p) => p.id === "premium")?.trialDays}
+              trialEligible={trialEligible}
+              isTrialActive={currentPlan === "premium" && !!userRow?.planExpiresAt}
+              planExpiresAt={userRow?.planExpiresAt ?? null}
+            />
+          </div>
+
+          <div className="w-full max-w-md">
+            <SubscriptionPlan
+              userEmail={session.user.email}
+              planId="gold"
+              planName="Gold"
+              features={PlanFeatures.gold}
+              price={99}
+              description="Para empresas buscam rescursos avançados e desejam uma solução e personalizada"
+              active={currentPlan === "gold"}
+            />
+          </div>
+        </div>
+
+        {/* Rodapé */}
+        <footer className="mt-12 w-full border-t border-slate-200 py-8 text-center text-sm text-slate-500">
+          <p>
+            © {new Date().getFullYear()} M.Agendy. Todos os direitos
+            reservados.
+          </p>
+          <p className="mt-1">
+            Desenvolvido por{" "}
+            <span className="font-medium">Matheus Queiroz</span>
+          </p>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default NewSubscriptionPage;

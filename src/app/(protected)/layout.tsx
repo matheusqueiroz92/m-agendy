@@ -35,4 +35,20 @@ const ProtectedLayout = async ({
   // Equipe de clínica sem plano ativo (nunca assinou, trial expirado ou
   // assinatura cancelada): manda para a escolha de plano, igual ao pós-login
   // (`resolveLandingRoute`). Sem este guard, o painel ficava acessível mesmo
-  // sem plano
+  // sem plano — só os limites de uso (agendamentos, profissionais) barravam.
+  if (clinic && !session.user.plan) {
+    redirect("/new-subscription");
+  }
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <AppHeader />
+        <div className="flex flex-1 flex-col">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+};
+
+export default ProtectedLayout;
