@@ -123,6 +123,14 @@ export class DrizzleAdminClinicRepository implements AdminClinicRepository {
     await db.delete(clinicsTable).where(eq(clinicsTable.id, id));
   }
 
+  async linkOwner(clinicId: string, userId: string): Promise<void> {
+    await db.insert(usersToClinicsTable).values({
+      userId,
+      clinicId,
+      role: "owner",
+    });
+  }
+
   async setStatus(
     id: string,
     status: ClinicStatus,

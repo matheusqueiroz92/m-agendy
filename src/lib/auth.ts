@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { customSession } from "better-auth/plugins";
+import { admin, customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { resolveClinicAccess } from "@/core/modules/clinics/domain/clinic-access";
@@ -51,6 +51,10 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    // Usado apenas server-side (auth.api.createUser) para provisionar a
+    // conta do responsável quando o admin de plataforma cria uma clínica
+    // (ver ClinicOwnerProvisioner). Não expõe rotas de admin no client.
+    admin(),
     customSession(async ({ user, session }) => {
       // TODO: colocar cache
       const [userData, clinics] = await Promise.all([
