@@ -30,10 +30,35 @@ Cada linha tem um menu de ações:
   opcional, ou volta a usar a assinatura do responsável.
 - **Bloquear / Liberar** — suspende ou reativa o acesso da clínica.
 - **Excluir** — remove a clínica e seus dados vinculados.
-- **Nova clínica** — cadastra uma clínica avulsa.
+- **Nova clínica** — cadastra a clínica e a pessoa responsável por ela.
 
 Todas as ações exigem `platform_admin` (garantido no caso de uso, não só na UI)
 e geram trilha de auditoria.
+
+### Responsável ao criar uma clínica pelo admin
+
+Diferente do autocadastro público (onde quem se cadastra já vira o dono da
+própria clínica), uma clínica criada pelo admin não tem, por padrão, nenhum
+usuário vinculado — e sem isso ninguém consegue logar nela. Por isso, ao criar
+(não ao editar), o formulário também pede **nome e e-mail do responsável**
+(telefone é opcional):
+
+1. Se já existe uma conta com aquele e-mail (a pessoa já usa o M.Agendy em
+   outra clínica), ela é apenas **vinculada** como responsável — sem criar
+   conta duplicada nem enviar e-mail.
+2. Senão, uma conta nova é criada (via `auth.api.createUser`, plugin `admin`
+   do BetterAuth) com uma senha aleatória descartável que **ninguém vê** —
+   nem o admin — e o e-mail de "definir senha" é disparado na hora,
+   reaproveitando o mesmo fluxo de recuperação de senha do login
+   (`sendResetPassword`). A pessoa define a própria senha pelo link e já cai
+   direto na clínica dela.
+3. Se esse provisionamento falhar por qualquer motivo, a clínica recém-criada
+   é revertida (excluída) em vez de ficar um registro órfão/inacessível.
+
+Implementação: `ClinicOwnerProvisioner` (porta) /
+`DrizzleClinicOwnerProvisioner` (adapter), orquestrado pelo
+`UpsertClinicUseCase` — ver `docs/05-desenvolvimento.md` para o padrão
+geral de portas/casos de uso do projeto.
 
 ## Bloqueio de acesso
 
