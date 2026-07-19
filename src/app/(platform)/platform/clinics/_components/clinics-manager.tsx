@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { adminDeleteClinic } from "@/actions/admin-delete-clinic";
 import { adminSetClinicPlan } from "@/actions/admin-set-clinic-plan";
 import { adminSetClinicStatus } from "@/actions/admin-set-clinic-status";
-import { adminUpsertClinic } from "@/actions/admin-upsert-clinic";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +54,6 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  CLINIC_TYPES,
   ClinicType,
   clinicTypeConfig,
 } from "@/core/modules/clinics/domain/clinic-type";
@@ -63,6 +61,8 @@ import {
   getPlanLabel,
   PLAN_CATALOG,
 } from "@/core/modules/billing/domain/plans";
+
+import { UpsertClinicDialog } from "./upsert-clinic-dialog";
 
 export interface ClinicRow {
   id: string;
@@ -87,8 +87,6 @@ const onErr = () => toast.error("Não foi possível concluir a ação.");
 export const ClinicsManager = ({ clinics }: { clinics: ClinicRow[] }) => {
   const [editing, setEditing] = useState<ClinicRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [type, setType] = useState<ClinicType>("medical");
 
   const [blocking, setBlocking] = useState<ClinicRow | null>(null);
   const [reason, setReason] = useState("");
@@ -99,13 +97,6 @@ export const ClinicsManager = ({ clinics }: { clinics: ClinicRow[] }) => {
 
   const [deleting, setDeleting] = useState<ClinicRow | null>(null);
 
-  const upsert = useAction(adminUpsertClinic, {
-    onSuccess: () => {
-      toast.success("Clínica salva.");
-      setEditOpen(false);
-    },
-    onError: onErr,
-  });
   const setStatus = useAction(adminSetClinicStatus, {
     onSuccess: () => {
       toast.success("Status atualizado.");
@@ -131,15 +122,11 @@ export const ClinicsManager = ({ clinics }: { clinics: ClinicRow[] }) => {
 
   const openNew = () => {
     setEditing(null);
-    setName("");
-    setType("medical");
     setEditOpen(true);
   };
 
   const openEdit = (c: ClinicRow) => {
     setEditing(c);
-    setName(c.name);
-    setType(c.type);
     setEditOpen(true);
   };
 
@@ -243,50 +230,11 @@ export const ClinicsManager = ({ clinics }: { clinics: ClinicRow[] }) => {
       </Table>
 
       {/* Criar/editar */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar clínica" : "Nova clínica"}</DialogTitle>
-            <DialogDescription>
-              Defina o nome e o tipo da clínica.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={type} onValueChange={(v) => setType(v as ClinicType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CLINIC_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {clinicTypeConfig[t].clinicLabel}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              disabled={upsert.isPending}
-              onClick={() =>
-                upsert.execute({ id: editing?.id, name, type })
-              }
-            >
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UpsertClinicDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        editing={editing}
+      />
 
       {/* Bloquear (com motivo) */}
       <Dialog open={!!blocking} onOpenChange={(o) => !o && setBlocking(null)}>
