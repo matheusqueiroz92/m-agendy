@@ -10,6 +10,8 @@ type Row = AdminClinicListItem;
 /** AdminClinicRepository em memória para testes. */
 export class InMemoryAdminClinicRepository implements AdminClinicRepository {
   public items: Row[] = [];
+  /** clinicId -> userId do responsável vinculado. */
+  public owners = new Map<string, string>();
   private seq = 0;
 
   async listAll(): Promise<Row[]> {
@@ -52,6 +54,11 @@ export class InMemoryAdminClinicRepository implements AdminClinicRepository {
 
   async delete(id: string): Promise<void> {
     this.items = this.items.filter((c) => c.id !== id);
+    this.owners.delete(id);
+  }
+
+  async linkOwner(clinicId: string, userId: string): Promise<void> {
+    this.owners.set(clinicId, userId);
   }
 
   async setStatus(

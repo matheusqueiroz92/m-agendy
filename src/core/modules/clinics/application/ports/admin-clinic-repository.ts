@@ -31,6 +31,8 @@ export interface AdminClinicRepository {
   create(data: { name: string; type: ClinicType }): Promise<{ id: string }>;
   update(id: string, data: { name: string; type: ClinicType }): Promise<void>;
   delete(id: string): Promise<void>;
+  /** Vincula o usuário como responsável ("owner") pela clínica. */
+  linkOwner(clinicId: string, userId: string): Promise<void>;
   setStatus(
     id: string,
     status: ClinicStatus,
