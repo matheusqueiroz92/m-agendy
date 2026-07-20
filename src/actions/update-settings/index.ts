@@ -29,7 +29,7 @@ export const updateSettings = actionClient
     const {
       name,
       email,
-      // phoneNumber,
+      phoneNumber,
       clinicName,
       whatsappPhoneNumberId,
       // As configurações de notificação e preferências poderiam ser salvas
@@ -44,7 +44,7 @@ export const updateSettings = actionClient
       .set({
         name,
         email,
-        // phoneNumber: phoneNumber || null,
+        phoneNumber: phoneNumber || null,
         updatedAt: new Date(),
       })
       .where(eq(usersTable.id, session.user.id));
