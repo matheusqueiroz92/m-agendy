@@ -137,6 +137,24 @@ describe("DrizzleAppointmentRepository (integração)", () => {
     expect(reloaded?.priceInCents).toBe(15000);
   });
 
+  it("persiste e recupera o tipo do agendamento (consulta/retorno)", async () => {
+    const { clinic, doctor } = await seedClinicWithOwnerAndDoctor();
+    const patient = await seedPatient(clinic.id);
+
+    const appointment = Appointment.create({
+      clinicId: clinic.id,
+      patientId: patient.id,
+      doctorId: doctor.id,
+      scheduledAt: new Date(Date.UTC(2026, 7, 10, 14, 0)),
+      priceInCents: 10000,
+      type: "return_visit",
+    });
+    await repo.save(appointment);
+
+    const reloaded = await repo.findById(appointment.id);
+    expect(reloaded?.type).toBe("return_visit");
+  });
+
   it("findById retorna null para agendamento inexistente", async () => {
     await expect(repo.findById(crypto.randomUUID())).resolves.toBeNull();
   });

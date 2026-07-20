@@ -60,6 +60,7 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
         date: data.scheduledAt,
         appointmentPriceInCents: data.priceInCents,
         status: data.status,
+        type: data.type,
       })
       .onConflictDoUpdate({
         target: [appointmentsTable.id],
@@ -70,6 +71,7 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
           doctorId: data.doctorId,
           date: data.scheduledAt,
           appointmentPriceInCents: data.priceInCents,
+          type: data.type,
           updatedAt: new Date(),
         },
       });
@@ -92,6 +94,7 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
       scheduledAt: row.date,
       priceInCents: row.appointmentPriceInCents,
       status: row.status,
+      type: row.type,
     });
   }
 
