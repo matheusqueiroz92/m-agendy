@@ -2,13 +2,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   PageActions,
   PageContainer,
   PageContent,
@@ -21,7 +14,7 @@ import { getDataTableAppointments } from "@/data/get-data-table-appointments";
 import { auth } from "@/lib/auth";
 
 import { AddAppointmentButton } from "./_components/add-appointment-button";
-import { AppointmentsTable } from "./_components/appointments-table";
+import { AppointmentsViewTabs } from "./_components/appointments-view-tabs";
 
 const AppointmentsPage = async () => {
   const session = await auth.api.getSession({
@@ -52,22 +45,11 @@ const AppointmentsPage = async () => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Agendamentos
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Agendamentos</PageTitle>
           <PageDescription>
-            Consultas, horários e status em um só lugar.
+            Consulte e organize horários no quadro ou na lista.
           </PageDescription>
         </PageHeaderContent>
         <PageActions>
@@ -75,7 +57,7 @@ const AppointmentsPage = async () => {
         </PageActions>
       </PageHeader>
       <PageContent>
-        <AppointmentsTable
+        <AppointmentsViewTabs
           appointments={appointments}
           doctors={doctors}
           patients={patients}

@@ -80,10 +80,14 @@ export class BookAppointmentUseCase {
       throw new NotFoundError("Profissional não encontrado.");
     }
 
+    const durationInMinutes =
+      professional.defaultAppointmentDurationInMinutes;
+
     const hasConflict = await this.appointments.hasConflict({
       clinicId: input.clinicId,
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      durationInMinutes,
     });
 
     if (hasConflict) {
@@ -103,6 +107,7 @@ export class BookAppointmentUseCase {
       patientId,
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      durationInMinutes,
       priceInCents: professional.priceInCents,
     });
 

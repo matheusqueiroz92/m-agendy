@@ -1,4 +1,8 @@
 import { ProfessionalValidationError } from "./errors";
+import {
+  AvailabilityWindow,
+  timeToMinutes,
+} from "@/core/modules/scheduling/domain/availability";
 
 export interface ProfessionalProps {
   id: string;
@@ -8,10 +12,8 @@ export interface ProfessionalProps {
   phoneNumber: string | null;
   avatarImageUrl: string | null;
   appointmentPriceInCents: number;
-  availableFromWeekDay: number; // 0 (domingo) – 6 (sábado)
-  availableToWeekDay: number;
-  availableFromTime: string; // "HH:mm" ou "HH:mm:ss"
-  availableToTime: string;
+  defaultAppointmentDurationInMinutes: number;
+  availabilityWindows: AvailabilityWindow[];
 }
 
 export type NewProfessionalInput = Omit<
@@ -26,9 +28,35 @@ export type NewProfessionalInput = Omit<
 const isWeekDay = (value: number) =>
   Number.isInteger(value) && value >= 0 && value <= 6;
 
+const isValidDuration = (minutes: number) =>
+  Number.isInteger(minutes) && minutes >= 15 && minutes % 15 === 0;
+
+const windowsOverlapSameDay = (windows: AvailabilityWindow[]) => {
+  const byDay = new Map<number, AvailabilityWindow[]>();
+  for (const window of windows) {
+    const list = byDay.get(window.weekDay) ?? [];
+    list.push(window);
+    byDay.set(window.weekDay, list);
+  }
+
+  for (const dayWindows of byDay.values()) {
+    const sorted = [...dayWindows].sort(
+      (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+    );
+    for (let i = 1; i < sorted.length; i++) {
+      if (
+        timeToMinutes(sorted[i].startTime) < timeToMinutes(sorted[i - 1].endTime)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 /**
  * Entidade de domínio Professional (médico, dentista, nutricionista, etc.).
- * Generaliza o antigo "Doctor"; a tabela física continua sendo `doctors`.
+ * A tabela física continua sendo `doctors`.
  */
 export class Professional {
   private constructor(private readonly props: ProfessionalProps) {}
@@ -53,17 +81,47 @@ export class Professional {
         "O preço da consulta deve ser maior que zero.",
       );
     }
-    if (!isWeekDay(input.availableFromWeekDay) || !isWeekDay(input.availableToWeekDay)) {
-      throw new ProfessionalValidationError("Dia da semana inválido.");
-    }
-    if (!input.availableFromTime || !input.availableToTime) {
+    if (!isValidDuration(input.defaultAppointmentDurationInMinutes)) {
       throw new ProfessionalValidationError(
-        "Os horários de disponibilidade são obrigatórios.",
+        "A duração padrão deve ser um múltiplo de 15 minutos (mínimo 15).",
       );
     }
-    if (input.availableFromTime >= input.availableToTime) {
+    if (
+      !input.availabilityWindows ||
+      input.availabilityWindows.length === 0
+    ) {
       throw new ProfessionalValidationError(
-        "O horário de início deve ser anterior ao de término.",
+        "Informe ao menos um horário de atendimento.",
+      );
+    }
+
+    for (const window of input.availabilityWindows) {
+      if (!isWeekDay(window.weekDay)) {
+        throw new ProfessionalValidationError("Dia da semana inválido.");
+      }
+      if (!window.startTime || !window.endTime) {
+        throw new ProfessionalValidationError(
+          "Os horários de disponibilidade são obrigatórios.",
+        );
+      }
+      if (timeToMinutes(window.startTime) >= timeToMinutes(window.endTime)) {
+        throw new ProfessionalValidationError(
+          "O horário de início deve ser anterior ao de término.",
+        );
+      }
+      if (
+        timeToMinutes(window.endTime) - timeToMinutes(window.startTime) <
+        15
+      ) {
+        throw new ProfessionalValidationError(
+          "Cada intervalo deve ter pelo menos 15 minutos.",
+        );
+      }
+    }
+
+    if (windowsOverlapSameDay(input.availabilityWindows)) {
+      throw new ProfessionalValidationError(
+        "Há intervalos sobrepostos no mesmo dia.",
       );
     }
 
@@ -80,10 +138,9 @@ export class Professional {
       phoneNumber: normalize(input.phoneNumber),
       avatarImageUrl: normalize(input.avatarImageUrl),
       appointmentPriceInCents: input.appointmentPriceInCents,
-      availableFromWeekDay: input.availableFromWeekDay,
-      availableToWeekDay: input.availableToWeekDay,
-      availableFromTime: input.availableFromTime,
-      availableToTime: input.availableToTime,
+      defaultAppointmentDurationInMinutes:
+        input.defaultAppointmentDurationInMinutes,
+      availabilityWindows: input.availabilityWindows.map((w) => ({ ...w })),
     });
   }
 
@@ -100,6 +157,11 @@ export class Professional {
   }
 
   toPrimitives(): ProfessionalProps {
-    return { ...this.props };
+    return {
+      ...this.props,
+      availabilityWindows: this.props.availabilityWindows.map((w) => ({
+        ...w,
+      })),
+    };
   }
 }

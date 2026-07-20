@@ -3,12 +3,6 @@ import { SearchX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -50,15 +44,6 @@ const PatientsPage = async () => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>Menu Principal</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Pacientes
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Pacientes</PageTitle>

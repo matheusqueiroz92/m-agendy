@@ -1,31 +1,37 @@
-import { ProfessionalAvailability } from "../../domain/availability";
-import { AvailabilityReader } from "../ports/availability-reader";
+import { OccupiedInterval } from "../../domain/availability";
+import {
+  AvailabilityReader,
+  ProfessionalAvailabilityInfo,
+} from "../ports/availability-reader";
 
-/** AvailabilityReader fake, configurável nos testes. */
+/** Fake do AvailabilityReader para testes unitários. */
 export class FakeAvailabilityReader implements AvailabilityReader {
-  constructor(
-    private availability: ProfessionalAvailability | null = {
-      availableFromWeekDay: 1,
-      availableToWeekDay: 5,
-      availableFromTime: "08:00:00",
-      availableToTime: "10:00:00",
-    },
-    private bookedTimes: string[] = [],
-  ) {}
+  private availability: ProfessionalAvailabilityInfo | null = {
+    windows: [
+      { weekDay: 1, startTime: "08:00:00", endTime: "10:00:00" },
+      { weekDay: 2, startTime: "08:00:00", endTime: "10:00:00" },
+      { weekDay: 3, startTime: "08:00:00", endTime: "10:00:00" },
+      { weekDay: 4, startTime: "08:00:00", endTime: "10:00:00" },
+      { weekDay: 5, startTime: "08:00:00", endTime: "10:00:00" },
+    ],
+    defaultAppointmentDurationInMinutes: 30,
+  };
 
-  setAvailability(availability: ProfessionalAvailability | null) {
+  private occupied: OccupiedInterval[] = [];
+
+  setAvailability(availability: ProfessionalAvailabilityInfo | null) {
     this.availability = availability;
   }
 
-  setBookedTimes(times: string[]) {
-    this.bookedTimes = times;
+  setOccupied(occupied: OccupiedInterval[]) {
+    this.occupied = occupied;
   }
 
-  async getAvailability(): Promise<ProfessionalAvailability | null> {
+  async getAvailability(): Promise<ProfessionalAvailabilityInfo | null> {
     return this.availability;
   }
 
-  async getBookedTimes(): Promise<string[]> {
-    return this.bookedTimes;
+  async getOccupiedIntervals(): Promise<OccupiedInterval[]> {
+    return this.occupied;
   }
 }

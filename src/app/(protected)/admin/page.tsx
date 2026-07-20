@@ -2,12 +2,6 @@ import dayjs from "dayjs";
 import { Building2 } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import {
   PageContainer,
@@ -44,16 +38,6 @@ const AdminPage = async () => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>Plataforma</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Administração
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Administração da plataforma</PageTitle>

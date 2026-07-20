@@ -29,6 +29,8 @@ export class DrizzleBookingDirectory implements BookingDirectory {
     return {
       priceInCents: doctor.appointmentPriceInCents,
       name: doctor.name,
+      defaultAppointmentDurationInMinutes:
+        doctor.defaultAppointmentDurationInMinutes,
     };
   }
 

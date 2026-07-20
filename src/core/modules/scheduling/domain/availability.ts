@@ -3,11 +3,18 @@ export interface TimeSlot {
   available: boolean;
 }
 
-export interface ProfessionalAvailability {
-  availableFromWeekDay: number; // 0 (domingo) – 6 (sábado)
-  availableToWeekDay: number;
-  availableFromTime: string; // "HH:MM" ou "HH:MM:SS"
-  availableToTime: string;
+export interface AvailabilityWindow {
+  weekDay: number; // 0 (domingo) – 6 (sábado)
+  startTime: string; // "HH:MM" ou "HH:MM:SS"
+  endTime: string;
+}
+
+/** Lista de janelas de atendimento do profissional. */
+export type ProfessionalAvailability = AvailabilityWindow[];
+
+export interface OccupiedInterval {
+  start: Date;
+  end: Date;
 }
 
 /** Dia da semana (0–6) de uma data "YYYY-MM-DD", em horário local (sem TZ shift). */
@@ -16,10 +23,34 @@ export const dayOfWeekFromISODate = (date: string): number => {
   return new Date(year, month - 1, day).getDay();
 };
 
+/** Normaliza "HH:MM" ou "HH:MM:SS" para minutos desde meia-noite. */
+export const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+export const minutesToTime = (totalMinutes: number): string => {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+};
+
+export const addMinutes = (date: Date, minutes: number): Date =>
+  new Date(date.getTime() + minutes * 60_000);
+
+/** Intervalos [aStart, aEnd) e [bStart, bEnd) se sobrepõem. */
+export const intervalsOverlap = (
+  aStart: Date,
+  aEnd: Date,
+  bStart: Date,
+  bEnd: Date,
+): boolean => aStart < bEnd && bStart < aEnd;
+
 /**
- * Verifica se o dia da semana está dentro da janela de atendimento do
- * profissional, suportando intervalos que "dão a volta" na semana
- * (ex.: sexta→segunda).
+ * Verifica se o dia da semana está dentro de um intervalo contínuo de dias
+ * (legado / migração), suportando wrap (ex.: sexta→segunda).
  */
 export const isDayAvailable = (
   dayOfWeek: number,
@@ -32,52 +63,102 @@ export const isDayAvailable = (
   return dayOfWeek >= fromWeekDay || dayOfWeek <= toWeekDay;
 };
 
-/** Gera horários "HH:MM" de 30 em 30 minutos no intervalo [from, to). */
-export const generateTimeSlots = (from: string, to: string): string[] => {
-  const [startHour, startMinute] = from.split(":").map(Number);
-  const [endHour, endMinute] = to.split(":").map(Number);
-
+/** Gera horários "HH:MM" no intervalo [from, to) com passo em minutos. */
+export const generateTimeSlots = (
+  from: string,
+  to: string,
+  stepMinutes = 15,
+): string[] => {
+  const start = timeToMinutes(from);
+  const end = timeToMinutes(to);
   const slots: string[] = [];
-  let hour = startHour;
-  let minute = startMinute;
 
-  while (hour < endHour || (hour === endHour && minute < endMinute)) {
-    slots.push(
-      `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`,
-    );
-    minute += 30;
-    if (minute >= 60) {
-      minute -= 60;
-      hour += 1;
-    }
+  for (let current = start; current < end; current += stepMinutes) {
+    slots.push(minutesToTime(current));
   }
 
   return slots;
 };
 
+const windowsForDay = (
+  windows: AvailabilityWindow[],
+  weekDay: number,
+): AvailabilityWindow[] => windows.filter((w) => w.weekDay === weekDay);
+
 /**
- * Monta a lista de slots do dia marcando como indisponíveis os horários já
- * ocupados. Se o dia não está na janela de atendimento, retorna vazio.
+ * Verifica se [start, start+duration) cabe inteiramente em alguma janela
+ * do dia correspondente.
+ */
+export const isWithinAvailability = (
+  start: Date,
+  durationMinutes: number,
+  windows: AvailabilityWindow[],
+): boolean => {
+  if (durationMinutes < 15 || durationMinutes % 15 !== 0) {
+    return false;
+  }
+
+  const weekDay = start.getDay();
+  const startMinutes = start.getHours() * 60 + start.getMinutes();
+  const endMinutes = startMinutes + durationMinutes;
+  const dayWindows = windowsForDay(windows, weekDay);
+
+  return dayWindows.some((window) => {
+    const windowStart = timeToMinutes(window.startTime);
+    const windowEnd = timeToMinutes(window.endTime);
+    return startMinutes >= windowStart && endMinutes <= windowEnd;
+  });
+};
+
+/**
+ * Monta slots do dia a partir das janelas. Um slot de início é disponível se
+ * [start, start+slotDuration) cabe na janela e não sobrepõe ocupados.
  */
 export const computeAvailableSlots = (
   date: string,
-  availability: ProfessionalAvailability,
-  occupiedTimes: string[],
+  windows: AvailabilityWindow[],
+  occupiedIntervals: OccupiedInterval[],
+  slotDurationMinutes = 30,
 ): TimeSlot[] => {
-  const dayAvailable = isDayAvailable(
-    dayOfWeekFromISODate(date),
-    availability.availableFromWeekDay,
-    availability.availableToWeekDay,
-  );
+  const weekDay = dayOfWeekFromISODate(date);
+  const dayWindows = windowsForDay(windows, weekDay);
 
-  if (!dayAvailable) {
+  if (dayWindows.length === 0) {
     return [];
   }
 
-  const occupied = new Set(occupiedTimes);
+  const [year, month, day] = date.split("-").map(Number);
+  const candidateStarts = new Set<string>();
 
-  return generateTimeSlots(
-    availability.availableFromTime,
-    availability.availableToTime,
-  ).map((time) => ({ time, available: !occupied.has(time) }));
+  for (const window of dayWindows) {
+    for (const time of generateTimeSlots(
+      window.startTime,
+      window.endTime,
+      15,
+    )) {
+      candidateStarts.add(time);
+    }
+  }
+
+  const sortedTimes = Array.from(candidateStarts).sort();
+
+  return sortedTimes.map((time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const start = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const end = addMinutes(start, slotDurationMinutes);
+
+    const fitsWindow = isWithinAvailability(
+      start,
+      slotDurationMinutes,
+      windows,
+    );
+    const overlapsOccupied = occupiedIntervals.some((interval) =>
+      intervalsOverlap(start, end, interval.start, interval.end),
+    );
+
+    return {
+      time,
+      available: fitsWindow && !overlapsOccupied,
+    };
+  });
 };

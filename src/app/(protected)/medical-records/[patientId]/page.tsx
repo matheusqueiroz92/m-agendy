@@ -3,13 +3,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   PageContainer,
   PageContent,
   PageHeader,
@@ -30,6 +23,7 @@ import { makeLogMedicalRecordAccess } from "@/core/modules/medical-records/infra
 import { ForbiddenError } from "@/core/shared/domain/errors";
 import { auth } from "@/lib/auth";
 
+import { SetHeaderBreadcrumbs } from "../../_components/header-breadcrumb-context";
 import { MedicalRecordHeader } from "./_components/medical-record-header";
 import { MedicalRecordTabs } from "./_components/medical-record-tabs";
 
@@ -120,21 +114,13 @@ const MedicalRecordPage = async ({ params }: MedicalRecordPageProps) => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>Menu Principal</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/medical-records">
-              Prontuários
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            {patient.name}
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <SetHeaderBreadcrumbs
+        items={[
+          { label: "Início", href: "/dashboard" },
+          { label: "Prontuários", href: "/medical-records" },
+          { label: patient.name },
+        ]}
+      />
 
       <PageHeader>
         <PageHeaderContent>

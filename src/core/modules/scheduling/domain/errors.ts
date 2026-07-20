@@ -21,7 +21,25 @@ export class AppointmentConflictError extends DomainError {
 
   constructor() {
     super(
-      "Já existe um agendamento para este médico neste horário. Escolha outro horário.",
+      "Já existe um agendamento para este profissional neste horário. Escolha outro horário.",
+    );
+  }
+}
+
+export class InvalidAppointmentDurationError extends DomainError {
+  readonly code = "INVALID_APPOINTMENT_DURATION";
+
+  constructor() {
+    super("A duração da consulta deve ser um múltiplo de 15 minutos (mínimo 15).");
+  }
+}
+
+export class AppointmentOutsideAvailabilityError extends DomainError {
+  readonly code = "APPOINTMENT_OUTSIDE_AVAILABILITY";
+
+  constructor() {
+    super(
+      "O horário escolhido está fora da disponibilidade do profissional.",
     );
   }
 }

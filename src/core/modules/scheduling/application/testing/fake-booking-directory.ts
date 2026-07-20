@@ -12,6 +12,7 @@ export class FakeBookingDirectory implements BookingDirectory {
     private professional: BookableProfessional | null = {
       priceInCents: 20000,
       name: "Dr. House",
+      defaultAppointmentDurationInMinutes: 30,
     },
     private patientId = "patient-1",
   ) {}

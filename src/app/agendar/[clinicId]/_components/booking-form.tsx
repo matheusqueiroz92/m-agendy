@@ -37,10 +37,12 @@ interface Professional {
   name: string;
   speciality: string;
   appointmentPriceInCents: number;
-  availableFromWeekDay: number;
-  availableToWeekDay: number;
-  availableFromTime: string;
-  availableToTime: string;
+  defaultAppointmentDurationInMinutes: number;
+  availabilityWindows: {
+    weekDay: number;
+    startTime: string;
+    endTime: string;
+  }[];
 }
 
 interface BookingFormProps {

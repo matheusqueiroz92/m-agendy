@@ -2,12 +2,6 @@ import dayjs from "dayjs";
 import { BellOff } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import {
@@ -36,15 +30,6 @@ const NotificationsPage = async () => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>Menu Principal</BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Notificações
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Notificações</PageTitle>

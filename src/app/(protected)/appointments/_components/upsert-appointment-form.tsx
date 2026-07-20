@@ -55,6 +55,9 @@ const formSchema = z.object({
   time: z.string().min(1, {
     message: "Horário é obrigatório.",
   }),
+  durationInMinutes: z.string().min(1, {
+    message: "Duração é obrigatória.",
+  }),
   type: z.enum(["consultation", "return_visit"]),
 });
 
@@ -63,8 +66,12 @@ const APPOINTMENT_TYPE_LABEL: Record<"consultation" | "return_visit", string> = 
   return_visit: "Retorno",
 };
 
+type DoctorOption = typeof doctorsTable.$inferSelect & {
+  availabilityWindows?: { weekDay: number }[];
+};
+
 interface UpsertAppointmentFormProps {
-  doctors: (typeof doctorsTable.$inferSelect)[];
+  doctors: DoctorOption[];
   patients: (typeof patientsTable.$inferSelect)[];
   appointment?: typeof appointmentsTable.$inferSelect & {
     patient: {
@@ -76,6 +83,12 @@ interface UpsertAppointmentFormProps {
       name: string;
     };
   };
+  defaultValues?: {
+    doctorId?: string;
+    date?: Date;
+    time?: string;
+    durationInMinutes?: number;
+  };
   onSuccess?: () => void;
 }
 
@@ -83,10 +96,11 @@ export const UpsertAppointmentForm = ({
   doctors,
   patients,
   appointment,
+  defaultValues,
   onSuccess,
 }: UpsertAppointmentFormProps) => {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>(
-    appointment?.doctorId || "",
+    appointment?.doctorId || defaultValues?.doctorId || "",
   );
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
     appointment?.patientId || "",
@@ -98,23 +112,29 @@ export const UpsertAppointmentForm = ({
     shouldUnregister: true,
     resolver: zodResolver(formSchema),
     defaultValues: {
-      patientId: appointment?.patientId || "",
-      doctorId: appointment?.doctorId || "",
-      appointmentPriceInCents: appointment?.appointmentPriceInCents
+      patientId: appointment?.patientId ?? "",
+      doctorId: appointment?.doctorId ?? defaultValues?.doctorId ?? "",
+      appointmentPriceInCents: appointment
         ? appointment.appointmentPriceInCents / 100
         : 0,
-      date: appointment?.date ? new Date(appointment.date) : undefined,
-      time: appointment?.date
-        ? `${new Date(appointment.date).getHours().toString().padStart(2, "0")}:${new Date(appointment.date).getMinutes().toString().padStart(2, "0")}`
-        : "",
+      date: appointment?.date
+        ? new Date(appointment.date)
+        : defaultValues?.date,
+      time: appointment
+        ? `${String(new Date(appointment.date).getHours()).padStart(2, "0")}:${String(new Date(appointment.date).getMinutes()).padStart(2, "0")}`
+        : (defaultValues?.time ?? ""),
+      durationInMinutes: String(
+        appointment?.durationInMinutes ??
+          defaultValues?.durationInMinutes ??
+          30,
+      ),
       type: appointment?.type ?? "consultation",
     },
   });
 
-  const watchedDate = form.watch("date");
   const { singular: professionalLabel } = useProfessionalLabels();
+  const watchedDate = form.watch("date");
 
-  // Hook para buscar horários disponíveis
   const {
     data: timeSlots = [],
     isLoading: isLoadingTimeSlots,
@@ -168,23 +188,22 @@ export const UpsertAppointmentForm = ({
     },
   });
 
-  // Atualiza o preço quando o médico é selecionado
   const handleDoctorChange = (doctorId: string) => {
     setSelectedDoctorId(doctorId);
     const doctor = doctors.find((d) => d.id === doctorId);
     if (doctor && !appointment) {
-      // Só preenche automaticamente se não estiver editando
       form.setValue(
         "appointmentPriceInCents",
         doctor.appointmentPriceInCents / 100,
       );
+      form.setValue(
+        "durationInMinutes",
+        String(doctor.defaultAppointmentDurationInMinutes ?? 30),
+      );
     }
     form.setValue("doctorId", doctorId);
-
-    // Limpar horário quando trocar médico
     form.setValue("time", "");
 
-    // Invalidar cache para o novo médico
     const currentDate = form.getValues("date");
     if (currentDate) {
       invalidateTimeSlots(doctorId, currentDate);
@@ -211,35 +230,20 @@ export const UpsertAppointmentForm = ({
     }
   };
 
-  // Função para verificar se uma data está disponível para o médico selecionado
   const isDateAvailable = (date: Date) => {
     if (!selectedDoctorId) return false;
 
     const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
     if (!selectedDoctor) return false;
 
-    // CORREÇÃO: usar data local para calcular o dia da semana sem problemas de timezone
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-    const localDate = new Date(year, month, day);
-    const dayOfWeek = localDate.getDay(); // 0 = domingo, 1 = segunda, etc.
+    const dayOfWeek = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    ).getDay();
 
-    // Verifica se o dia da semana está dentro do range de disponibilidade do médico
-    const { availableFromWeekDay, availableToWeekDay } = selectedDoctor;
-
-    let isAvailable = false;
-    if (availableFromWeekDay <= availableToWeekDay) {
-      // Range normal (ex: segunda a sexta = 1 a 5)
-      isAvailable =
-        dayOfWeek >= availableFromWeekDay && dayOfWeek <= availableToWeekDay;
-    } else {
-      // Range que cruza a semana (ex: sexta a segunda = 5 a 1)
-      isAvailable =
-        dayOfWeek >= availableFromWeekDay || dayOfWeek <= availableToWeekDay;
-    }
-
-    return isAvailable;
+    const windows = selectedDoctor.availabilityWindows ?? [];
+    return windows.some((window) => window.weekDay === dayOfWeek);
   };
 
   // Condições para habilitar campos
@@ -252,9 +256,10 @@ export const UpsertAppointmentForm = ({
       id: appointment?.id,
       patientId: values.patientId,
       doctorId: values.doctorId,
-      appointmentPriceInCents: values.appointmentPriceInCents * 100, // Converte para centavos
+      appointmentPriceInCents: values.appointmentPriceInCents * 100,
       date: values.date,
       time: values.time,
+      durationInMinutes: parseInt(values.durationInMinutes, 10),
       type: values.type,
     });
   };
@@ -464,6 +469,31 @@ export const UpsertAppointmentForm = ({
                         </SelectItem>
                       ))
                     )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="durationInMinutes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duração</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Duração" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                      <SelectItem key={minutes} value={String(minutes)}>
+                        {minutes} minutos
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

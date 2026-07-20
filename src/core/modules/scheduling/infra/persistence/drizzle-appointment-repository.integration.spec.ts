@@ -75,7 +75,12 @@ describe("DrizzleAppointmentRepository (integração)", () => {
     );
 
     await expect(
-      repo.hasConflict({ clinicId: clinic.id, doctorId: doctor.id, scheduledAt }),
+      repo.hasConflict({
+        clinicId: clinic.id,
+        doctorId: doctor.id,
+        scheduledAt,
+        durationInMinutes: 30,
+      }),
     ).resolves.toBe(true);
 
     await expect(
@@ -83,6 +88,7 @@ describe("DrizzleAppointmentRepository (integração)", () => {
         clinicId: clinic.id,
         doctorId: doctor.id,
         scheduledAt: new Date(Date.UTC(2026, 7, 10, 15, 0)),
+        durationInMinutes: 30,
       }),
     ).resolves.toBe(false);
   });
@@ -106,6 +112,7 @@ describe("DrizzleAppointmentRepository (integração)", () => {
         clinicId: clinic.id,
         doctorId: doctor.id,
         scheduledAt,
+        durationInMinutes: 30,
         excludeAppointmentId: appointment.id,
       }),
     ).resolves.toBe(false);

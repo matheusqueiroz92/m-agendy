@@ -7,6 +7,8 @@ export interface GetAvailableTimeSlotsInput {
   clinicId: string;
   doctorId: string;
   date: string; // "YYYY-MM-DD"
+  /** Duração desejada da consulta; default = do profissional. */
+  durationInMinutes?: number;
 }
 
 export interface GetAvailableTimeSlotsOutput {
@@ -14,9 +16,8 @@ export interface GetAvailableTimeSlotsOutput {
 }
 
 /**
- * Calcula os horários disponíveis de um profissional numa data, combinando a
- * janela de atendimento com os horários já ocupados. Usado tanto pelo painel
- * (gestão) quanto pelo agendamento online (público).
+ * Calcula os horários disponíveis de um profissional numa data, combinando as
+ * janelas de atendimento com os intervalos já ocupados.
  */
 export class GetAvailableTimeSlotsUseCase {
   constructor(private readonly reader: AvailabilityReader) {}
@@ -33,14 +34,23 @@ export class GetAvailableTimeSlotsUseCase {
       throw new NotFoundError("Profissional não encontrado.");
     }
 
-    const occupied = await this.reader.getBookedTimes({
+    const occupied = await this.reader.getOccupiedIntervals({
       clinicId: input.clinicId,
       doctorId: input.doctorId,
       date: input.date,
     });
 
+    const duration =
+      input.durationInMinutes ??
+      availability.defaultAppointmentDurationInMinutes;
+
     return {
-      timeSlots: computeAvailableSlots(input.date, availability, occupied),
+      timeSlots: computeAvailableSlots(
+        input.date,
+        availability.windows,
+        occupied,
+        duration,
+      ),
     };
   }
 }

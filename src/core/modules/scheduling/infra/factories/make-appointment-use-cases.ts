@@ -4,9 +4,11 @@ import { SystemClock } from "@/core/shared/infra/system-clock";
 
 import { CancelAppointmentUseCase } from "../../application/use-cases/cancel-appointment";
 import { MarkAppointmentNoShowUseCase } from "../../application/use-cases/mark-appointment-no-show";
+import { RescheduleAppointmentUseCase } from "../../application/use-cases/reschedule-appointment";
 import { UpsertAppointmentUseCase } from "../../application/use-cases/upsert-appointment";
 import { DrizzleAppointmentContactDirectory } from "../persistence/drizzle-appointment-contact-directory";
 import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment-repository";
+import { DrizzleAvailabilityReader } from "../persistence/drizzle-availability-reader";
 import { QStashReminderScheduler } from "../scheduling/qstash-reminder-scheduler";
 import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
 
@@ -25,6 +27,19 @@ export const makeUpsertAppointment = () =>
     makeReminderScheduler(),
     makeWhatsAppAppointmentNotifier(),
     new DrizzleAppointmentContactDirectory(),
+    new DrizzleAvailabilityReader(),
+  );
+
+export const makeRescheduleAppointment = () =>
+  new RescheduleAppointmentUseCase(
+    new DrizzleAppointmentRepository(),
+    new Authorizer(),
+    new DrizzleAuditLog(),
+    new SystemClock(),
+    makeReminderScheduler(),
+    makeWhatsAppAppointmentNotifier(),
+    new DrizzleAppointmentContactDirectory(),
+    new DrizzleAvailabilityReader(),
   );
 
 export const makeCancelAppointment = () =>

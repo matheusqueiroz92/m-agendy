@@ -68,13 +68,20 @@ export class DrizzleChatAvailability implements ChatAvailability {
     });
     if (!availability) return [];
 
-    const occupied = await this.reader.getBookedTimes({
+    const occupied = await this.reader.getOccupiedIntervals({
       clinicId: params.clinicId,
       doctorId: params.doctorId,
       date: params.dateISO,
     });
 
-    return computeAvailableSlots(params.dateISO, availability, occupied)
+    const duration = availability.defaultAppointmentDurationInMinutes;
+
+    return computeAvailableSlots(
+      params.dateISO,
+      availability.windows,
+      occupied,
+      duration,
+    )
       .filter((slot) => slot.available)
       .map((slot) => slot.time);
   }

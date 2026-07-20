@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon, TrashIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { NumericFormat, PatternFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,56 +30,139 @@ import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { getClinicTypeConfig } from "@/core/modules/clinics/domain/clinic-type";
-import { doctorsTable } from "@/db/schema";
+import { doctorAvailabilityWindowsTable, doctorsTable } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
+
+const WEEK_DAYS = [
+  { value: 0, label: "Domingo" },
+  { value: 1, label: "Segunda" },
+  { value: 2, label: "Terça" },
+  { value: 3, label: "Quarta" },
+  { value: 4, label: "Quinta" },
+  { value: 5, label: "Sexta" },
+  { value: 6, label: "Sábado" },
+] as const;
+
+const TIME_OPTIONS = Array.from({ length: (23 - 5) * 4 + 4 }, (_, i) => {
+  const total = 5 * 60 + i * 15;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  const label = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return { value: `${label}:00`, label };
+});
 
 const formSchema = z
   .object({
-    name: z.string().trim().min(1, {
-      message: "Nome é obrigatório.",
-    }),
+    name: z.string().trim().min(1, { message: "Nome é obrigatório." }),
     phoneNumber: z.string().trim().optional(),
     speciality: z.string().trim().min(1, {
       message: "Especialidade é obrigatória.",
     }),
     avatarImageUrl: z.string().optional(),
-    appointmentPriceInCents: z.number().min(1, {
-      message: "Preço da consulta é obrigatório.",
+    appointmentPriceInCents: z
+      .number({
+        required_error: "Preço da consulta é obrigatório.",
+        invalid_type_error: "Preço da consulta é obrigatório.",
+      })
+      .min(1, {
+        message: "Preço da consulta é obrigatório.",
+      }),
+    defaultAppointmentDurationInMinutes: z.string().min(1, {
+      message: "Duração padrão é obrigatória.",
     }),
-    availableFromWeekDay: z.string(),
-    availableToWeekDay: z.string(),
-    availableFromTime: z.string().min(1, {
-      message: "Hora de início é obrigatória.",
-    }),
-    availableToTime: z.string().min(1, {
-      message: "Hora de término é obrigatória.",
-    }),
+    days: z.array(
+      z.object({
+        weekDay: z.number(),
+        enabled: z.boolean(),
+        intervals: z
+          .array(
+            z.object({
+              startTime: z.string().min(1),
+              endTime: z.string().min(1),
+            }),
+          )
+          .default([]),
+      }),
+    ),
   })
-  .refine(
-    (data) => {
-      return data.availableFromTime < data.availableToTime;
-    },
-    {
-      message:
-        "O horário de início não pode ser anterior ao horário de término.",
-      path: ["availableToTime"],
-    },
-  );
+  .superRefine((data, ctx) => {
+    let hasEnabled = false;
+    data.days.forEach((day, dayIndex) => {
+      if (!day.enabled) return;
+      hasEnabled = true;
+      if (!day.intervals || day.intervals.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Adicione ao menos um intervalo.",
+          path: ["days", dayIndex, "intervals"],
+        });
+      }
+      day.intervals?.forEach((interval, intervalIndex) => {
+        if (interval.startTime >= interval.endTime) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Início deve ser anterior ao término.",
+            path: ["days", dayIndex, "intervals", intervalIndex, "endTime"],
+          });
+        }
+      });
+    });
+    if (!hasEnabled) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Ative ao menos um dia de atendimento.",
+        path: ["days"],
+      });
+    }
+  });
+
+type DoctorWithWindows = typeof doctorsTable.$inferSelect & {
+  availabilityWindows?: (typeof doctorAvailabilityWindowsTable.$inferSelect)[];
+};
 
 interface UpsertDoctorFormProps {
-  doctor?: typeof doctorsTable.$inferSelect & {
-    availableFromTime: string;
-    availableToTime: string;
-  };
+  doctor?: DoctorWithWindows;
   onSuccess?: () => void;
 }
+
+const defaultDays = () =>
+  WEEK_DAYS.map((day) => ({
+    weekDay: day.value,
+    enabled: day.value >= 1 && day.value <= 5,
+    intervals:
+      day.value >= 1 && day.value <= 5
+        ? [{ startTime: "08:00:00", endTime: "18:00:00" }]
+        : [],
+  }));
+
+const daysFromDoctor = (doctor?: DoctorWithWindows) => {
+  if (!doctor?.availabilityWindows?.length) {
+    return defaultDays();
+  }
+
+  return WEEK_DAYS.map((day) => {
+    const windows = doctor.availabilityWindows!.filter(
+      (w) => w.weekDay === day.value,
+    );
+    return {
+      weekDay: day.value,
+      enabled: windows.length > 0,
+      intervals:
+        windows.length > 0
+          ? windows.map((w) => ({
+              startTime: w.startTime.length === 5 ? `${w.startTime}:00` : w.startTime,
+              endTime: w.endTime.length === 5 ? `${w.endTime}:00` : w.endTime,
+            }))
+          : [],
+    };
+  });
+};
 
 export const UpsertDoctorForm = ({
   doctor,
@@ -90,7 +174,6 @@ export const UpsertDoctorForm = ({
   const singularLower = singular.toLowerCase();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    shouldUnregister: true,
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: doctor?.name ?? "",
@@ -99,12 +182,17 @@ export const UpsertDoctorForm = ({
       avatarImageUrl: doctor?.avatarImageUrl ?? "",
       appointmentPriceInCents: doctor?.appointmentPriceInCents
         ? doctor.appointmentPriceInCents / 100
-        : 0,
-      availableFromWeekDay: doctor?.availableFromWeekDay?.toString() ?? "1",
-      availableToWeekDay: doctor?.availableToWeekDay?.toString() ?? "5",
-      availableFromTime: doctor?.availableFromTime ?? "",
-      availableToTime: doctor?.availableToTime ?? "",
+        : undefined,
+      defaultAppointmentDurationInMinutes: String(
+        doctor?.defaultAppointmentDurationInMinutes ?? 30,
+      ),
+      days: daysFromDoctor(doctor),
     },
+  });
+
+  const { fields } = useFieldArray({
+    control: form.control,
+    name: "days",
   });
 
   const upsertDoctorAction = useAction(upsertDoctor, {
@@ -114,22 +202,46 @@ export const UpsertDoctorForm = ({
       );
       onSuccess?.();
     },
-    onError: (error) => {
-      console.log(error);
-      toast.error(`Erro ao salvar ${singularLower}.`);
+    onError: ({ error }) => {
+      toast.error(
+        error.serverError ?? `Erro ao salvar ${singularLower}.`,
+      );
     },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const availabilityWindows = values.days
+      .filter((day) => day.enabled)
+      .flatMap((day) =>
+        (day.intervals ?? []).map((interval) => ({
+          weekDay: day.weekDay,
+          startTime: interval.startTime,
+          endTime: interval.endTime,
+        })),
+      );
+
+    if (availabilityWindows.length === 0) {
+      toast.error("Ative ao menos um dia de atendimento.");
+      return;
+    }
+
     upsertDoctorAction.execute({
-      ...values,
       id: doctor?.id,
-      availableFromWeekDay: parseInt(values.availableFromWeekDay),
-      availableToWeekDay: parseInt(values.availableToWeekDay),
-      appointmentPriceInCents: values.appointmentPriceInCents * 100,
+      name: values.name,
+      speciality: values.speciality,
+      appointmentPriceInCents: Math.round(values.appointmentPriceInCents * 100),
       avatarImageUrl: values.avatarImageUrl || undefined,
       phoneNumber: values.phoneNumber || undefined,
+      defaultAppointmentDurationInMinutes: parseInt(
+        values.defaultAppointmentDurationInMinutes,
+        10,
+      ),
+      availabilityWindows,
     });
+  };
+
+  const onInvalid = () => {
+    toast.error("Verifique os campos obrigatórios do formulário.");
   };
 
   return (
@@ -145,7 +257,10 @@ export const UpsertDoctorForm = ({
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="avatarImageUrl"
@@ -228,57 +343,29 @@ export const UpsertDoctorForm = ({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="appointmentPriceInCents"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Preço da consulta</FormLabel>
-                <NumericFormat
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value.floatValue);
-                  }}
-                  decimalScale={2}
-                  fixedDecimalScale
-                  decimalSeparator=","
-                  allowNegative={false}
-                  allowLeadingZeros={false}
-                  thousandSeparator="."
-                  customInput={Input}
-                  prefix="R$"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="availableFromWeekDay"
+              name="appointmentPriceInCents"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dia inicial de disponibilidade</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um dia" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="0">Domingo</SelectItem>
-                      <SelectItem value="1">Segunda</SelectItem>
-                      <SelectItem value="2">Terça</SelectItem>
-                      <SelectItem value="3">Quarta</SelectItem>
-                      <SelectItem value="4">Quinta</SelectItem>
-                      <SelectItem value="5">Sexta</SelectItem>
-                      <SelectItem value="6">Sábado</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Preço da consulta</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      value={field.value ?? ""}
+                      onValueChange={(value) => {
+                        field.onChange(value.floatValue);
+                      }}
+                      decimalScale={2}
+                      fixedDecimalScale
+                      decimalSeparator=","
+                      allowNegative={false}
+                      allowLeadingZeros={false}
+                      thousandSeparator="."
+                      customInput={Input}
+                      prefix="R$ "
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -286,27 +373,25 @@ export const UpsertDoctorForm = ({
 
             <FormField
               control={form.control}
-              name="availableToWeekDay"
+              name="defaultAppointmentDurationInMinutes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dia final de disponibilidade</FormLabel>
+                  <FormLabel>Duração padrão</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value?.toString()}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um dia" />
+                        <SelectValue placeholder="Duração" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="0">Domingo</SelectItem>
-                      <SelectItem value="1">Segunda</SelectItem>
-                      <SelectItem value="2">Terça</SelectItem>
-                      <SelectItem value="3">Quarta</SelectItem>
-                      <SelectItem value="4">Quinta</SelectItem>
-                      <SelectItem value="5">Sexta</SelectItem>
-                      <SelectItem value="6">Sábado</SelectItem>
+                      {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                        <SelectItem key={minutes} value={String(minutes)}>
+                          {minutes} min
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -315,146 +400,179 @@ export const UpsertDoctorForm = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="availableFromTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Horário inicial de disponibilidade</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um horário" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Manhã</SelectLabel>
-                        <SelectItem value="05:00:00">05:00</SelectItem>
-                        <SelectItem value="05:30:00">05:30</SelectItem>
-                        <SelectItem value="06:00:00">06:00</SelectItem>
-                        <SelectItem value="06:30:00">06:30</SelectItem>
-                        <SelectItem value="07:00:00">07:00</SelectItem>
-                        <SelectItem value="07:30:00">07:30</SelectItem>
-                        <SelectItem value="08:00:00">08:00</SelectItem>
-                        <SelectItem value="08:30:00">08:30</SelectItem>
-                        <SelectItem value="09:00:00">09:00</SelectItem>
-                        <SelectItem value="09:30:00">09:30</SelectItem>
-                        <SelectItem value="10:00:00">10:00</SelectItem>
-                        <SelectItem value="10:30:00">10:30</SelectItem>
-                        <SelectItem value="11:00:00">11:00</SelectItem>
-                        <SelectItem value="11:30:00">11:30</SelectItem>
-                        <SelectItem value="12:00:00">12:00</SelectItem>
-                        <SelectItem value="12:30:00">12:30</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Tarde</SelectLabel>
-                        <SelectItem value="13:00:00">13:00</SelectItem>
-                        <SelectItem value="13:30:00">13:30</SelectItem>
-                        <SelectItem value="14:00:00">14:00</SelectItem>
-                        <SelectItem value="14:30:00">14:30</SelectItem>
-                        <SelectItem value="15:00:00">15:00</SelectItem>
-                        <SelectItem value="15:30:00">15:30</SelectItem>
-                        <SelectItem value="16:00:00">16:00</SelectItem>
-                        <SelectItem value="16:30:00">16:30</SelectItem>
-                        <SelectItem value="17:00:00">17:00</SelectItem>
-                        <SelectItem value="17:30:00">17:30</SelectItem>
-                        <SelectItem value="18:00:00">18:00</SelectItem>
-                        <SelectItem value="18:30:00">18:30</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Noite</SelectLabel>
-                        <SelectItem value="19:00:00">19:00</SelectItem>
-                        <SelectItem value="19:30:00">19:30</SelectItem>
-                        <SelectItem value="20:00:00">20:00</SelectItem>
-                        <SelectItem value="20:30:00">20:30</SelectItem>
-                        <SelectItem value="21:00:00">21:00</SelectItem>
-                        <SelectItem value="21:30:00">21:30</SelectItem>
-                        <SelectItem value="22:00:00">22:00</SelectItem>
-                        <SelectItem value="22:30:00">22:30</SelectItem>
-                        <SelectItem value="23:00:00">23:00</SelectItem>
-                        <SelectItem value="23:30:00">23:30</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-3">
+            <FormLabel>Horários de atendimento</FormLabel>
+            {fields.map((dayField, dayIndex) => {
+              const dayMeta = WEEK_DAYS[dayIndex];
+              const enabled = form.watch(`days.${dayIndex}.enabled`);
+              const intervals =
+                form.watch(`days.${dayIndex}.intervals`) ?? [];
 
-            <FormField
-              control={form.control}
-              name="availableToTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Horário final de disponibilidade</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um horário" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Manhã</SelectLabel>
-                        <SelectItem value="05:00:00">05:00</SelectItem>
-                        <SelectItem value="05:30:00">05:30</SelectItem>
-                        <SelectItem value="06:00:00">06:00</SelectItem>
-                        <SelectItem value="06:30:00">06:30</SelectItem>
-                        <SelectItem value="07:00:00">07:00</SelectItem>
-                        <SelectItem value="07:30:00">07:30</SelectItem>
-                        <SelectItem value="08:00:00">08:00</SelectItem>
-                        <SelectItem value="08:30:00">08:30</SelectItem>
-                        <SelectItem value="09:00:00">09:00</SelectItem>
-                        <SelectItem value="09:30:00">09:30</SelectItem>
-                        <SelectItem value="10:00:00">10:00</SelectItem>
-                        <SelectItem value="10:30:00">10:30</SelectItem>
-                        <SelectItem value="11:00:00">11:00</SelectItem>
-                        <SelectItem value="11:30:00">11:30</SelectItem>
-                        <SelectItem value="12:00:00">12:00</SelectItem>
-                        <SelectItem value="12:30:00">12:30</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Tarde</SelectLabel>
-                        <SelectItem value="13:00:00">13:00</SelectItem>
-                        <SelectItem value="13:30:00">13:30</SelectItem>
-                        <SelectItem value="14:00:00">14:00</SelectItem>
-                        <SelectItem value="14:30:00">14:30</SelectItem>
-                        <SelectItem value="15:00:00">15:00</SelectItem>
-                        <SelectItem value="15:30:00">15:30</SelectItem>
-                        <SelectItem value="16:00:00">16:00</SelectItem>
-                        <SelectItem value="16:30:00">16:30</SelectItem>
-                        <SelectItem value="17:00:00">17:00</SelectItem>
-                        <SelectItem value="17:30:00">17:30</SelectItem>
-                        <SelectItem value="18:00:00">18:00</SelectItem>
-                        <SelectItem value="18:30:00">18:30</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Noite</SelectLabel>
-                        <SelectItem value="19:00:00">19:00</SelectItem>
-                        <SelectItem value="19:30:00">19:30</SelectItem>
-                        <SelectItem value="20:00:00">20:00</SelectItem>
-                        <SelectItem value="20:30:00">20:30</SelectItem>
-                        <SelectItem value="21:00:00">21:00</SelectItem>
-                        <SelectItem value="21:30:00">21:30</SelectItem>
-                        <SelectItem value="22:00:00">22:00</SelectItem>
-                        <SelectItem value="22:30:00">22:30</SelectItem>
-                        <SelectItem value="23:00:00">23:00</SelectItem>
-                        <SelectItem value="23:30:00">23:30</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              return (
+                <div
+                  key={dayField.id}
+                  className="rounded-lg border p-3 space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium">{dayMeta.label}</span>
+                    <FormField
+                      control={form.control}
+                      name={`days.${dayIndex}.enabled`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormLabel className="text-muted-foreground text-xs font-normal">
+                            Atende
+                          </FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (
+                                  checked &&
+                                  form.getValues(`days.${dayIndex}.intervals`)
+                                    .length === 0
+                                ) {
+                                  form.setValue(
+                                    `days.${dayIndex}.intervals`,
+                                    [
+                                      {
+                                        startTime: "08:00:00",
+                                        endTime: "18:00:00",
+                                      },
+                                    ],
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {enabled && (
+                    <div className="space-y-2">
+                      {intervals.map((_, intervalIndex) => (
+                        <div
+                          key={intervalIndex}
+                          className="grid grid-cols-[1fr_1fr_auto] gap-2"
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`days.${dayIndex}.intervals.${intervalIndex}.startTime`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Início" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {TIME_OPTIONS.map((option) => (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`days.${dayIndex}.intervals.${intervalIndex}.endTime`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Fim" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {TIME_OPTIONS.map((option) => (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={intervals.length <= 1}
+                            onClick={() => {
+                              const next = intervals.filter(
+                                (_, i) => i !== intervalIndex,
+                              );
+                              form.setValue(
+                                `days.${dayIndex}.intervals`,
+                                next,
+                              );
+                            }}
+                          >
+                            <TrashIcon className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      {form.formState.errors.days?.[dayIndex]?.intervals
+                        ?.message && (
+                        <p className="text-destructive text-sm">
+                          {
+                            form.formState.errors.days[dayIndex]?.intervals
+                              ?.message as string
+                          }
+                        </p>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          form.setValue(`days.${dayIndex}.intervals`, [
+                            ...intervals,
+                            {
+                              startTime: "14:00:00",
+                              endTime: "18:00:00",
+                            },
+                          ]);
+                        }}
+                      >
+                        <PlusIcon className="mr-1 size-4" />
+                        Intervalo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {form.formState.errors.days?.message ||
+            form.formState.errors.days?.root?.message ? (
+              <p className="text-destructive text-sm">
+                {(form.formState.errors.days?.message ??
+                  form.formState.errors.days?.root?.message) as string}
+              </p>
+            ) : null}
           </div>
 
           <DialogFooter>

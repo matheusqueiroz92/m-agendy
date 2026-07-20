@@ -16,6 +16,8 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
+import { HeaderBreadcrumbs } from "./header-breadcrumbs";
+
 export const AppHeader = () => {
   const router = useRouter();
   const session = authClient.useSession();
@@ -32,10 +34,11 @@ export const AppHeader = () => {
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b border-border/60 backdrop-blur">
-      <div className="flex h-14 items-center justify-between px-4">
+      <div className="flex h-14 items-center gap-2 px-4">
         <SidebarTrigger aria-label="Alternar barra lateral" />
+        <HeaderBreadcrumbs />
 
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -76,11 +79,7 @@ export const AppHeader = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Notificações"
-          >
+          <Button variant="ghost" size="icon" aria-label="Notificações">
             <Bell aria-hidden="true" className="h-5 w-5" />
           </Button>
 

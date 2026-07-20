@@ -1,4 +1,7 @@
-import { InvalidAppointmentPriceError } from "./errors";
+import {
+  InvalidAppointmentDurationError,
+  InvalidAppointmentPriceError,
+} from "./errors";
 
 export type AppointmentStatus =
   | "pending"
@@ -19,10 +22,14 @@ export interface AppointmentProps {
   patientId: string;
   doctorId: string;
   scheduledAt: Date;
+  durationInMinutes: number;
   priceInCents: number;
   status: AppointmentStatus;
   type: AppointmentType;
 }
+
+const isValidDuration = (minutes: number) =>
+  Number.isInteger(minutes) && minutes >= 15 && minutes % 15 === 0;
 
 /**
  * Entidade de domínio Appointment.
@@ -36,14 +43,23 @@ export class Appointment {
 
   /** Cria um novo agendamento, validando as invariantes. */
   static create(
-    input: Omit<AppointmentProps, "id" | "status" | "type"> & {
+    input: Omit<
+      AppointmentProps,
+      "id" | "status" | "type" | "durationInMinutes"
+    > & {
       id?: string;
       status?: AppointmentStatus;
       type?: AppointmentType;
+      durationInMinutes?: number;
     },
   ): Appointment {
     if (!Number.isInteger(input.priceInCents) || input.priceInCents <= 0) {
       throw new InvalidAppointmentPriceError();
+    }
+
+    const durationInMinutes = input.durationInMinutes ?? 30;
+    if (!isValidDuration(durationInMinutes)) {
+      throw new InvalidAppointmentDurationError();
     }
 
     return new Appointment({
@@ -51,6 +67,7 @@ export class Appointment {
       patientId: input.patientId,
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      durationInMinutes,
       priceInCents: input.priceInCents,
       id: input.id ?? crypto.randomUUID(),
       status: input.status ?? "pending",
@@ -66,6 +83,18 @@ export class Appointment {
   /** Retorna uma cópia com o status alterado. */
   withStatus(status: AppointmentStatus): Appointment {
     return new Appointment({ ...this.props, status });
+  }
+
+  /** Retorna uma cópia reagendada (data/duração). */
+  withSchedule(scheduledAt: Date, durationInMinutes: number): Appointment {
+    if (!isValidDuration(durationInMinutes)) {
+      throw new InvalidAppointmentDurationError();
+    }
+    return new Appointment({
+      ...this.props,
+      scheduledAt,
+      durationInMinutes,
+    });
   }
 
   get id(): string {
@@ -86,6 +115,10 @@ export class Appointment {
 
   get scheduledAt(): Date {
     return this.props.scheduledAt;
+  }
+
+  get durationInMinutes(): number {
+    return this.props.durationInMinutes;
   }
 
   get priceInCents(): number {

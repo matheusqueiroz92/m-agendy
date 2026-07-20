@@ -17,6 +17,7 @@ export const getDataTableAppointments = async ({
   const [doctors, patients, appointments] = await Promise.all([
     db.query.doctorsTable.findMany({
       where: eq(doctorsTable.clinicId, session.user.clinic.id),
+      with: { availabilityWindows: true },
     }),
     db.query.patientsTable.findMany({
       where: eq(patientsTable.clinicId, session.user.clinic.id),

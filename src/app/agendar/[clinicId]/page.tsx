@@ -25,6 +25,7 @@ const PublicBookingPage = async ({ params }: PublicBookingPageProps) => {
   const doctors = await db.query.doctorsTable.findMany({
     where: eq(doctorsTable.clinicId, clinicId),
     orderBy: (doctors, { asc }) => [asc(doctors.name)],
+    with: { availabilityWindows: true },
   });
 
   const config = getClinicTypeConfig(clinic.type);
@@ -34,10 +35,13 @@ const PublicBookingPage = async ({ params }: PublicBookingPageProps) => {
     name: doctor.name,
     speciality: doctor.speciality,
     appointmentPriceInCents: doctor.appointmentPriceInCents,
-    availableFromWeekDay: doctor.availableFromWeekDay,
-    availableToWeekDay: doctor.availableToWeekDay,
-    availableFromTime: doctor.availableFromTime,
-    availableToTime: doctor.availableToTime,
+    defaultAppointmentDurationInMinutes:
+      doctor.defaultAppointmentDurationInMinutes,
+    availabilityWindows: doctor.availabilityWindows.map((w) => ({
+      weekDay: w.weekDay,
+      startTime: w.startTime,
+      endTime: w.endTime,
+    })),
   }));
 
   return (

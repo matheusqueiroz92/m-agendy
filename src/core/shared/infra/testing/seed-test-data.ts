@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   clinicsTable,
   clinicTypeEnum,
+  doctorAvailabilityWindowsTable,
   doctorsTable,
   patientsTable,
   usersTable,
@@ -59,14 +60,21 @@ export async function seedDoctor(
       clinicId,
       name: "Dr. Teste",
       speciality: "Clínico Geral",
-      availableFromWeekDay: 1,
-      availableToWeekDay: 5,
-      availableFromTime: "08:00",
-      availableToTime: "18:00",
       appointmentPriceInCents: 20000,
+      defaultAppointmentDurationInMinutes: 30,
       ...overrides,
     })
     .returning();
+
+  await db.insert(doctorAvailabilityWindowsTable).values(
+    [1, 2, 3, 4, 5].map((weekDay) => ({
+      doctorId: doctor.id,
+      weekDay,
+      startTime: "08:00:00",
+      endTime: "18:00:00",
+    })),
+  );
+
   return doctor;
 }
 

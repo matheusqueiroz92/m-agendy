@@ -2,10 +2,8 @@ import { Authorizer } from "@/core/modules/iam/application/authorizer";
 import { AuthenticatedActor } from "@/core/modules/iam/domain/authenticated-actor";
 import { AuditLog } from "@/core/shared/application/ports/audit-log";
 import { Clock } from "@/core/shared/application/ports/clock";
-import { NotFoundError, PlanLimitError } from "@/core/shared/domain/errors";
-import { canCreateAppointment } from "@/core/modules/billing/domain/entitlements";
+import { NotFoundError } from "@/core/shared/domain/errors";
 
-import { Appointment, AppointmentType } from "../../domain/appointment";
 import {
   AppointmentConflictError,
   AppointmentInThePastError,
@@ -19,32 +17,22 @@ import { AppointmentRepository } from "../ports/appointment-repository";
 import { AvailabilityReader } from "../ports/availability-reader";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
-export interface UpsertAppointmentInput {
+export interface RescheduleAppointmentInput {
   actor: AuthenticatedActor | null;
   clinicId: string;
-  /** Plano efetivo da clínica (para aplicar o limite mensal). */
-  plan?: string | null;
-  id?: string;
-  patientId: string;
-  doctorId: string;
+  appointmentId: string;
   scheduledAt: Date;
-  durationInMinutes?: number;
-  priceInCents: number;
-  /** Consulta (padrão) ou retorno. */
-  type?: AppointmentType;
+  durationInMinutes: number;
 }
 
-export interface UpsertAppointmentOutput {
+export interface RescheduleAppointmentOutput {
   appointmentId: string;
 }
 
 /**
- * Cria ou atualiza um agendamento pela equipe da clínica (painel).
- * Exige papel de gestão, garante isolamento por clínica, valida data futura e
- * conflito de horário, registra auditoria e — de forma "best-effort" — envia a
- * confirmação por WhatsApp e agenda os lembretes (reagendando na edição).
+ * Move ou redimensiona um agendamento no quadro (drag/resize).
  */
-export class UpsertAppointmentUseCase {
+export class RescheduleAppointmentUseCase {
   constructor(
     private readonly appointments: AppointmentRepository,
     private readonly authorizer: Authorizer,
@@ -57,55 +45,40 @@ export class UpsertAppointmentUseCase {
   ) {}
 
   async execute(
-    input: UpsertAppointmentInput,
-  ): Promise<UpsertAppointmentOutput> {
+    input: RescheduleAppointmentInput,
+  ): Promise<RescheduleAppointmentOutput> {
     this.authorizer.assertCanManageClinic(input.actor, input.clinicId);
 
-    const now = this.clock.now();
+    const existing = await this.appointments.findById(input.appointmentId);
+    if (!existing || existing.clinicId !== input.clinicId) {
+      throw new NotFoundError("Agendamento não encontrado.");
+    }
 
+    if (
+      existing.status === "cancelled" ||
+      existing.status === "no_show"
+    ) {
+      throw new NotFoundError("Agendamento não encontrado.");
+    }
+
+    const now = this.clock.now();
     if (input.scheduledAt.getTime() <= now.getTime()) {
       throw new AppointmentInThePastError();
     }
 
-    if (input.id) {
-      const existing = await this.appointments.findById(input.id);
-      if (!existing || existing.clinicId !== input.clinicId) {
-        throw new NotFoundError("Agendamento não encontrado.");
-      }
-    } else if (input.plan) {
-      const y = input.scheduledAt.getUTCFullYear();
-      const m = input.scheduledAt.getUTCMonth();
-      const start = new Date(Date.UTC(y, m, 1));
-      const end = new Date(Date.UTC(y, m + 1, 1));
-      const monthCount = await this.appointments.countByClinicInPeriod(
-        input.clinicId,
-        start,
-        end,
-      );
-      if (!canCreateAppointment(input.plan, monthCount)) {
-        throw new PlanLimitError(
-          "Seu plano atingiu o limite de agendamentos deste mês. Faça upgrade para criar mais.",
-        );
-      }
-    }
-
     const availabilityInfo = await this.availability.getAvailability({
       clinicId: input.clinicId,
-      doctorId: input.doctorId,
+      doctorId: existing.doctorId,
     });
 
     if (!availabilityInfo) {
       throw new NotFoundError("Profissional não encontrado.");
     }
 
-    const durationInMinutes =
-      input.durationInMinutes ??
-      availabilityInfo.defaultAppointmentDurationInMinutes;
-
     if (
       !isWithinAvailability(
         input.scheduledAt,
-        durationInMinutes,
+        input.durationInMinutes,
         availabilityInfo.windows,
       )
     ) {
@@ -114,49 +87,38 @@ export class UpsertAppointmentUseCase {
 
     const hasConflict = await this.appointments.hasConflict({
       clinicId: input.clinicId,
-      doctorId: input.doctorId,
+      doctorId: existing.doctorId,
       scheduledAt: input.scheduledAt,
-      durationInMinutes,
-      excludeAppointmentId: input.id,
+      durationInMinutes: input.durationInMinutes,
+      excludeAppointmentId: existing.id,
     });
 
     if (hasConflict) {
       throw new AppointmentConflictError();
     }
 
-    const appointment = Appointment.create({
-      id: input.id,
-      clinicId: input.clinicId,
-      patientId: input.patientId,
-      doctorId: input.doctorId,
-      scheduledAt: input.scheduledAt,
-      durationInMinutes,
-      priceInCents: input.priceInCents,
-      type: input.type,
-    });
+    const appointment = existing.withSchedule(
+      input.scheduledAt,
+      input.durationInMinutes,
+    );
 
     await this.appointments.save(appointment);
-
-    const isUpdate = Boolean(input.id);
 
     await this.audit.record({
       clinicId: input.clinicId,
       actorUserId: input.actor?.userId,
-      action: isUpdate ? "appointment.updated" : "appointment.created",
+      action: "appointment.rescheduled",
       entityType: "appointment",
       entityId: appointment.id,
     });
 
-    // Confirmação + lembretes não devem derrubar o agendamento.
     try {
-      if (isUpdate) {
-        await this.reminders.cancelForAppointment(appointment.id);
-      }
+      await this.reminders.cancelForAppointment(appointment.id);
 
       const contact = await this.contacts.getContact({
         clinicId: input.clinicId,
-        patientId: input.patientId,
-        doctorId: input.doctorId,
+        patientId: appointment.patientId,
+        doctorId: appointment.doctorId,
       });
 
       if (contact?.patientPhoneNumber) {
@@ -182,7 +144,7 @@ export class UpsertAppointmentUseCase {
       }
     } catch (error) {
       console.error(
-        "[scheduling] falha ao notificar/agendar lembretes:",
+        "[scheduling] falha ao notificar/agendar lembretes (reschedule):",
         error,
       );
     }

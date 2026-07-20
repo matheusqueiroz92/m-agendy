@@ -10,6 +10,12 @@ import { Professional } from "../../domain/professional";
 import { InMemoryProfessionalRepository } from "../testing/in-memory-professional-repository";
 import { UpsertProfessionalUseCase } from "./upsert-professional";
 
+const weekdaysWindows = [1, 2, 3, 4, 5].map((weekDay) => ({
+  weekDay,
+  startTime: "08:00:00",
+  endTime: "18:00:00",
+}));
+
 describe("UpsertProfessionalUseCase", () => {
   let professionals: InMemoryProfessionalRepository;
   let audit: FakeAuditLog;
@@ -27,10 +33,8 @@ describe("UpsertProfessionalUseCase", () => {
     name: "Dr. House",
     speciality: "Clínico Geral",
     appointmentPriceInCents: 20000,
-    availableFromWeekDay: 1,
-    availableToWeekDay: 5,
-    availableFromTime: "08:00:00",
-    availableToTime: "18:00:00",
+    defaultAppointmentDurationInMinutes: 30,
+    availabilityWindows: weekdaysWindows,
   };
 
   beforeEach(() => {
@@ -97,8 +101,9 @@ describe("UpsertProfessionalUseCase", () => {
     await expect(
       useCase.execute({
         ...baseInput,
-        availableFromTime: "18:00:00",
-        availableToTime: "08:00:00",
+        availabilityWindows: [
+          { weekDay: 1, startTime: "18:00:00", endTime: "08:00:00" },
+        ],
       }),
     ).rejects.toBeInstanceOf(ProfessionalValidationError);
   });

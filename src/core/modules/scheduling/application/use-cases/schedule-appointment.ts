@@ -75,6 +75,7 @@ export class ScheduleAppointmentUseCase {
       clinicId: input.clinicId,
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      durationInMinutes: 30,
     });
 
     if (hasConflict) {
@@ -86,6 +87,7 @@ export class ScheduleAppointmentUseCase {
       patientId: input.patientId,
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      durationInMinutes: 30,
       priceInCents: input.priceInCents,
     });
 

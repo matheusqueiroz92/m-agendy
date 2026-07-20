@@ -3,13 +3,24 @@ import { describe, expect, it } from "vitest";
 import {
   computeAvailableSlots,
   generateTimeSlots,
+  intervalsOverlap,
   isDayAvailable,
+  isWithinAvailability,
 } from "./availability";
 
 describe("availability", () => {
   describe("generateTimeSlots", () => {
-    it("gera slots de 30 em 30 min no intervalo [from, to)", () => {
-      expect(generateTimeSlots("08:00:00", "10:00:00")).toEqual([
+    it("gera slots de 15 em 15 min no intervalo [from, to)", () => {
+      expect(generateTimeSlots("08:00:00", "09:00:00", 15)).toEqual([
+        "08:00",
+        "08:15",
+        "08:30",
+        "08:45",
+      ]);
+    });
+
+    it("aceita passo de 30 min", () => {
+      expect(generateTimeSlots("08:00:00", "10:00:00", 30)).toEqual([
         "08:00",
         "08:30",
         "09:00",
@@ -26,33 +37,93 @@ describe("availability", () => {
     });
 
     it("intervalo com volta na semana (sex–seg)", () => {
-      expect(isDayAvailable(6, 5, 1)).toBe(true); // sábado
-      expect(isDayAvailable(0, 5, 1)).toBe(true); // domingo
-      expect(isDayAvailable(3, 5, 1)).toBe(false); // quarta
+      expect(isDayAvailable(6, 5, 1)).toBe(true);
+      expect(isDayAvailable(0, 5, 1)).toBe(true);
+      expect(isDayAvailable(3, 5, 1)).toBe(false);
+    });
+  });
+
+  describe("intervalsOverlap", () => {
+    const t = (h: number, m = 0) => new Date(2026, 5, 15, h, m);
+
+    it("detecta overlap parcial", () => {
+      expect(intervalsOverlap(t(8), t(8, 45), t(8, 30), t(9))).toBe(true);
+    });
+
+    it("não overlap quando um termina no início do outro", () => {
+      expect(intervalsOverlap(t(8), t(8, 30), t(8, 30), t(9))).toBe(false);
+    });
+  });
+
+  describe("isWithinAvailability", () => {
+    const windows = [
+      { weekDay: 1, startTime: "08:00:00", endTime: "12:00:00" },
+      { weekDay: 1, startTime: "14:00:00", endTime: "18:00:00" },
+    ];
+
+    it("aceita horário na janela da manhã", () => {
+      // 2026-06-15 é segunda
+      expect(
+        isWithinAvailability(new Date(2026, 5, 15, 8, 0), 30, windows),
+      ).toBe(true);
+    });
+
+    it("rejeita horário no intervalo de almoço", () => {
+      expect(
+        isWithinAvailability(new Date(2026, 5, 15, 12, 0), 30, windows),
+      ).toBe(false);
+    });
+
+    it("rejeita se a duração ultrapassa o fim da janela", () => {
+      expect(
+        isWithinAvailability(new Date(2026, 5, 15, 11, 45), 30, windows),
+      ).toBe(false);
     });
   });
 
   describe("computeAvailableSlots", () => {
-    const availability = {
-      availableFromWeekDay: 1,
-      availableToWeekDay: 5,
-      availableFromTime: "08:00:00",
-      availableToTime: "09:30:00",
-    };
+    const windows = [
+      { weekDay: 1, startTime: "08:00:00", endTime: "09:30:00" },
+    ];
 
-    it("marca horários ocupados como indisponíveis", () => {
-      // 2026-06-15 é uma segunda-feira.
-      const slots = computeAvailableSlots("2026-06-15", availability, ["08:30"]);
-      expect(slots).toEqual([
-        { time: "08:00", available: true },
-        { time: "08:30", available: false },
-        { time: "09:00", available: true },
-      ]);
+    it("marca horários ocupados considerando duração", () => {
+      const occupied = [
+        {
+          start: new Date(2026, 5, 15, 8, 0),
+          end: new Date(2026, 5, 15, 8, 30),
+        },
+      ];
+      const slots = computeAvailableSlots(
+        "2026-06-15",
+        windows,
+        occupied,
+        30,
+      );
+      const byTime = Object.fromEntries(
+        slots.map((s) => [s.time, s.available]),
+      );
+      expect(byTime["08:00"]).toBe(false);
+      expect(byTime["08:15"]).toBe(false);
+      expect(byTime["08:30"]).toBe(true);
+      expect(byTime["09:00"]).toBe(true);
     });
 
-    it("retorna vazio quando o dia não está na janela de atendimento", () => {
-      // 2026-06-14 é um domingo (fora de seg–sex).
-      expect(computeAvailableSlots("2026-06-14", availability, [])).toEqual([]);
+    it("retorna vazio quando o dia não tem janelas", () => {
+      expect(computeAvailableSlots("2026-06-14", windows, [], 30)).toEqual([]);
+    });
+
+    it("suporta múltiplas janelas no mesmo dia", () => {
+      const multi = [
+        { weekDay: 1, startTime: "08:00:00", endTime: "09:00:00" },
+        { weekDay: 1, startTime: "14:00:00", endTime: "15:00:00" },
+      ];
+      const slots = computeAvailableSlots("2026-06-15", multi, [], 30);
+      const times = slots.filter((s) => s.available).map((s) => s.time);
+      expect(times).toContain("08:00");
+      expect(times).toContain("08:30");
+      expect(times).toContain("14:00");
+      expect(times).toContain("14:30");
+      expect(times).not.toContain("12:00");
     });
   });
 });

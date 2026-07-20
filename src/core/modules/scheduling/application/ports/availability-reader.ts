@@ -1,19 +1,26 @@
-import { ProfessionalAvailability } from "../../domain/availability";
+import {
+  OccupiedInterval,
+  ProfessionalAvailability,
+} from "../../domain/availability";
+
+export interface ProfessionalAvailabilityInfo {
+  windows: ProfessionalAvailability;
+  defaultAppointmentDurationInMinutes: number;
+}
 
 /**
- * Porta de leitura para o cálculo de horários disponíveis: expõe a janela de
- * atendimento do profissional e os horários já ocupados numa data.
+ * Porta de leitura para o cálculo de horários disponíveis: expõe as janelas de
+ * atendimento do profissional e os intervalos já ocupados numa data.
  */
 export interface AvailabilityReader {
   getAvailability(params: {
     clinicId: string;
     doctorId: string;
-  }): Promise<ProfessionalAvailability | null>;
+  }): Promise<ProfessionalAvailabilityInfo | null>;
 
-  /** Horários "HH:MM" já ocupados para o profissional na data "YYYY-MM-DD". */
-  getBookedTimes(params: {
+  getOccupiedIntervals(params: {
     clinicId: string;
     doctorId: string;
     date: string;
-  }): Promise<string[]>;
+  }): Promise<OccupiedInterval[]>;
 }

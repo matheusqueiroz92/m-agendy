@@ -3,6 +3,7 @@ import { AuthenticatedActor } from "@/core/modules/iam/domain/authenticated-acto
 import { AuditLog } from "@/core/shared/application/ports/audit-log";
 import { NotFoundError, PlanLimitError } from "@/core/shared/domain/errors";
 import { canAddProfessional } from "@/core/modules/billing/domain/entitlements";
+import { AvailabilityWindow } from "@/core/modules/scheduling/domain/availability";
 
 import { Professional } from "../../domain/professional";
 import { ProfessionalRepository } from "../ports/professional-repository";
@@ -18,10 +19,8 @@ export interface UpsertProfessionalInput {
   phoneNumber?: string | null;
   avatarImageUrl?: string | null;
   appointmentPriceInCents: number;
-  availableFromWeekDay: number;
-  availableToWeekDay: number;
-  availableFromTime: string;
-  availableToTime: string;
+  defaultAppointmentDurationInMinutes: number;
+  availabilityWindows: AvailabilityWindow[];
 }
 
 export interface UpsertProfessionalOutput {
@@ -50,7 +49,6 @@ export class UpsertProfessionalUseCase {
         throw new NotFoundError("Profissional não encontrado.");
       }
     } else {
-      // Criação: respeita o limite de profissionais do plano.
       const current = await this.professionals.countByClinic(input.clinicId);
       if (input.plan && !canAddProfessional(input.plan, current)) {
         throw new PlanLimitError(
@@ -67,10 +65,9 @@ export class UpsertProfessionalUseCase {
       phoneNumber: input.phoneNumber,
       avatarImageUrl: input.avatarImageUrl,
       appointmentPriceInCents: input.appointmentPriceInCents,
-      availableFromWeekDay: input.availableFromWeekDay,
-      availableToWeekDay: input.availableToWeekDay,
-      availableFromTime: input.availableFromTime,
-      availableToTime: input.availableToTime,
+      defaultAppointmentDurationInMinutes:
+        input.defaultAppointmentDurationInMinutes,
+      availabilityWindows: input.availabilityWindows,
     });
 
     await this.professionals.save(professional);

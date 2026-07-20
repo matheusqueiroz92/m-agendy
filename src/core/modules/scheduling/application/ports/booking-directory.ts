@@ -1,6 +1,7 @@
 export interface BookableProfessional {
   priceInCents: number;
   name: string;
+  defaultAppointmentDurationInMinutes: number;
 }
 
 export interface FindOrCreatePatientInput {

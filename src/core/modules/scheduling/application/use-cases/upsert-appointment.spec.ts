@@ -11,6 +11,7 @@ import {
   AppointmentInThePastError,
 } from "../../domain/errors";
 import { FakeAppointmentContactDirectory } from "../testing/fake-appointment-contact-directory";
+import { FakeAvailabilityReader } from "../testing/fake-availability-reader";
 import {
   FakeAppointmentNotifier,
   FixedClock,
@@ -28,6 +29,7 @@ describe("UpsertAppointmentUseCase", () => {
   let reminders: InMemoryReminderScheduler;
   let notifier: FakeAppointmentNotifier;
   let contacts: FakeAppointmentContactDirectory;
+  let availability: FakeAvailabilityReader;
   let useCase: UpsertAppointmentUseCase;
 
   const manager = new AuthenticatedActor({
@@ -55,6 +57,13 @@ describe("UpsertAppointmentUseCase", () => {
       patientPhoneNumber: "+5511999999999",
       doctorName: "Dr. House",
     });
+    availability = new FakeAvailabilityReader();
+    availability.setAvailability({
+      windows: [
+        { weekDay: 6, startTime: "08:00:00", endTime: "18:00:00" }, // sábado 2026-06-20
+      ],
+      defaultAppointmentDurationInMinutes: 30,
+    });
     useCase = new UpsertAppointmentUseCase(
       appointments,
       new Authorizer(),
@@ -63,6 +72,7 @@ describe("UpsertAppointmentUseCase", () => {
       reminders,
       notifier,
       contacts,
+      availability,
     );
   });
 

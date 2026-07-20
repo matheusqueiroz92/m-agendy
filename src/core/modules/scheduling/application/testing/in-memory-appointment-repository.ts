@@ -1,5 +1,9 @@
 import { Appointment, AppointmentStatus } from "../../domain/appointment";
 import {
+  addMinutes,
+  intervalsOverlap,
+} from "../../domain/availability";
+import {
   AppointmentRepository,
   ConflictQuery,
 } from "../ports/appointment-repository";
@@ -9,13 +13,25 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   public items: Appointment[] = [];
 
   async hasConflict(query: ConflictQuery): Promise<boolean> {
+    const queryEnd = addMinutes(query.scheduledAt, query.durationInMinutes);
+
     return this.items.some((appointment) => {
       const data = appointment.toPrimitives();
-      return (
-        data.clinicId === query.clinicId &&
-        data.doctorId === query.doctorId &&
-        data.scheduledAt.getTime() === query.scheduledAt.getTime() &&
-        data.id !== query.excludeAppointmentId
+      if (
+        data.clinicId !== query.clinicId ||
+        data.doctorId !== query.doctorId ||
+        data.id === query.excludeAppointmentId ||
+        data.status === "cancelled" ||
+        data.status === "no_show"
+      ) {
+        return false;
+      }
+
+      return intervalsOverlap(
+        query.scheduledAt,
+        queryEnd,
+        data.scheduledAt,
+        addMinutes(data.scheduledAt, data.durationInMinutes),
       );
     });
   }

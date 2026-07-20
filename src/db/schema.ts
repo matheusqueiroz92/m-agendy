@@ -199,17 +199,35 @@ export const doctorsTable = pgTable("doctors", {
   avatarImageUrl: text("avatar_image_url"),
   phoneNumber: text("phone_number"),
   speciality: text("speciality").notNull(),
-  // 0- sunday, 1- monday, 2- tuesday, 3- wednesday, 4- thursday, 5- friday, 6- saturday
-  availableFromWeekDay: integer("available_from_week_day").notNull(), // 1
-  availableToWeekDay: integer("available_to_week_day").notNull(), // 5
-  availableFromTime: time("available_from_time").notNull(),
-  availableToTime: time("available_to_time").notNull(),
+  defaultAppointmentDurationInMinutes: integer(
+    "default_appointment_duration_in_minutes",
+  )
+    .notNull()
+    .default(30),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+/** Janelas de atendimento por dia da semana (0=domingo … 6=sábado). */
+export const doctorAvailabilityWindowsTable = pgTable(
+  "doctor_availability_windows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctorsTable.id, { onDelete: "cascade" }),
+    weekDay: integer("week_day").notNull(),
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+);
 
 export const doctorsTableRelations = relations(
   doctorsTable,
@@ -219,6 +237,17 @@ export const doctorsTableRelations = relations(
       references: [clinicsTable.id],
     }),
     appointments: many(appointmentsTable),
+    availabilityWindows: many(doctorAvailabilityWindowsTable),
+  }),
+);
+
+export const doctorAvailabilityWindowsTableRelations = relations(
+  doctorAvailabilityWindowsTable,
+  ({ one }) => ({
+    doctor: one(doctorsTable, {
+      fields: [doctorAvailabilityWindowsTable.doctorId],
+      references: [doctorsTable.id],
+    }),
   }),
 );
 
@@ -264,6 +293,7 @@ export const patientsTableRelations = relations(
 export const appointmentsTable = pgTable("appointments", {
   id: uuid("id").defaultRandom().primaryKey(),
   date: timestamp("date").notNull(),
+  durationInMinutes: integer("duration_in_minutes").notNull().default(30),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
   status: appointmentStatusEnum("status").notNull().default("pending"),
   type: appointmentTypeEnum("type").notNull().default("consultation"),

@@ -15,7 +15,16 @@ describe("GetAvailableTimeSlotsUseCase", () => {
   });
 
   it("retorna slots marcando ocupados (2026-06-15 = segunda)", async () => {
-    reader.setBookedTimes(["08:30", "09:00"]);
+    reader.setOccupied([
+      {
+        start: new Date(2026, 5, 15, 8, 30),
+        end: new Date(2026, 5, 15, 9, 0),
+      },
+      {
+        start: new Date(2026, 5, 15, 9, 0),
+        end: new Date(2026, 5, 15, 9, 30),
+      },
+    ]);
 
     const { timeSlots } = await useCase.execute({
       clinicId: "clinic-1",
@@ -23,12 +32,13 @@ describe("GetAvailableTimeSlotsUseCase", () => {
       date: "2026-06-15",
     });
 
-    expect(timeSlots).toEqual([
-      { time: "08:00", available: true },
-      { time: "08:30", available: false },
-      { time: "09:00", available: false },
-      { time: "09:30", available: true },
-    ]);
+    const byTime = Object.fromEntries(
+      timeSlots.map((s) => [s.time, s.available]),
+    );
+    expect(byTime["08:00"]).toBe(true);
+    expect(byTime["08:30"]).toBe(false);
+    expect(byTime["09:00"]).toBe(false);
+    expect(byTime["09:30"]).toBe(true);
   });
 
   it("retorna vazio em dia fora da janela (2026-06-14 = domingo)", async () => {

@@ -3,13 +3,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   PageContainer,
   PageContent,
   PageDescription,
@@ -55,17 +48,6 @@ const SettingsPage = async () => {
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            Configurações
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>Configurações</PageTitle>

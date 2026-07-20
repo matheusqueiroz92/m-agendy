@@ -35,14 +35,19 @@ import {
 } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { doctorsTable } from "@/db/schema";
+import {
+  doctorAvailabilityWindowsTable,
+  doctorsTable,
+} from "@/db/schema";
 import { formatCurrencyInCents } from "@/helpers/currency";
 
-import { getAvailability } from "../../../../helpers/availability";
+import { getAvailabilitySummary } from "../../../../helpers/availability";
 import { UpsertDoctorForm } from "./upsert-doctor-form";
 
 interface DoctorCardProps {
-  doctor: typeof doctorsTable.$inferSelect;
+  doctor: typeof doctorsTable.$inferSelect & {
+    availabilityWindows?: (typeof doctorAvailabilityWindowsTable.$inferSelect)[];
+  };
 }
 
 export const DoctorCard = ({ doctor }: DoctorCardProps) => {
@@ -67,7 +72,7 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
     .split(" ")
     .map((name) => name[0])
     .join("");
-  const availability = getAvailability(doctor);
+  const availability = getAvailabilitySummary(doctor);
 
   return (
     <Card>
@@ -86,12 +91,11 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
       <CardContent className="flex flex-col gap-2">
         <Badge variant="outline">
           <CalendarIcon className="mr-1" />
-          {availability.from.format("dddd")} a {availability.to.format("dddd")}
+          {availability.daysLabel}
         </Badge>
         <Badge variant="outline">
           <ClockIcon className="mr-1" />
-          {availability.from.format("HH:mm")} as{" "}
-          {availability.to.format("HH:mm")}
+          {availability.hoursLabel}
         </Badge>
         <Badge variant="outline">
           <DollarSignIcon className="mr-1" />
@@ -108,11 +112,7 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
             <Button className="w-full">Ver detalhes</Button>
           </DialogTrigger>
           <UpsertDoctorForm
-            doctor={{
-              ...doctor,
-              availableFromTime: availability.from.format("HH:mm:ss"),
-              availableToTime: availability.to.format("HH:mm:ss"),
-            }}
+            doctor={doctor}
             onSuccess={() => setIsUpsertDoctorDialogOpen(false)}
           />
         </Dialog>

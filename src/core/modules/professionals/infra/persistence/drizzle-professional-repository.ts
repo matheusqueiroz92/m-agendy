@@ -1,7 +1,10 @@
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { doctorsTable } from "@/db/schema";
+import {
+  doctorAvailabilityWindowsTable,
+  doctorsTable,
+} from "@/db/schema";
 
 import { Professional } from "../../domain/professional";
 import { ProfessionalRepository } from "../../application/ports/professional-repository";
@@ -14,6 +17,7 @@ export class DrizzleProfessionalRepository implements ProfessionalRepository {
   async findById(id: string): Promise<Professional | null> {
     const row = await db.query.doctorsTable.findFirst({
       where: eq(doctorsTable.id, id),
+      with: { availabilityWindows: true },
     });
 
     if (!row) {
@@ -28,54 +32,70 @@ export class DrizzleProfessionalRepository implements ProfessionalRepository {
       phoneNumber: row.phoneNumber,
       avatarImageUrl: row.avatarImageUrl,
       appointmentPriceInCents: row.appointmentPriceInCents,
-      availableFromWeekDay: row.availableFromWeekDay,
-      availableToWeekDay: row.availableToWeekDay,
-      availableFromTime: row.availableFromTime,
-      availableToTime: row.availableToTime,
+      defaultAppointmentDurationInMinutes:
+        row.defaultAppointmentDurationInMinutes,
+      availabilityWindows: row.availabilityWindows.map((window) => ({
+        weekDay: window.weekDay,
+        startTime: window.startTime,
+        endTime: window.endTime,
+      })),
     });
   }
 
   async countByClinic(clinicId: string): Promise<number> {
-    const [row] = await db
-      .select({ value: count() })
-      .from(doctorsTable)
-      .where(eq(doctorsTable.clinicId, clinicId));
-    return row?.value ?? 0;
+    const rows = await db.query.doctorsTable.findMany({
+      where: eq(doctorsTable.clinicId, clinicId),
+      columns: { id: true },
+    });
+    return rows.length;
   }
 
   async save(professional: Professional): Promise<void> {
     const data = professional.toPrimitives();
 
-    await db
-      .insert(doctorsTable)
-      .values({
-        id: data.id,
-        clinicId: data.clinicId,
-        name: data.name,
-        speciality: data.speciality,
-        phoneNumber: data.phoneNumber,
-        avatarImageUrl: data.avatarImageUrl,
-        appointmentPriceInCents: data.appointmentPriceInCents,
-        availableFromWeekDay: data.availableFromWeekDay,
-        availableToWeekDay: data.availableToWeekDay,
-        availableFromTime: data.availableFromTime,
-        availableToTime: data.availableToTime,
-      })
-      .onConflictDoUpdate({
-        target: [doctorsTable.id],
-        set: {
+    await db.transaction(async (tx) => {
+      await tx
+        .insert(doctorsTable)
+        .values({
+          id: data.id,
+          clinicId: data.clinicId,
           name: data.name,
           speciality: data.speciality,
           phoneNumber: data.phoneNumber,
           avatarImageUrl: data.avatarImageUrl,
           appointmentPriceInCents: data.appointmentPriceInCents,
-          availableFromWeekDay: data.availableFromWeekDay,
-          availableToWeekDay: data.availableToWeekDay,
-          availableFromTime: data.availableFromTime,
-          availableToTime: data.availableToTime,
-          updatedAt: new Date(),
-        },
-      });
+          defaultAppointmentDurationInMinutes:
+            data.defaultAppointmentDurationInMinutes,
+        })
+        .onConflictDoUpdate({
+          target: [doctorsTable.id],
+          set: {
+            name: data.name,
+            speciality: data.speciality,
+            phoneNumber: data.phoneNumber,
+            avatarImageUrl: data.avatarImageUrl,
+            appointmentPriceInCents: data.appointmentPriceInCents,
+            defaultAppointmentDurationInMinutes:
+              data.defaultAppointmentDurationInMinutes,
+            updatedAt: new Date(),
+          },
+        });
+
+      await tx
+        .delete(doctorAvailabilityWindowsTable)
+        .where(eq(doctorAvailabilityWindowsTable.doctorId, data.id));
+
+      if (data.availabilityWindows.length > 0) {
+        await tx.insert(doctorAvailabilityWindowsTable).values(
+          data.availabilityWindows.map((window) => ({
+            doctorId: data.id,
+            weekDay: window.weekDay,
+            startTime: window.startTime,
+            endTime: window.endTime,
+          })),
+        );
+      }
+    });
   }
 
   async delete(id: string): Promise<void> {

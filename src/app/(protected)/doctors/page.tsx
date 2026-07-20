@@ -3,13 +3,6 @@ import { SearchX } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import {
   PageActions,
@@ -51,21 +44,11 @@ const DoctorsPage = async () => {
 
   const doctors = await db.query.doctorsTable.findMany({
     where: eq(doctorsTable.clinicId, session.user.clinic.id),
+    with: { availabilityWindows: true },
   });
 
   return (
     <PageContainer>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Menu Principal</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem className="font-semibold text-[var(--primary)]">
-            {plural}
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       <PageHeader>
         <PageHeaderContent>
           <PageTitle>{plural}</PageTitle>

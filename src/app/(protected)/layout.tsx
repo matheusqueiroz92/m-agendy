@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 
 import { AppHeader } from "./_components/app-header";
 import { AppSidebar } from "./_components/app-sidebar";
+import { HeaderBreadcrumbProvider } from "./_components/header-breadcrumb-context";
 
 const ProtectedLayout = async ({
   children,
@@ -44,8 +45,10 @@ const ProtectedLayout = async ({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <AppHeader />
-        <div className="flex flex-1 flex-col">{children}</div>
+        <HeaderBreadcrumbProvider>
+          <AppHeader />
+          <div className="flex flex-1 flex-col">{children}</div>
+        </HeaderBreadcrumbProvider>
       </SidebarInset>
     </SidebarProvider>
   );

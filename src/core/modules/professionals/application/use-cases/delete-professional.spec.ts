@@ -26,10 +26,12 @@ describe("DeleteProfessionalUseCase", () => {
       name: "Dr. House",
       speciality: "Clínico Geral",
       appointmentPriceInCents: 20000,
-      availableFromWeekDay: 1,
-      availableToWeekDay: 5,
-      availableFromTime: "08:00:00",
-      availableToTime: "18:00:00",
+      defaultAppointmentDurationInMinutes: 30,
+      availabilityWindows: [1, 2, 3, 4, 5].map((weekDay) => ({
+        weekDay,
+        startTime: "08:00:00",
+        endTime: "18:00:00",
+      })),
     });
 
   beforeEach(() => {

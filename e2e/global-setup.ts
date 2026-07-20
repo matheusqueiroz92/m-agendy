@@ -43,6 +43,7 @@ export default async function globalSetup(_config: FullConfig) {
     "clinical_attendances",
     "medical_records",
     "appointments",
+    "doctor_availability_windows",
     "patients",
     "doctors",
     "users_to_clinics",
@@ -69,13 +70,19 @@ export default async function globalSetup(_config: FullConfig) {
       clinicId: bookingClinic.id,
       name: "Dr. E2E",
       speciality: "Clínico Geral",
-      availableFromWeekDay: 1,
-      availableToWeekDay: 6,
-      availableFromTime: "08:00",
-      availableToTime: "20:00",
       appointmentPriceInCents: 20000,
+      defaultAppointmentDurationInMinutes: 30,
     })
     .returning();
+
+  await db.insert(schema.doctorAvailabilityWindowsTable).values(
+    [1, 2, 3, 4, 5, 6].map((weekDay) => ({
+      doctorId: bookingDoctor.id,
+      weekDay,
+      startTime: "08:00:00",
+      endTime: "20:00:00",
+    })),
+  );
 
   process.env.E2E_BOOKING_CLINIC_ID = bookingClinic.id;
   process.env.E2E_BOOKING_DOCTOR_ID = bookingDoctor.id;

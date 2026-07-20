@@ -1,9 +1,13 @@
-import { and, count, eq, gte, lt, ne } from "drizzle-orm";
+import { and, eq, gte, lt, ne, notInArray, count } from "drizzle-orm";
 
 import { db } from "@/db";
 import { appointmentsTable } from "@/db/schema";
 
 import { Appointment, AppointmentStatus } from "../../domain/appointment";
+import {
+  addMinutes,
+  intervalsOverlap,
+} from "../../domain/availability";
 import {
   AppointmentRepository,
   ConflictQuery,
@@ -15,18 +19,34 @@ import {
  */
 export class DrizzleAppointmentRepository implements AppointmentRepository {
   async hasConflict(query: ConflictQuery): Promise<boolean> {
-    const existing = await db.query.appointmentsTable.findFirst({
+    const dayStart = new Date(query.scheduledAt);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const queryEnd = addMinutes(query.scheduledAt, query.durationInMinutes);
+
+    const candidates = await db.query.appointmentsTable.findMany({
       where: and(
         eq(appointmentsTable.clinicId, query.clinicId),
         eq(appointmentsTable.doctorId, query.doctorId),
-        eq(appointmentsTable.date, query.scheduledAt),
+        gte(appointmentsTable.date, dayStart),
+        lt(appointmentsTable.date, dayEnd),
+        notInArray(appointmentsTable.status, ["cancelled", "no_show"]),
         query.excludeAppointmentId
           ? ne(appointmentsTable.id, query.excludeAppointmentId)
           : undefined,
       ),
     });
 
-    return Boolean(existing);
+    return candidates.some((row) =>
+      intervalsOverlap(
+        query.scheduledAt,
+        queryEnd,
+        row.date,
+        addMinutes(row.date, row.durationInMinutes),
+      ),
+    );
   }
 
   async countByClinicInPeriod(
@@ -58,18 +78,19 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
         patientId: data.patientId,
         doctorId: data.doctorId,
         date: data.scheduledAt,
+        durationInMinutes: data.durationInMinutes,
         appointmentPriceInCents: data.priceInCents,
         status: data.status,
         type: data.type,
       })
       .onConflictDoUpdate({
         target: [appointmentsTable.id],
-        // Não sobrescreve "status" numa edição (preserva confirmações).
         set: {
           clinicId: data.clinicId,
           patientId: data.patientId,
           doctorId: data.doctorId,
           date: data.scheduledAt,
+          durationInMinutes: data.durationInMinutes,
           appointmentPriceInCents: data.priceInCents,
           type: data.type,
           updatedAt: new Date(),
@@ -92,6 +113,7 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
       patientId: row.patientId,
       doctorId: row.doctorId,
       scheduledAt: row.date,
+      durationInMinutes: row.durationInMinutes,
       priceInCents: row.appointmentPriceInCents,
       status: row.status,
       type: row.type,

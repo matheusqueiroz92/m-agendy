@@ -64,6 +64,13 @@
       "when": 1784211542413,
       "tag": "0008_perpetual_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784554200000,
+      "tag": "0009_schedule_board",
+      "breakpoints": true
     }
   ]
 }
