@@ -5,7 +5,7 @@ import { Clock } from "@/core/shared/application/ports/clock";
 import { NotFoundError, PlanLimitError } from "@/core/shared/domain/errors";
 import { canCreateAppointment } from "@/core/modules/billing/domain/entitlements";
 
-import { Appointment } from "../../domain/appointment";
+import { Appointment, AppointmentType } from "../../domain/appointment";
 import {
   AppointmentConflictError,
   AppointmentInThePastError,
@@ -26,6 +26,8 @@ export interface UpsertAppointmentInput {
   doctorId: string;
   scheduledAt: Date;
   priceInCents: number;
+  /** Consulta (padrão) ou retorno. */
+  type?: AppointmentType;
 }
 
 export interface UpsertAppointmentOutput {
@@ -102,6 +104,7 @@ export class UpsertAppointmentUseCase {
       doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
       priceInCents: input.priceInCents,
+      type: input.type,
     });
 
     await this.appointments.save(appointment);

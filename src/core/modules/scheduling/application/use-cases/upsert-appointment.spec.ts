@@ -74,6 +74,39 @@ describe("UpsertAppointmentUseCase", () => {
     expect(audit.entries[0].action).toBe("appointment.created");
   });
 
+  it("cria um agendamento como 'consulta' por padrão quando o tipo não é informado", async () => {
+    await useCase.execute(baseInput);
+
+    expect(appointments.items[0].type).toBe("consultation");
+  });
+
+  it("cria um agendamento de retorno quando o tipo é informado", async () => {
+    await useCase.execute({ ...baseInput, type: "return_visit" });
+
+    expect(appointments.items[0].type).toBe("return_visit");
+  });
+
+  it("permite alterar o tipo do agendamento na edição", async () => {
+    const existing = Appointment.create({
+      clinicId: "clinic-1",
+      patientId: "patient-1",
+      doctorId: "doctor-1",
+      scheduledAt: future,
+      priceInCents: 10000,
+      type: "consultation",
+    });
+    await appointments.save(existing);
+
+    await useCase.execute({
+      ...baseInput,
+      id: existing.id,
+      type: "return_visit",
+    });
+
+    const updated = await appointments.findById(existing.id);
+    expect(updated?.type).toBe("return_visit");
+  });
+
   it("envia confirmação e agenda lembretes quando há telefone", async () => {
     await useCase.execute(baseInput);
 
