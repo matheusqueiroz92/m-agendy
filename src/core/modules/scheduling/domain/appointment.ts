@@ -6,6 +6,13 @@ export type AppointmentStatus =
   | "cancelled"
   | "no_show";
 
+/**
+ * Tipo do agendamento: primeira consulta ("consultation") ou retorno de um
+ * atendimento anterior ("return_visit"). Puramente informativo por enquanto —
+ * não afeta preço, conflito ou lembretes.
+ */
+export type AppointmentType = "consultation" | "return_visit";
+
 export interface AppointmentProps {
   id: string;
   clinicId: string;
@@ -14,6 +21,7 @@ export interface AppointmentProps {
   scheduledAt: Date;
   priceInCents: number;
   status: AppointmentStatus;
+  type: AppointmentType;
 }
 
 /**
@@ -28,9 +36,10 @@ export class Appointment {
 
   /** Cria um novo agendamento, validando as invariantes. */
   static create(
-    input: Omit<AppointmentProps, "id" | "status"> & {
+    input: Omit<AppointmentProps, "id" | "status" | "type"> & {
       id?: string;
       status?: AppointmentStatus;
+      type?: AppointmentType;
     },
   ): Appointment {
     if (!Number.isInteger(input.priceInCents) || input.priceInCents <= 0) {
@@ -45,6 +54,7 @@ export class Appointment {
       priceInCents: input.priceInCents,
       id: input.id ?? crypto.randomUUID(),
       status: input.status ?? "pending",
+      type: input.type ?? "consultation",
     });
   }
 
@@ -84,6 +94,10 @@ export class Appointment {
 
   get status(): AppointmentStatus {
     return this.props.status;
+  }
+
+  get type(): AppointmentType {
+    return this.props.type;
   }
 
   toPrimitives(): AppointmentProps {
