@@ -18,6 +18,7 @@ const schema = z.object({
   appointmentPriceInCents: z.number().positive(),
   date: z.date(),
   time: z.string().min(1),
+  type: z.enum(["consultation", "return_visit"]).default("consultation"),
 });
 
 /**
@@ -48,6 +49,7 @@ export const upsertAppointment = actionClient
       doctorId: parsedInput.doctorId,
       scheduledAt,
       priceInCents: parsedInput.appointmentPriceInCents,
+      type: parsedInput.type,
     });
 
     revalidatePath("/appointments");

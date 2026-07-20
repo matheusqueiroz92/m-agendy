@@ -98,6 +98,19 @@ export const createAppointmentsTableColumns = (
     },
   },
   {
+    id: "type",
+    accessorKey: "type",
+    header: "Tipo",
+    cell: (params) => {
+      const appointment = params.row.original;
+      const label: Record<typeof appointment.type, string> = {
+        consultation: "Consulta",
+        return_visit: "Retorno",
+      };
+      return <Badge variant="outline">{label[appointment.type]}</Badge>;
+    },
+  },
+  {
     id: "status",
     accessorKey: "status",
     header: "Status",

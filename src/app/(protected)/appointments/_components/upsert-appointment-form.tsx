@@ -55,7 +55,13 @@ const formSchema = z.object({
   time: z.string().min(1, {
     message: "Horário é obrigatório.",
   }),
+  type: z.enum(["consultation", "return_visit"]),
 });
+
+const APPOINTMENT_TYPE_LABEL: Record<"consultation" | "return_visit", string> = {
+  consultation: "Consulta",
+  return_visit: "Retorno",
+};
 
 interface UpsertAppointmentFormProps {
   doctors: (typeof doctorsTable.$inferSelect)[];
@@ -101,6 +107,7 @@ export const UpsertAppointmentForm = ({
       time: appointment?.date
         ? `${new Date(appointment.date).getHours().toString().padStart(2, "0")}:${new Date(appointment.date).getMinutes().toString().padStart(2, "0")}`
         : "",
+      type: appointment?.type ?? "consultation",
     },
   });
 
@@ -248,6 +255,7 @@ export const UpsertAppointmentForm = ({
       appointmentPriceInCents: values.appointmentPriceInCents * 100, // Converte para centavos
       date: values.date,
       time: values.time,
+      type: values.type,
     });
   };
 
@@ -308,6 +316,33 @@ export const UpsertAppointmentForm = ({
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
                         {doctor.name} - {doctor.speciality}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(Object.keys(APPOINTMENT_TYPE_LABEL) as Array<
+                      keyof typeof APPOINTMENT_TYPE_LABEL
+                    >).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {APPOINTMENT_TYPE_LABEL[type]}
                       </SelectItem>
                     ))}
                   </SelectContent>
