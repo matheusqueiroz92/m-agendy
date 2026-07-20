@@ -65,6 +65,8 @@ apply-fase-6-chatbot-conversations.sql     # conversas do chatbot
 apply-refino-whatsapp-multitenant.sql      # clinics.whatsapp_phone_number_id
 apply-fase-8-platform-admin.sql            # status + override de plano por clínica
 apply-fase-9-trial-e-lembretes.sql         # trial sem cartão + cancelamento real de lembretes
+apply-admin-plugin-fields.sql              # campos do plugin admin do BetterAuth + users.phone_number
+apply-appointment-type.sql                 # tipo do agendamento (consulta/retorno)
 ```
 
 > **Ordem de aplicação:** se for montar um ambiente do zero, prefira

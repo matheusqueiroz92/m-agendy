@@ -60,6 +60,15 @@ Implementação: `ClinicOwnerProvisioner` (porta) /
 `UpsertClinicUseCase` — ver `docs/05-desenvolvimento.md` para o padrão
 geral de portas/casos de uso do projeto.
 
+> **Nota sobre o schema:** `auth.api.createUser` (usado aqui) é exposto pelo
+> plugin `admin` do BetterAuth (`better-auth/plugins`), que exige as colunas
+> `role`, `banned`, `ban_reason` e `ban_expires` em `users` — mesmo que a
+> aplicação não use RBAC nativo do BetterAuth (o RBAC próprio é
+> `platformRole`, um conceito separado). Sem essas colunas, a criação de
+> clínica falha em runtime com `BetterAuthError: The field "role" does not
+> exist...`. Já aplicado em `src/db/schema.ts` e em
+> `drizzle/manual/apply-admin-plugin-fields.sql`.
+
 ## Bloqueio de acesso
 
 Bloquear uma clínica define `status = 'blocked'` (com motivo opcional). Efeito:

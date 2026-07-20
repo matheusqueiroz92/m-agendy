@@ -15,7 +15,8 @@ e confirmações por WhatsApp, lembretes automáticos e prontuário seguro.
 
 ## ✨ Funcionalidades
 
-- **Agendamento** pelo painel e **online pelo paciente** (link público, sem login).
+- **Agendamento** pelo painel e **online pelo paciente** (link público, sem login),
+  com identificação de **consulta ou retorno**.
 - **Chatbot de WhatsApp** que agenda em conversa, e **confirmação** de consultas
   por WhatsApp com aviso in-app para a clínica.
 - **Lembretes automáticos** (reduzem faltas) via fila (QStash).

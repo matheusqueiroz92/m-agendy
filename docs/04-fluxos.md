@@ -42,6 +42,20 @@ Conflitos de horário do mesmo profissional são rejeitados
 (`AppointmentConflictError`). Confirmação e lembretes nunca derrubam o
 agendamento (são best-effort, com `try/catch`).
 
+### Tipo do agendamento (consulta ou retorno)
+
+Todo agendamento tem um `type`: `"consultation"` (primeira consulta/avaliação,
+padrão) ou `"return_visit"` (retorno de um atendimento anterior). É puramente
+informativo — não afeta preço, conflito de horário nem lembretes — e serve
+para a equipe identificar rapidamente o perfil da agenda.
+
+- Só é editável pelo **painel da clínica** (`UpsertAppointmentForm`), tanto ao
+  criar quanto ao editar.
+- Agendamento **online pelo paciente** (link público) e pelo **chatbot** não
+  expõem esse campo: entram sempre como `"consultation"` — a equipe pode
+  corrigir depois pela edição, caso seja de fato um retorno.
+- Domínio: `AppointmentType` em `scheduling/domain/appointment.ts`.
+
 ## 3. Agendamento online pelo paciente (sem login)
 
 Duas portas de entrada, ambas **sem autenticação do paciente**:
