@@ -41,6 +41,13 @@ export const appointmentStatusEnum = pgEnum("appointment_status", [
   "no_show",
 ]);
 
+// "consultation" = primeira consulta/avaliação; "return_visit" = retorno de
+// um atendimento anterior. Puramente informativo (não afeta preço/conflito).
+export const appointmentTypeEnum = pgEnum("appointment_type", [
+  "consultation",
+  "return_visit",
+]);
+
 export const userPlanEnum = pgEnum("user_plan", [
   "trial",
   "essential",
@@ -54,7 +61,7 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
   image: text("image"),
-  // phoneNumber: text("phone_number"),
+  phoneNumber: text("phone_number"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   plan: text("plan"), // modificar aqui para adcionar os planos
@@ -68,6 +75,16 @@ export const usersTable = pgTable("users", {
   platformRole: userPlatformRoleEnum("platform_role")
     .notNull()
     .default("member"),
+  // Campos exigidos pelo schema interno do plugin "admin" do BetterAuth
+  // (better-auth/plugins), usado hoje apenas server-side por
+  // auth.api.createUser (ver ClinicOwnerProvisioner). Não confundir com
+  // "platformRole" acima, que é o RBAC próprio da aplicação
+  // (member/platform_admin) — "role" é um conceito interno do plugin, não
+  // exposto/usado pela aplicação.
+  role: text("role"),
+  banned: boolean("banned").default(false),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -249,6 +266,7 @@ export const appointmentsTable = pgTable("appointments", {
   date: timestamp("date").notNull(),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
   status: appointmentStatusEnum("status").notNull().default("pending"),
+  type: appointmentTypeEnum("type").notNull().default("consultation"),
   clinicId: uuid("clinic_id")
     .notNull()
     .references(() => clinicsTable.id, { onDelete: "cascade" }),
