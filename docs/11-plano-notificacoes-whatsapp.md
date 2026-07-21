@@ -254,6 +254,24 @@ tolerando máscara e não duplicando o prefixo se ele já existir. Aplicado em:
   telefone recebido no webhook com o do cadastro após normalizar os dois
   lados, em vez de comparar só dígitos brutos.
 
+## Correção: URL de destino escapada quebrava o agendamento no QStash ✅ implementado (21/07/2026)
+
+**Problema**: `QStashReminderScheduler.schedule` montava a URL de publicação
+com `encodeURIComponent(destinationUrl)` — mas a API do QStash espera o
+destino **cru** depois de `/v2/publish/` (ex.:
+`.../v2/publish/https://seu-dominio.com/api/reminders/dispatch`), não
+escapado. Com `encodeURIComponent`, o `https://` virava `https%3A%2F%2F`, e o
+QStash recusava com `400` ("invalid destination url: endpoint has invalid
+scheme") — exatamente o erro visto em produção
+(`Falha ao agendar lembrete no QStash: 400`). Esse trecho nunca tinha sido
+validado contra um QStash real antes (só mockado nos testes existentes da
+Fase 2), então o bug ficou invisível até o primeiro teste de ponta a ponta.
+
+**Correção**: removido o `encodeURIComponent` — o destino agora vai cru na
+URL, como a API espera. Teste novo em
+`qstash-reminder-scheduler.spec.ts` fixa esse comportamento (URL exata
+publicada, com e sem `qstashUrl` regional) para não regredir.
+
 ## Multi-tenant: número de WhatsApp por clínica ✅ implementado (17/07/2026)
 
 O sistema é usado por várias clínicas, e cada uma pode ter (ou não) seu
