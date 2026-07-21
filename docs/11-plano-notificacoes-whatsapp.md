@@ -213,6 +213,26 @@ uma parcela de esforço bem maior para um caso hoje raro (poucos pacientes têm
 mais de uma consulta pendente ao mesmo tempo). Fica como evolução futura se
 isso se mostrar frequente na prática.
 
+## Correção: QStash multi-região ✅ implementado (21/07/2026)
+
+**Problema**: a Upstash passou a oferecer instâncias regionais de QStash
+(EU/US), cada uma com seu próprio endpoint (`https://qstash-eu-central-1
+.upstash.io`, `https://qstash-us-east-1.upstash.io`) — o alias antigo
+`https://qstash.upstash.io`, hardcoded como default no
+`QStashReminderScheduler`, é só um apelido da região **EU**. Quem cria o
+token na região **US** (recomendada por latência para o Brasil) e publica
+mensagens no endpoint EU por engano não recebe erro claro — as mensagens
+simplesmente não chegam à fila certa.
+
+**Correção**: `makeReminderScheduler` (`scheduling/infra/factories/make-appointment-use-cases.ts`)
+agora lê `process.env.QSTASH_URL` e monta o endpoint regional completo
+(`${QSTASH_URL}/v2/publish`) quando presente, mantendo o default antigo (EU)
+como fallback para não quebrar quem já estava configurado sem essa variável.
+
+**Pendente da sua parte**: preencher `QSTASH_URL` no `.env` com o endpoint
+da região escolhida no console da Upstash (visível no painel "Quickstart" da
+região) — ver `docs/03-variaveis-de-ambiente.md`.
+
 ## Multi-tenant: número de WhatsApp por clínica ✅ implementado (17/07/2026)
 
 O sistema é usado por várias clínicas, e cada uma pode ter (ou não) seu

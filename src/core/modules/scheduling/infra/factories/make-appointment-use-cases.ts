@@ -12,11 +12,20 @@ import { DrizzleAvailabilityReader } from "../persistence/drizzle-availability-r
 import { QStashReminderScheduler } from "../scheduling/qstash-reminder-scheduler";
 import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
 
-const makeReminderScheduler = () =>
-  new QStashReminderScheduler({
+const makeReminderScheduler = () => {
+  // QStash agora tem instâncias regionais (EU/US), cada uma com seu próprio
+  // endpoint — https://qstash.upstash.io é só o alias da região EU. Sem
+  // QSTASH_URL configurada, o adapter cai no default (EU); defina QSTASH_URL
+  // com o endpoint da região escolhida no console da Upstash (ex.:
+  // "https://qstash-us-east-1.upstash.io") para publicar na região certa.
+  const region = process.env.QSTASH_URL?.replace(/\/+$/, "");
+
+  return new QStashReminderScheduler({
     token: process.env.QSTASH_TOKEN,
     destinationUrl: process.env.REMINDER_DISPATCH_URL,
+    qstashUrl: region ? `${region}/v2/publish` : undefined,
   });
+};
 
 export const makeUpsertAppointment = () =>
   new UpsertAppointmentUseCase(

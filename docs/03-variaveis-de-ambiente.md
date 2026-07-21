@@ -53,7 +53,8 @@ enviar de verdade). Isso permite rodar o app localmente sem configurar tudo.
 | Variável | Descrição |
 |---|---|
 | `QSTASH_TOKEN` | Token do Upstash QStash (agenda HTTP atrasado para os lembretes). |
-| `REMINDER_DISPATCH_URL` | URL que o QStash chama para disparar o lembrete (`/api/reminders/dispatch`). |
+| `QSTASH_URL` | Endpoint da região do QStash (console da Upstash). O QStash tem instâncias regionais (EU/US); sem esta variável, o adapter usa o alias padrão `https://qstash.upstash.io`, que é a região **EU**. Se o seu token foi criado na região **US**, preencha com `https://qstash-us-east-1.upstash.io` — do contrário os agendamentos vão para a região errada e nada é entregue. |
+| `REMINDER_DISPATCH_URL` | URL do **próprio** endpoint do M.Agendy (`/api/reminders/dispatch`) — não vem do console da Upstash, é você quem define. Em produção, use o domínio real (`https://seu-dominio.com/api/reminders/dispatch`), nunca uma URL de preview. |
 | `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | Chaves de assinatura do QStash (console da Upstash), validam o header `Upstash-Signature` em `/api/reminders/dispatch`. Sem elas, o endpoint aceita qualquer requisição (modo dev) — ver [docs/11](11-plano-notificacoes-whatsapp.md). |
 
 ## E-mail (SMTP / contato)
