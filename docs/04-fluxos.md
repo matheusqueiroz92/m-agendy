@@ -66,6 +66,19 @@ processo.
 > Se o produto expandir para clínicas fora do fuso de Brasília, isso precisa
 > virar uma configuração por clínica em vez de uma constante global.
 
+A correção acima expôs um bug relacionado: com `scheduledAt` agora salvo
+corretamente como instante UTC, as funções que **leem** essa data para checar
+disponibilidade (`isWithinAvailability`, `computeAvailableSlots`, em
+`scheduling/domain/availability.ts`, e
+`DrizzleAvailabilityReader.getOccupiedIntervals`) ainda usavam
+`.getDay()`/`.getHours()`/`.getMinutes()`/`.getFullYear()` — métodos do fuso
+do **processo**. Em produção (UTC), uma consulta às 10:00 (13:00 UTC) era lida
+como se fosse às 13:00, rejeitando horários genuinamente disponíveis
+(`"O horário escolhido está fora da disponibilidade do profissional"`).
+Corrigido lendo/construindo essas datas explicitamente via
+`dayjs(...).tz(CLINIC_TIMEZONE)` e `formatInClinicTimezone`, pelo mesmo padrão
+já usado na escrita.
+
 ### Tipo do agendamento (consulta ou retorno)
 
 Todo agendamento tem um `type`: `"consultation"` (primeira consulta/avaliação,

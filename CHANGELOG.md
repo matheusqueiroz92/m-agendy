@@ -45,6 +45,15 @@ de verdade.
   `formatInClinicTimezone`, usado nas mensagens/telas que mostram o
   horário) fixam o fuso em `America/Sao_Paulo` independente de onde o
   código roda. Detalhes: [docs/04-fluxos.md](docs/04-fluxos.md).
+- **Horário disponível sendo recusado ao agendar** — a correção do fuso
+  horário acima expôs um bug irmão: `isWithinAvailability`,
+  `computeAvailableSlots` (`scheduling/domain/availability.ts`) e
+  `DrizzleAvailabilityReader.getOccupiedIntervals` liam a data salva com
+  `.getDay()/.getHours()/.getMinutes()/.getFullYear()` (fuso do processo);
+  em produção uma consulta às 10:00 (13:00 UTC) era lida como 13:00 e caía
+  fora da janela do profissional. Corrigido lendo/construindo essas datas
+  via `dayjs(...).tz(CLINIC_TIMEZONE)`/`formatInClinicTimezone`. Detalhes:
+  [docs/04-fluxos.md](docs/04-fluxos.md).
 
 ### Adicionado
 
