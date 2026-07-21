@@ -25,11 +25,14 @@ export const upsertPatient = actionClient
 
     const clinicId = resolveCurrentClinicId(actor);
 
-    await makeUpsertPatient().execute({
+    const result = await makeUpsertPatient().execute({
       actor,
       clinicId,
       ...parsedInput,
     });
 
     revalidatePath("/patients");
+    revalidatePath("/appointments");
+
+    return { patientId: result.patientId };
   });
