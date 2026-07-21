@@ -58,7 +58,11 @@ export class QStashReminderScheduler implements ReminderScheduler {
       Math.round((reminder.runAt.getTime() - Date.now()) / 1000),
     );
 
-    const response = await fetch(`${qstashUrl}/${encodeURIComponent(destinationUrl)}`, {
+    // O destino vai CRU na URL (não com encodeURIComponent) — é assim que a
+    // API do QStash espera: .../v2/publish/https://seu-destino.com/rota. Se
+    // o "https://" vier escapado (%3A%2F%2F), o QStash rejeita com 400
+    // ("invalid destination url: endpoint has invalid scheme").
+    const response = await fetch(`${qstashUrl}/${destinationUrl}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
