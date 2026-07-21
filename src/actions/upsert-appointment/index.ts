@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { resolveCurrentClinicId } from "@/core/modules/iam/infra/current-clinic";
 import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
 import { makeUpsertAppointment } from "@/core/modules/scheduling/infra/factories/make-appointment-use-cases";
+import { combineDateAndTimeInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 import { UnauthorizedError } from "@/core/shared/domain/errors";
 import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/next-safe-action";
@@ -27,9 +28,10 @@ export const upsertAppointment = actionClient
     const clinicId = resolveCurrentClinicId(actor);
     const session = await auth.api.getSession({ headers: await headers() });
 
-    const [hours, minutes] = parsedInput.time.split(":").map(Number);
-    const scheduledAt = new Date(parsedInput.date);
-    scheduledAt.setHours(hours, minutes, 0, 0);
+    const scheduledAt = combineDateAndTimeInClinicTimezone(
+      parsedInput.date,
+      parsedInput.time,
+    );
 
     const result = await makeUpsertAppointment().execute({
       actor,

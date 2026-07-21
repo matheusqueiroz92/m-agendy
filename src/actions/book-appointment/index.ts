@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { makeBookAppointment } from "@/core/modules/scheduling/infra/factories/make-book-appointment";
+import { combineDateAndTimeInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 import { DomainError } from "@/core/shared/domain/domain-error";
 import { actionClient } from "@/lib/next-safe-action";
 
@@ -28,9 +29,10 @@ const schema = z.object({
 export const bookAppointment = actionClient
   .schema(schema)
   .action(async ({ parsedInput }) => {
-    const [hours, minutes] = parsedInput.time.split(":").map(Number);
-    const scheduledAt = new Date(parsedInput.date);
-    scheduledAt.setHours(hours, minutes, 0, 0);
+    const scheduledAt = combineDateAndTimeInClinicTimezone(
+      parsedInput.date,
+      parsedInput.time,
+    );
 
     try {
       const result = await makeBookAppointment().execute({
