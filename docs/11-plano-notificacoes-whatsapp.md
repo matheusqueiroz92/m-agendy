@@ -233,6 +233,27 @@ como fallback para não quebrar quem já estava configurado sem essa variável.
 da região escolhida no console da Upstash (visível no painel "Quickstart" da
 região) — ver `docs/03-variaveis-de-ambiente.md`.
 
+## Correção: telefone sem DDI (55) impedia entrega ✅ implementado (21/07/2026)
+
+**Problema**: os formulários de paciente e de responsável coletam o telefone
+só com DDD (máscara `(##) #####-####`), sem o código do país. Esse valor era
+usado direto — tanto para o campo `to` enviado à Meta (confirmação, lembrete,
+cancelamento) quanto para casar o telefone que chega no webhook (confirmação
+por resposta, chatbot) com o cadastro do paciente. A Meta exige o número
+completo com DDI, e o telefone recebido no webhook já vem com "55" —
+nenhuma das duas pontas batia, então as mensagens eram descartadas/rejeitadas
+silenciosamente (o erro fica só no log do servidor, nunca aparece no painel).
+
+**Correção**: `toE164BR` (`src/core/shared/domain/phone-number.ts`, testado em
+`phone-number.spec.ts`) normaliza qualquer telefone para dígitos com DDI 55,
+tolerando máscara e não duplicando o prefixo se ele já existir. Aplicado em:
+- `WhatsAppAppointmentNotifier.sendTemplate` — normaliza o destinatário antes
+  de montar o payload da Graph API (cobre confirmação, lembrete e
+  cancelamento, que passam todos por aqui).
+- `DrizzleConfirmationLookup` e `DrizzleChatPatientLookup` — comparam o
+  telefone recebido no webhook com o do cadastro após normalizar os dois
+  lados, em vez de comparar só dígitos brutos.
+
 ## Multi-tenant: número de WhatsApp por clínica ✅ implementado (17/07/2026)
 
 O sistema é usado por várias clínicas, e cada uma pode ter (ou não) seu
