@@ -80,14 +80,12 @@ const formSchema = z
       z.object({
         weekDay: z.number(),
         enabled: z.boolean(),
-        intervals: z
-          .array(
-            z.object({
-              startTime: z.string().min(1),
-              endTime: z.string().min(1),
-            }),
-          )
-          .default([]),
+        intervals: z.array(
+          z.object({
+            startTime: z.string().min(1),
+            endTime: z.string().min(1),
+          }),
+        ),
       }),
     ),
   })
@@ -96,14 +94,14 @@ const formSchema = z
     data.days.forEach((day, dayIndex) => {
       if (!day.enabled) return;
       hasEnabled = true;
-      if (!day.intervals || day.intervals.length === 0) {
+      if (day.intervals.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Adicione ao menos um intervalo.",
           path: ["days", dayIndex, "intervals"],
         });
       }
-      day.intervals?.forEach((interval, intervalIndex) => {
+      day.intervals.forEach((interval, intervalIndex) => {
         if (interval.startTime >= interval.endTime) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
