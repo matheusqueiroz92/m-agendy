@@ -1,7 +1,6 @@
-import dayjs from "dayjs";
-
 import { db } from "@/db";
 import { notificationsTable } from "@/db/schema";
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 
 import {
   AppointmentConfirmedNotification,
@@ -13,7 +12,10 @@ export class DrizzleClinicNotifier implements ClinicNotifier {
   async notifyAppointmentConfirmed(
     notification: AppointmentConfirmedNotification,
   ): Promise<void> {
-    const when = dayjs(notification.scheduledAt).format("DD/MM/YYYY [às] HH:mm");
+    const when = formatInClinicTimezone(
+      notification.scheduledAt,
+      "DD/MM/YYYY [às] HH:mm",
+    );
 
     await db.insert(notificationsTable).values({
       clinicId: notification.clinicId,

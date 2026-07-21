@@ -1,5 +1,6 @@
-import dayjs from "dayjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 
 import { FakeClinicWhatsAppDirectory } from "../../application/testing/fakes";
 import { WhatsAppAppointmentNotifier } from "./whatsapp-appointment-notifier";
@@ -12,10 +13,13 @@ const notification = {
   scheduledAt: new Date("2026-07-20T14:00:00.000Z"),
 };
 
-// A formatação usa o fuso horário local da máquina (mesmo comportamento do
-// adapter em produção) — computar aqui em vez de fixar uma string evita que
-// o teste quebre dependendo do timezone de quem/onde ele roda.
-const WHEN_FORMATTED = dayjs(notification.scheduledAt).format("DD/MM/YYYY [às] HH:mm");
+// A formatação usa sempre o fuso horário da clínica (America/Sao_Paulo),
+// nunca o fuso de onde o teste roda — reflete o mesmo comportamento do
+// adapter em produção.
+const WHEN_FORMATTED = formatInClinicTimezone(
+  notification.scheduledAt,
+  "DD/MM/YYYY [às] HH:mm",
+);
 
 describe("WhatsAppAppointmentNotifier", () => {
   let fetchMock: ReturnType<typeof vi.fn>;

@@ -1,6 +1,5 @@
-import dayjs from "dayjs";
-
 import { Clock } from "@/core/shared/application/ports/clock";
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 
 import { AppointmentRepository } from "../ports/appointment-repository";
 import { WhatsAppMessenger } from "../ports/chatbot-ports";
@@ -51,7 +50,7 @@ export class ConfirmAppointmentFromWhatsAppUseCase {
       const list = candidates
         .map(
           (candidate, index) =>
-            `${index + 1}. ${dayjs(candidate.scheduledAt).format("DD/MM/YYYY [às] HH:mm")}`,
+            `${index + 1}. ${formatInClinicTimezone(candidate.scheduledAt, "DD/MM/YYYY [às] HH:mm")}`,
         )
         .join("\n");
 

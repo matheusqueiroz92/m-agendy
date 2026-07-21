@@ -1,5 +1,4 @@
-import dayjs from "dayjs";
-
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 import { toE164BR } from "@/core/shared/domain/phone-number";
 
 import {
@@ -103,7 +102,10 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
   private buildParams(
     notification: AppointmentScheduledNotification,
   ): [patientName: string, doctorName: string, when: string] {
-    const when = dayjs(notification.scheduledAt).format("DD/MM/YYYY [às] HH:mm");
+    const when = formatInClinicTimezone(
+      notification.scheduledAt,
+      "DD/MM/YYYY [às] HH:mm",
+    );
     return [
       notification.patientName?.trim() || "paciente",
       notification.doctorName?.trim() || "seu profissional",

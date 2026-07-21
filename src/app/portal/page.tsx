@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { CalendarCheck, CalendarClock } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { makeGetPatientPortalAgenda } from "@/core/modules/patient-portal/infra/factories/make-get-patient-portal-agenda";
 import { PortalAppointment } from "@/core/modules/patient-portal/application/ports/patient-appointments-reader";
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 import { formatCurrencyInCents } from "@/helpers/currency";
 import { auth } from "@/lib/auth";
 
@@ -22,7 +22,7 @@ const AppointmentRow = ({ appointment }: { appointment: PortalAppointment }) => 
   <div className="flex items-center justify-between gap-2 border-b py-3 last:border-b-0">
     <div className="min-w-0">
       <p className="text-sm font-medium">
-        {dayjs(appointment.scheduledAt).format("DD/MM/YYYY [às] HH:mm")}
+        {formatInClinicTimezone(appointment.scheduledAt, "DD/MM/YYYY [às] HH:mm")}
       </p>
       <p className="text-muted-foreground truncate text-sm">
         {appointment.doctorName} · {appointment.clinicName}
