@@ -127,6 +127,22 @@ describe("WhatsAppAppointmentNotifier", () => {
     expect(body.template.name).toBe("cancelamento_agendamento");
   });
 
+  it("normaliza o telefone do paciente com o DDI 55 quando ele vem sem código do país", async () => {
+    // É assim que o telefone é cadastrado hoje (formulário só pede DDD +
+    // número) — sem essa normalização, a Meta rejeita o destinatário.
+    const notifier = new WhatsAppAppointmentNotifier({
+      apiUrl: "https://graph.facebook.com/v20.0",
+      phoneNumberId: "123",
+      accessToken: "token",
+      confirmationTemplateName: "confirmacao_agendamento",
+    });
+
+    await notifier.notifyScheduled({ ...notification, to: "(11) 99999-8888" });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.to).toBe("5511999998888");
+  });
+
   it("usa valores de fallback quando patientName/doctorName vêm vazios", async () => {
     const notifier = new WhatsAppAppointmentNotifier({
       apiUrl: "https://graph.facebook.com/v20.0",

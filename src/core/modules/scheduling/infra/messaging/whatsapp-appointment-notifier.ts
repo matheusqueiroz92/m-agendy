@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 
+import { toE164BR } from "@/core/shared/domain/phone-number";
+
 import {
   AppointmentCancelledNotification,
   AppointmentNotifier,
@@ -138,7 +140,7 @@ export class WhatsAppAppointmentNotifier implements AppointmentNotifier {
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to,
+        to: toE164BR(to),
         type: "template",
         template: {
           name: templateName,
