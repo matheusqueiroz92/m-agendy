@@ -42,6 +42,30 @@ Conflitos de horário do mesmo profissional são rejeitados
 (`AppointmentConflictError`). Confirmação e lembretes nunca derrubam o
 agendamento (são best-effort, com `try/catch`).
 
+### Fuso horário
+
+A aplicação assume um único fuso horário para todas as clínicas:
+`America/Sao_Paulo` (`CLINIC_TIMEZONE`, em
+`src/core/shared/domain/combine-date-and-time.ts`). O formulário só coleta
+data + horário (ex.: "10:00"), sem fuso — combinar isso com
+`Date.prototype.setHours` usaria o fuso horário de onde o **código** roda, e
+não o da clínica. Em dev isso "funciona por acidente" (a máquina do
+desenvolvedor já está no fuso do Brasil); em produção (Vercel, runtime em
+UTC) o mesmo código deslocava o horário em 3h (10:00 virava 07:00).
+
+Correção: toda combinação de data+horário passa por
+`combineDateAndTimeInClinicTimezone(date, time)` (usada em
+`upsert-appointment`, `book-appointment` e `reschedule-appointment`), que
+interpreta o horário explicitamente no fuso da clínica via `dayjs`
+(`utc`/`timezone` plugins), independente do fuso do processo. Formatação de
+volta para exibição/mensagens (WhatsApp, notificação in-app, portal do
+paciente) usa `formatInClinicTimezone(date, pattern)`, pelo mesmo motivo —
+`dayjs(date).format(...)` sem `.tz(...)` também usa o fuso local do
+processo.
+
+> Se o produto expandir para clínicas fora do fuso de Brasília, isso precisa
+> virar uma configuração por clínica em vez de uma constante global.
+
 ### Tipo do agendamento (consulta ou retorno)
 
 Todo agendamento tem um `type`: `"consultation"` (primeira consulta/avaliação,
