@@ -81,6 +81,7 @@ Variáveis: **[docs/03-variaveis-de-ambiente.md](docs/03-variaveis-de-ambiente.m
 | [Gateways de pagamento](docs/06-gateways-de-pagamento.md)                 | Conectar Pagar.me / Mercado Pago                         |
 | [Gestão e operação](docs/07-gestao-e-operacao.md)                         | RBAC, admin, LGPD, multi-tenant                          |
 | [Administração da plataforma e planos](docs/08-administracao-e-planos.md) | Área /platform, bloqueio de clínicas, catálogo de planos |
+| [Changelog](CHANGELOG.md)                                                 | Histórico de correções e mudanças relevantes             |
 
 ## 🗂️ Estrutura (resumo)
 
