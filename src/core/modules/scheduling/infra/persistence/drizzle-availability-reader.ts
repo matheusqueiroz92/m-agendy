@@ -2,6 +2,7 @@ import { and, eq, notInArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { appointmentsTable, doctorsTable } from "@/db/schema";
+import { formatInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 
 import { addMinutes } from "../../domain/availability";
 import { AvailabilityReader } from "../../application/ports/availability-reader";
@@ -50,14 +51,18 @@ export class DrizzleAvailabilityReader implements AvailabilityReader {
       ),
     });
 
-    const [year, month, day] = params.date.split("-").map(Number);
-    const targetDateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
+    // Compara a data-calendário no fuso da clínica (CLINIC_TIMEZONE), não no
+    // fuso local do processo. `appointment.date` é um instante UTC correto
+    // (ex.: 22:00 BRT vira 01:00 UTC do dia seguinte); usar
+    // `getFullYear()/getMonth()/getDate()` (fuso do runtime, UTC na Vercel)
+    // classificaria esse agendamento no dia errado.
     return appointments
       .filter((appointment) => {
-        const d = appointment.date;
-        const appointmentDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        return appointmentDateStr === targetDateStr;
+        const appointmentDateStr = formatInClinicTimezone(
+          appointment.date,
+          "YYYY-MM-DD",
+        );
+        return appointmentDateStr === params.date;
       })
       .map((appointment) => ({
         start: appointment.date,
