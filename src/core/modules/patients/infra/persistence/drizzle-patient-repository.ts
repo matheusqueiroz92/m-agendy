@@ -1,10 +1,14 @@
-import { eq } from "drizzle-orm";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { patientsTable } from "@/db/schema";
 
+import {
+  PatientRepository,
+  PatientSearchResult,
+  SearchPatientsByClinicInput,
+} from "../../application/ports/patient-repository";
 import { Patient } from "../../domain/patient";
-import { PatientRepository } from "../../application/ports/patient-repository";
 
 /** Adapter Drizzle da porta PatientRepository. */
 export class DrizzlePatientRepository implements PatientRepository {
@@ -54,5 +58,37 @@ export class DrizzlePatientRepository implements PatientRepository {
 
   async delete(id: string): Promise<void> {
     await db.delete(patientsTable).where(eq(patientsTable.id, id));
+  }
+
+  async searchByClinic(
+    input: SearchPatientsByClinicInput,
+  ): Promise<PatientSearchResult[]> {
+    const normalized = input.query.trim();
+    const filters = [eq(patientsTable.clinicId, input.clinicId)];
+
+    if (normalized) {
+      const pattern = `%${normalized}%`;
+      filters.push(
+        or(
+          ilike(patientsTable.name, pattern),
+          ilike(patientsTable.email, pattern),
+          ilike(patientsTable.phoneNumber, pattern),
+        )!,
+      );
+    }
+
+    const rows = await db
+      .select({
+        id: patientsTable.id,
+        name: patientsTable.name,
+        email: patientsTable.email,
+        phoneNumber: patientsTable.phoneNumber,
+      })
+      .from(patientsTable)
+      .where(and(...filters))
+      .orderBy(asc(patientsTable.name))
+      .limit(input.limit);
+
+    return rows;
   }
 }
