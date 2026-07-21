@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   doctorAvailabilityWindowsTable,
   doctorsTable,
-  patientsTable,
 } from "@/db/schema";
 
 import { AppointmentsTable } from "./appointments-table";
@@ -30,7 +29,6 @@ type AppointmentWithRelations = typeof import("@/db/schema").appointmentsTable.$
 
 interface AppointmentsViewTabsProps {
   doctors: DoctorWithWindows[];
-  patients: (typeof patientsTable.$inferSelect)[];
   appointments: AppointmentWithRelations[];
 }
 
@@ -45,7 +43,6 @@ function ViewTabsList() {
 
 export function AppointmentsViewTabs({
   doctors,
-  patients,
   appointments,
 }: AppointmentsViewTabsProps) {
   return (
@@ -53,7 +50,6 @@ export function AppointmentsViewTabs({
       <TabsContent value="board" className="mt-0">
         <ScheduleBoard
           doctors={doctors}
-          patients={patients}
           appointments={appointments}
           toolbarLeading={<ViewTabsList />}
         />
@@ -63,7 +59,6 @@ export function AppointmentsViewTabs({
         <AppointmentsTable
           appointments={appointments}
           doctors={doctors}
-          patients={patients}
         />
       </TabsContent>
     </Tabs>

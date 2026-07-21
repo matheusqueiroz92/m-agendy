@@ -5,7 +5,7 @@ import { CalendarX } from "lucide-react";
 import { DataNotFound } from "@/components/ui/data-not-found";
 import { DataTable } from "@/components/ui/data-table";
 import { useProfessionalLabels } from "@/hooks/use-professional-labels";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable } from "@/db/schema";
 
 import { createAppointmentsTableColumns } from "./table-columns";
 
@@ -26,18 +26,15 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 interface AppointmentsTableProps {
   appointments: AppointmentWithRelations[];
   doctors: (typeof doctorsTable.$inferSelect)[];
-  patients: (typeof patientsTable.$inferSelect)[];
 }
 
 export const AppointmentsTable = ({
   appointments,
   doctors,
-  patients,
 }: AppointmentsTableProps) => {
   const { singular: professionalLabel } = useProfessionalLabels();
   const appointmentsTableColumns = createAppointmentsTableColumns(
     doctors,
-    patients,
     professionalLabel,
   );
 

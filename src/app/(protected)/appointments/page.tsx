@@ -33,7 +33,7 @@ const AppointmentsPage = async () => {
     redirect("/new-subscription");
   }
 
-  const { doctors, patients, appointments } = await getDataTableAppointments({
+  const { doctors, appointments } = await getDataTableAppointments({
     session: {
       user: {
         clinic: {
@@ -53,14 +53,13 @@ const AppointmentsPage = async () => {
           </PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <AddAppointmentButton doctors={doctors} patients={patients} />
+          <AddAppointmentButton doctors={doctors} />
         </PageActions>
       </PageHeader>
       <PageContent>
         <AppointmentsViewTabs
           appointments={appointments}
           doctors={doctors}
-          patients={patients}
         />
       </PageContent>
     </PageContainer>

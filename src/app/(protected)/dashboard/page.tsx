@@ -79,7 +79,7 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     },
   });
 
-  const { doctors, patients, appointments } = await getDataTableAppointments({
+  const { doctors, appointments } = await getDataTableAppointments({
     session: {
       user: {
         clinic: {
@@ -137,7 +137,6 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
             <AppointmentsTable
               appointments={appointments}
               doctors={doctors}
-              patients={patients}
             />
           </PageSection>
           {showDetailedMetrics && (

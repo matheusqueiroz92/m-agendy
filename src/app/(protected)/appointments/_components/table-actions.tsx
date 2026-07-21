@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable } from "@/db/schema";
 
 import { UpsertAppointmentForm } from "./upsert-appointment-form";
 
@@ -49,13 +49,11 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 interface AppointmentTableActionsProps {
   appointment: AppointmentWithRelations;
   doctors: (typeof doctorsTable.$inferSelect)[];
-  patients: (typeof patientsTable.$inferSelect)[];
 }
 
 export const AppointmentTableActions = ({
   appointment,
   doctors,
-  patients,
 }: AppointmentTableActionsProps) => {
   const [upsertDialogIsOpen, setUpsertDialogIsOpen] = useState(false);
 
@@ -172,7 +170,6 @@ export const AppointmentTableActions = ({
       <UpsertAppointmentForm
         appointment={appointment}
         doctors={doctors}
-        patients={patients}
         onSuccess={() => setUpsertDialogIsOpen(false)}
       />
     </Dialog>

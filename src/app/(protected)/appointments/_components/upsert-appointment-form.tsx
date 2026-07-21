@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { upsertAppointment } from "@/actions/upsert-appointment";
+import { UpsertPatientForm } from "@/app/(protected)/patients/_components/upsert-patient-form";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -34,10 +35,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable } from "@/db/schema";
 import { useAvailableTimeSlots } from "@/hooks/use-available-time-slots";
 import { useInvalidateTimeSlots } from "@/hooks/use-invalidate-time-slots";
 import { useProfessionalLabels } from "@/hooks/use-professional-labels";
+
+import { PatientSearchCombobox } from "./patient-search-combobox";
 
 const formSchema = z.object({
   patientId: z.string().min(1, {
@@ -70,9 +73,10 @@ type DoctorOption = typeof doctorsTable.$inferSelect & {
   availabilityWindows?: { weekDay: number }[];
 };
 
+type Step = "appointment" | "patient";
+
 interface UpsertAppointmentFormProps {
   doctors: DoctorOption[];
-  patients: (typeof patientsTable.$inferSelect)[];
   appointment?: typeof appointmentsTable.$inferSelect & {
     patient: {
       id: string;
@@ -94,11 +98,14 @@ interface UpsertAppointmentFormProps {
 
 export const UpsertAppointmentForm = ({
   doctors,
-  patients,
   appointment,
   defaultValues,
   onSuccess,
 }: UpsertAppointmentFormProps) => {
+  const [step, setStep] = useState<Step>("appointment");
+  const [selectedPatientLabel, setSelectedPatientLabel] = useState(
+    appointment?.patient?.name ?? "",
+  );
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>(
     appointment?.doctorId || defaultValues?.doctorId || "",
   );
@@ -264,6 +271,22 @@ export const UpsertAppointmentForm = ({
     });
   };
 
+  if (step === "patient") {
+    return (
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <UpsertPatientForm
+          embedded
+          onCancel={() => setStep("appointment")}
+          onSuccess={({ patientId, name }) => {
+            handlePatientChange(patientId);
+            setSelectedPatientLabel(name);
+            setStep("appointment");
+          }}
+        />
+      </DialogContent>
+    );
+  }
+
   return (
     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
       <DialogHeader>
@@ -284,20 +307,17 @@ export const UpsertAppointmentForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Paciente</FormLabel>
-                <Select onValueChange={handlePatientChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um paciente" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {patients.map((patient) => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <PatientSearchCombobox
+                    value={field.value}
+                    selectedLabel={selectedPatientLabel}
+                    onSelect={(patient) => {
+                      handlePatientChange(patient.id);
+                      setSelectedPatientLabel(patient.name);
+                    }}
+                    onCreatePatient={() => setStep("patient")}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

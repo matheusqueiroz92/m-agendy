@@ -26,7 +26,6 @@ import {
 import {
   doctorAvailabilityWindowsTable,
   doctorsTable,
-  patientsTable,
   appointmentsTable,
 } from "@/db/schema";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -54,14 +53,12 @@ type AppointmentRow = typeof appointmentsTable.$inferSelect & {
 
 interface ScheduleBoardProps {
   doctors: DoctorWithWindows[];
-  patients: (typeof patientsTable.$inferSelect)[];
   appointments: AppointmentRow[];
   toolbarLeading?: ReactNode;
 }
 
 export function ScheduleBoard({
   doctors,
-  patients,
   appointments,
   toolbarLeading,
 }: ScheduleBoardProps) {
@@ -235,7 +232,6 @@ export function ScheduleBoard({
           <UpsertAppointmentForm
             key={`${createDefaults.date?.toISOString()}-${createDefaults.time}`}
             doctors={doctors}
-            patients={patients}
             defaultValues={createDefaults}
             onSuccess={() => setCreateOpen(false)}
           />
@@ -304,7 +300,6 @@ export function ScheduleBoard({
         {editingAppointment && (
           <UpsertAppointmentForm
             doctors={doctors}
-            patients={patients}
             appointment={editingAppointment}
             onSuccess={() => {
               setEditOpen(false);

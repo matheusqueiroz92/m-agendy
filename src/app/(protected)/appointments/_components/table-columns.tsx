@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
 
 import { Badge } from "@/components/ui/badge";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable } from "@/db/schema";
 
 import { AppointmentTableActions } from "./table-actions";
 
@@ -25,7 +25,6 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 
 export const createAppointmentsTableColumns = (
   doctors: (typeof doctorsTable.$inferSelect)[],
-  patients: (typeof patientsTable.$inferSelect)[],
   professionalLabel: string,
 ): ColumnDef<AppointmentWithRelations>[] => [
   {
@@ -143,7 +142,6 @@ export const createAppointmentsTableColumns = (
         <AppointmentTableActions
           appointment={appointment}
           doctors={doctors}
-          patients={patients}
         />
       );
     },
