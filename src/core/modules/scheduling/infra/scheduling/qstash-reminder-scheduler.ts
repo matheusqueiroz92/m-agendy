@@ -69,7 +69,9 @@ export class QStashReminderScheduler implements ReminderScheduler {
         "Content-Type": "application/json",
         "Upstash-Delay": `${delaySeconds}s`,
         // Idempotência: evita duplicar o mesmo lembrete em retentativas.
-        "Upstash-Deduplication-Id": `${reminder.appointmentId}:${reminder.runAt.getTime()}`,
+        // O QStash não aceita ":" nesse campo ("DeduplicationId cannot
+        // contain ':'") — usa "_" como separador em vez disso.
+        "Upstash-Deduplication-Id": `${reminder.appointmentId}_${reminder.runAt.getTime()}`,
       },
       body: JSON.stringify(payload),
     });

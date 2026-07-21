@@ -64,6 +64,20 @@ describe("QStashReminderScheduler", () => {
     );
   });
 
+  it("usa '_' (não ':') no Upstash-Deduplication-Id — o QStash recusa ':' nesse campo", async () => {
+    const scheduler = new QStashReminderScheduler({
+      token: "token",
+      destinationUrl: "https://m-agendy.vercel.app/api/reminders/dispatch",
+    });
+
+    await scheduler.schedule(reminder);
+
+    const [, options] = fetchMock.mock.calls[0];
+    const dedupId = options.headers["Upstash-Deduplication-Id"];
+    expect(dedupId).toBe(`appt-1_${reminder.runAt.getTime()}`);
+    expect(dedupId).not.toContain(":");
+  });
+
   it("lança erro com o corpo da resposta quando o QStash recusa o agendamento", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
