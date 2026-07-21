@@ -49,12 +49,17 @@ const formSchema = z.object({
 
 interface UpsertPatientFormProps {
   patient?: typeof patientsTable.$inferSelect;
-  onSuccess?: () => void;
+  onSuccess?: (result: { patientId: string; name: string }) => void;
+  onCancel?: () => void;
+  /** Quando true, não envolve DialogContent (uso dentro de outro Dialog). */
+  embedded?: boolean;
 }
 
 export const UpsertPatientForm = ({
   patient,
   onSuccess,
+  onCancel,
+  embedded = false,
 }: UpsertPatientFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     shouldUnregister: true,
@@ -68,13 +73,18 @@ export const UpsertPatientForm = ({
   });
 
   const upsertPatientAction = useAction(upsertPatient, {
-    onSuccess: () => {
+    onSuccess: ({ data }) => {
       toast.success(
         patient
           ? "Paciente atualizado com sucesso."
           : "Paciente adicionado com sucesso.",
       );
-      onSuccess?.();
+      if (data?.patientId) {
+        onSuccess?.({
+          patientId: data.patientId,
+          name: form.getValues("name"),
+        });
+      }
     },
     onError: (error) => {
       console.log(error);
@@ -89,8 +99,8 @@ export const UpsertPatientForm = ({
     });
   };
 
-  return (
-    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+  const body = (
+    <>
       <DialogHeader>
         <DialogTitle>
           {patient ? patient.name : "Adicionar paciente"}
@@ -184,7 +194,20 @@ export const UpsertPatientForm = ({
             )}
           />
 
-          <DialogFooter>
+          <DialogFooter
+            className={embedded ? "flex-col gap-2 sm:flex-col" : undefined}
+          >
+            {embedded && onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={onCancel}
+                disabled={upsertPatientAction.isPending}
+              >
+                Voltar
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={upsertPatientAction.isPending}
@@ -195,6 +218,16 @@ export const UpsertPatientForm = ({
           </DialogFooter>
         </form>
       </Form>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-4">{body}</div>;
+  }
+
+  return (
+    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      {body}
     </DialogContent>
   );
 };
