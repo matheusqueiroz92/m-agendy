@@ -272,6 +272,19 @@ URL, como a API espera. Teste novo em
 `qstash-reminder-scheduler.spec.ts` fixa esse comportamento (URL exata
 publicada, com e sem `qstashUrl` regional) para não regredir.
 
+## Correção: ":" no Upstash-Deduplication-Id quebrava o agendamento ✅ implementado (21/07/2026)
+
+**Problema**: mesmo depois de corrigir a URL de destino escapada, o
+agendamento no QStash continuava recusado com `400`. O corpo da resposta
+(capturado após a correção anterior de logging) revelou o motivo exato:
+`DeduplicationId cannot contain ':'` — o header `Upstash-Deduplication-Id`
+era montado como `${appointmentId}:${runAt.getTime()}`, e o QStash não
+aceita `:` nesse campo.
+
+**Correção**: separador trocado de `:` para `_`
+(`${appointmentId}_${runAt.getTime()}`). Teste novo em
+`qstash-reminder-scheduler.spec.ts` fixa o formato do header.
+
 ## Multi-tenant: número de WhatsApp por clínica ✅ implementado (17/07/2026)
 
 O sistema é usado por várias clínicas, e cada uma pode ter (ou não) seu
