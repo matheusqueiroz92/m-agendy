@@ -1,3 +1,12 @@
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+import { CLINIC_TIMEZONE } from "@/core/shared/domain/combine-date-and-time";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export interface TimeSlot {
   time: string; // "HH:MM"
   available: boolean;
@@ -88,6 +97,13 @@ const windowsForDay = (
 /**
  * Verifica se [start, start+duration) cabe inteiramente em alguma janela
  * do dia correspondente.
+ *
+ * IMPORTANTE: lê dia da semana/hora/minuto no fuso da clínica
+ * (`CLINIC_TIMEZONE`), não no fuso de onde o código roda. `start.getDay()`/
+ * `getHours()` usariam o fuso LOCAL do processo — em produção (Vercel,
+ * runtime em UTC), uma consulta às 10:00 (armazenada como 13:00 UTC)
+ * apareceria como se fosse às 13:00, rejeitando horários que na verdade
+ * estão dentro da disponibilidade do profissional.
  */
 export const isWithinAvailability = (
   start: Date,
@@ -98,8 +114,9 @@ export const isWithinAvailability = (
     return false;
   }
 
-  const weekDay = start.getDay();
-  const startMinutes = start.getHours() * 60 + start.getMinutes();
+  const local = dayjs(start).tz(CLINIC_TIMEZONE);
+  const weekDay = local.day();
+  const startMinutes = local.hour() * 60 + local.minute();
   const endMinutes = startMinutes + durationMinutes;
   const dayWindows = windowsForDay(windows, weekDay);
 
@@ -127,7 +144,6 @@ export const computeAvailableSlots = (
     return [];
   }
 
-  const [year, month, day] = date.split("-").map(Number);
   const candidateStarts = new Set<string>();
 
   for (const window of dayWindows) {
@@ -143,8 +159,11 @@ export const computeAvailableSlots = (
   const sortedTimes = Array.from(candidateStarts).sort();
 
   return sortedTimes.map((time) => {
-    const [hours, minutes] = time.split(":").map(Number);
-    const start = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    // Interpreta "date + time" explicitamente no fuso da clínica — não no
+    // fuso de onde o código roda (mesmo motivo do `isWithinAvailability`
+    // acima). Necessário para casar corretamente com os agendamentos já
+    // salvos (`occupiedIntervals`), que são instantes UTC corretos.
+    const start = dayjs.tz(`${date} ${time}`, CLINIC_TIMEZONE).toDate();
     const end = addMinutes(start, slotDurationMinutes);
 
     const fitsWindow = isWithinAvailability(

@@ -1,4 +1,9 @@
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { describe, expect, it } from "vitest";
+
+import { CLINIC_TIMEZONE } from "@/core/shared/domain/combine-date-and-time";
 
 import {
   computeAvailableSlots,
@@ -7,6 +12,24 @@ import {
   isDayAvailable,
   isWithinAvailability,
 } from "./availability";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * Constrói um instante a partir de um horário de parede no fuso da clínica
+ * (`America/Sao_Paulo`) — em vez de `new Date(y, m, d, h, min)`, que usaria o
+ * fuso LOCAL de quem roda o teste (CI normalmente é UTC) e quebraria de forma
+ * imprevisível, já que `isWithinAvailability`/`computeAvailableSlots` agora
+ * leem/constroem datas explicitamente no fuso da clínica.
+ */
+const brt = (y: number, m: number, d: number, h: number, min = 0): Date =>
+  dayjs
+    .tz(
+      `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")} ${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
+      CLINIC_TIMEZONE,
+    )
+    .toDate();
 
 describe("availability", () => {
   describe("generateTimeSlots", () => {
@@ -63,21 +86,21 @@ describe("availability", () => {
 
     it("aceita horário na janela da manhã", () => {
       // 2026-06-15 é segunda
-      expect(
-        isWithinAvailability(new Date(2026, 5, 15, 8, 0), 30, windows),
-      ).toBe(true);
+      expect(isWithinAvailability(brt(2026, 5, 15, 8, 0), 30, windows)).toBe(
+        true,
+      );
     });
 
     it("rejeita horário no intervalo de almoço", () => {
-      expect(
-        isWithinAvailability(new Date(2026, 5, 15, 12, 0), 30, windows),
-      ).toBe(false);
+      expect(isWithinAvailability(brt(2026, 5, 15, 12, 0), 30, windows)).toBe(
+        false,
+      );
     });
 
     it("rejeita se a duração ultrapassa o fim da janela", () => {
-      expect(
-        isWithinAvailability(new Date(2026, 5, 15, 11, 45), 30, windows),
-      ).toBe(false);
+      expect(isWithinAvailability(brt(2026, 5, 15, 11, 45), 30, windows)).toBe(
+        false,
+      );
     });
   });
 
@@ -89,8 +112,8 @@ describe("availability", () => {
     it("marca horários ocupados considerando duração", () => {
       const occupied = [
         {
-          start: new Date(2026, 5, 15, 8, 0),
-          end: new Date(2026, 5, 15, 8, 30),
+          start: brt(2026, 5, 15, 8, 0),
+          end: brt(2026, 5, 15, 8, 30),
         },
       ];
       const slots = computeAvailableSlots(

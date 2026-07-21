@@ -1,9 +1,30 @@
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { CLINIC_TIMEZONE } from "@/core/shared/domain/combine-date-and-time";
 import { NotFoundError } from "@/core/shared/domain/errors";
 
 import { FakeAvailabilityReader } from "../testing/fake-availability-reader";
 import { GetAvailableTimeSlotsUseCase } from "./get-available-time-slots";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * Constrói um instante a partir de um horário de parede no fuso da clínica
+ * (`America/Sao_Paulo`) — evita depender do fuso LOCAL de quem roda o teste,
+ * já que `computeAvailableSlots`/`isWithinAvailability` agora leem/constroem
+ * datas explicitamente em `CLINIC_TIMEZONE`.
+ */
+const brt = (y: number, m: number, d: number, h: number, min = 0): Date =>
+  dayjs
+    .tz(
+      `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")} ${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
+      CLINIC_TIMEZONE,
+    )
+    .toDate();
 
 describe("GetAvailableTimeSlotsUseCase", () => {
   let reader: FakeAvailabilityReader;
@@ -17,12 +38,12 @@ describe("GetAvailableTimeSlotsUseCase", () => {
   it("retorna slots marcando ocupados (2026-06-15 = segunda)", async () => {
     reader.setOccupied([
       {
-        start: new Date(2026, 5, 15, 8, 30),
-        end: new Date(2026, 5, 15, 9, 0),
+        start: brt(2026, 5, 15, 8, 30),
+        end: brt(2026, 5, 15, 9, 0),
       },
       {
-        start: new Date(2026, 5, 15, 9, 0),
-        end: new Date(2026, 5, 15, 9, 30),
+        start: brt(2026, 5, 15, 9, 0),
+        end: brt(2026, 5, 15, 9, 30),
       },
     ]);
 
