@@ -116,7 +116,8 @@ export const UpsertAppointmentForm = ({
   const { invalidateTimeSlots } = useInvalidateTimeSlots();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    shouldUnregister: true,
+    // Mantém valores ao trocar para o passo de cadastro de paciente (campos desmontam).
+    shouldUnregister: false,
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientId: appointment?.patientId ?? "",
