@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { doctorsTable, patientsTable } from "@/db/schema";
+import { toE164BR } from "@/core/shared/domain/phone-number";
 
 import { computeAvailableSlots } from "../../domain/availability";
 import { ChatbotOption } from "../../domain/chatbot";
@@ -12,8 +13,6 @@ import {
   ChatProfessionalsCatalog,
 } from "../../application/ports/chatbot-ports";
 import { DrizzleAvailabilityReader } from "../persistence/drizzle-availability-reader";
-
-const onlyDigits = (value: string) => value.replace(/\D/g, "");
 
 /** Lista de profissionais da clínica para o chatbot. */
 export class DrizzleChatProfessionalsCatalog
@@ -32,13 +31,17 @@ export class DrizzleChatProfessionalsCatalog
   }
 }
 
-/** Identifica o paciente da clínica pelo telefone (comparando só dígitos). */
+/**
+ * Identifica o paciente da clínica pelo telefone (comparando números
+ * normalizados — DDI 55 + só dígitos — para tolerar máscara e a ausência do
+ * código do país no cadastro).
+ */
 export class DrizzleChatPatientLookup implements ChatPatientLookup {
   async findByPhone(params: {
     clinicId: string;
     phone: string;
   }): Promise<{ patientId: string; name: string } | null> {
-    const target = onlyDigits(params.phone);
+    const target = toE164BR(params.phone);
 
     const patients = await db.query.patientsTable.findMany({
       where: eq(patientsTable.clinicId, params.clinicId),
@@ -46,7 +49,7 @@ export class DrizzleChatPatientLookup implements ChatPatientLookup {
     });
 
     const patient = patients.find(
-      (candidate) => onlyDigits(candidate.phoneNumber) === target,
+      (candidate) => toE164BR(candidate.phoneNumber) === target,
     );
 
     return patient ? { patientId: patient.id, name: patient.name } : null;
