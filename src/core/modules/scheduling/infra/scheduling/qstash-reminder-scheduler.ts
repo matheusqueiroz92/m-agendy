@@ -75,7 +75,13 @@ export class QStashReminderScheduler implements ReminderScheduler {
     });
 
     if (!response.ok) {
-      throw new Error(`Falha ao agendar lembrete no QStash: ${response.status}`);
+      // Inclui o corpo da resposta do QStash no erro — é onde vem o motivo
+      // real da recusa (ex.: "invalid destination url: ..."), sem isso só
+      // temos o status HTTP, que não é suficiente pra diagnosticar.
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        `Falha ao agendar lembrete no QStash: ${response.status}${errorBody ? ` — ${errorBody}` : ""}`,
+      );
     }
 
     // Guarda o messageId retornado para poder cancelar de verdade depois
@@ -132,8 +138,9 @@ export class QStashReminderScheduler implements ReminderScheduler {
         // 404 = a mensagem já foi entregue/expirou no QStash; trata como
         // sucesso (não há mais o que cancelar).
         if (!response.ok && response.status !== 404) {
+          const errorBody = await response.text().catch(() => "");
           throw new Error(
-            `Falha ao cancelar lembrete no QStash: ${response.status}`,
+            `Falha ao cancelar lembrete no QStash: ${response.status}${errorBody ? ` — ${errorBody}` : ""}`,
           );
         }
 

@@ -64,15 +64,19 @@ describe("QStashReminderScheduler", () => {
     );
   });
 
-  it("lança erro quando o QStash recusa o agendamento", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 400 });
+  it("lança erro com o corpo da resposta quando o QStash recusa o agendamento", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => '{"error":"invalid destination url"}',
+    });
     const scheduler = new QStashReminderScheduler({
       token: "token",
       destinationUrl: "https://m-agendy.vercel.app/api/reminders/dispatch",
     });
 
     await expect(scheduler.schedule(reminder)).rejects.toThrow(
-      "Falha ao agendar lembrete no QStash: 400",
+      'Falha ao agendar lembrete no QStash: 400 — {"error":"invalid destination url"}',
     );
   });
 
