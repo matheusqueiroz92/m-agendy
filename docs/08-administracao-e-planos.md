@@ -140,11 +140,11 @@ desbloqueia automaticamente quando há cortesia — sem mexer em cada página.
 
 Cada plano declara seus **entitlements** no catálogo (`entitlements`):
 
-| Plano | Profissionais | Agendamentos/mês | Métricas detalhadas | IA |
-|---|---|---|---|---|
-| Essential | 3 | 100 | não | não |
-| Premium | 10 | ilimitado | sim | não |
-| Gold | ilimitado | ilimitado | sim | sim |
+| Plano | Profissionais | Agendamentos/mês | Agendamentos/dia | Métricas detalhadas | IA |
+|---|---|---|---|---|---|
+| Essential | 3 | 100 | 15 | não | não |
+| Premium | 10 | ilimitado | 40 | sim | não |
+| Gold | ilimitado | ilimitado | ilimitado | sim | sim |
 
 Onde é aplicado:
 
@@ -153,14 +153,24 @@ Onde é aplicado:
 - **Limite de agendamentos/mês** — aplicado em **todos os caminhos** de criação:
   painel (`UpsertAppointmentUseCase`), link público (`BookAppointmentUseCase`) e
   chatbot (`ScheduleAppointmentUseCase`). Nos fluxos sem sessão, o plano efetivo
-  da clínica é resolvido pela porta `ClinicPlanProvider`.
+  da clínica é resolvido pela porta `ClinicPlanProvider`. É um limite de
+  **capacidade de agenda** por mês (conta pela data agendada).
+- **Limite de agendamentos/dia** — aplicado nos mesmos 3 caminhos, mas conta
+  pela data de **criação** do agendamento (`createdAt`), não pela data
+  agendada — é um limite de **volume de mensagens de WhatsApp** disparadas
+  (cada agendamento criado gera uma confirmação + lembretes), independente do
+  limite mensal. Quando falta exatamente 1 agendamento para o limite, a
+  clínica recebe um aviso in-app (`ClinicNotifier.notifyDailyLimitWarning`)
+  antes de o próximo ser efetivamente bloqueado. Editar um agendamento
+  existente não conta contra nenhum dos dois limites (só a criação).
 - **Métricas detalhadas / IA** — o dashboard usa `planHasFeature(...)` para
   exibir gráficos/rankings só para quem tem direito; os demais veem um aviso de
   upgrade.
 
 Helpers puros em `billing/domain/entitlements.ts`: `canAddProfessional`,
-`canCreateAppointment`, `planHasFeature`, `entitlementsOf`. Ajuste limites/recursos
-editando o catálogo — a verificação acompanha.
+`canCreateAppointment`, `canCreateAppointmentToday`,
+`isOneAppointmentAwayFromDailyLimit`, `planHasFeature`, `entitlementsOf`.
+Ajuste limites/recursos editando o catálogo — a verificação acompanha.
 
 > O plano efetivo usado nos limites vem da sessão (`session.user.plan`), que já
 > considera cortesia/override.
@@ -178,6 +188,7 @@ Tudo num lugar só: **`src/core/modules/billing/domain/plans.ts`**, no campo
   entitlements: {
     maxProfessionals: 3,           // número ou null (ilimitado)
     maxAppointmentsPerMonth: 100,  // número ou null (ilimitado)
+    maxAppointmentsPerDay: 15,     // número ou null (ilimitado) — volume de WhatsApp/dia
     detailedMetrics: false,        // gráficos/rankings no dashboard
     aiInsights: false,             // recurso de IA
   },
@@ -189,6 +200,8 @@ checagem leem daqui:
 
 - profissionais → `UpsertProfessionalUseCase` (via `canAddProfessional`);
 - agendamentos/mês → use cases de painel, público e chatbot (via `canCreateAppointment`);
+- agendamentos/dia → os mesmos 3 use cases (via `canCreateAppointmentToday` e
+  `isOneAppointmentAwayFromDailyLimit`);
 - métricas/IA → dashboard (via `planHasFeature`).
 
 **Adicionar um novo tipo de recurso** (ex.: `whatsappChatbot: boolean`):

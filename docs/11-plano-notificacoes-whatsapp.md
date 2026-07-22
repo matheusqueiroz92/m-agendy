@@ -347,3 +347,21 @@ que recebeu a mensagem — continua funcionando em qualquer número, com ou sem
 
 A variável `WHATSAPP_DEFAULT_CLINIC_ID` foi removida (não é mais lida por
 nenhum resolver em uso).
+
+## Limite diário de agendamentos por plano (22/07/2026)
+
+Outra frente de controle de volume, complementar à restrição acima: cada
+agendamento criado dispara uma confirmação imediata + lembretes futuros por
+WhatsApp, então o número de agendamentos criados por dia é, na prática, o
+que determina o volume de mensagens enviadas naquele dia — independente do
+limite mensal já existente (que é sobre capacidade de agenda, conta pela
+data agendada, não pela data de criação).
+
+Novo entitlement `maxAppointmentsPerDay` no catálogo de planos (Essential
+15/dia, Premium 40/dia, Gold ilimitado), aplicado nos mesmos 3 fluxos de
+criação (painel, link público, chatbot). Conta por `createdAt` via
+`countCreatedByClinicInPeriod` (novo método do `AppointmentRepository`), na
+janela do dia no fuso da clínica (`dayWindowInClinicTimezone`). Ao faltar
+exatamente 1 agendamento para o limite, a clínica recebe um aviso in-app
+(`ClinicNotifier.notifyDailyLimitWarning`) antes do próximo ser bloqueado.
+Detalhes de configuração: [docs/08-administracao-e-planos.md](08-administracao-e-planos.md).

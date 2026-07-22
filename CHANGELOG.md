@@ -59,3 +59,32 @@ de verdade.
 
 - Campo **tipo do agendamento** (consulta ou retorno) no painel — ver
   [docs/04-fluxos.md](docs/04-fluxos.md).
+
+## 2026-07-22 — Escala do WhatsApp com número compartilhado
+
+Correções motivadas por uma pergunta de escala: com muitas clínicas usando o
+mesmo número de WhatsApp compartilhado, como evitar bagunça e volume
+descontrolado de mensagens?
+
+### Corrigido
+
+- **Chatbot de agendamento misturava clínicas no número compartilhado** —
+  uma conversa nova (sem lembrete anterior) sempre caía numa única clínica
+  fixa (`WHATSAPP_DEFAULT_CLINIC_ID`), já que não há como saber de qual
+  clínica é uma mensagem nova no número compartilhado. Agora o chatbot de
+  agendamento por conversa nova é restrito a clínicas com número próprio
+  configurado; a confirmação de presença (resposta a um lembrete) não é
+  afetada, pois resolve a clínica pelo agendamento existente. Detalhes:
+  [docs/11-plano-notificacoes-whatsapp.md](docs/11-plano-notificacoes-whatsapp.md).
+- **Busca de paciente por telefone carregava todos os pacientes em
+  memória** — `DrizzleConfirmationLookup` (usado a cada mensagem recebida no
+  webhook) trazia a tabela `patients` inteira para comparar telefone em JS.
+  Agora filtra no banco. Detalhes: [docs/11](docs/11-plano-notificacoes-whatsapp.md).
+
+### Adicionado
+
+- **Limite diário de agendamentos por plano** (`maxAppointmentsPerDay`) —
+  controla volume de mensagens de WhatsApp por dia, independente do limite
+  mensal já existente. Essential 15/dia, Premium 40/dia, Gold ilimitado;
+  avisa a clínica ao faltar 1 para o limite. Detalhes:
+  [docs/08-administracao-e-planos.md](docs/08-administracao-e-planos.md).
