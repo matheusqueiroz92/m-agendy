@@ -7,6 +7,7 @@ const NONE: PlanEntitlements = {
   maxAppointmentsPerDay: 0,
   detailedMetrics: false,
   aiInsights: false,
+  canUseOwnWhatsAppNumber: false,
 };
 
 /** Direitos do plano (ou NONE se o plano não existe). */
@@ -58,8 +59,11 @@ export const isOneAppointmentAwayFromDailyLimit = (
   return max !== null && todayCount === max - 1;
 };
 
-/** O plano libera um recurso booleano (ex.: detailedMetrics, aiInsights)? */
+/**
+ * O plano libera um recurso booleano (ex.: detailedMetrics, aiInsights,
+ * canUseOwnWhatsAppNumber)?
+ */
 export const planHasFeature = (
   planId: string | null | undefined,
-  feature: "detailedMetrics" | "aiInsights",
+  feature: "detailedMetrics" | "aiInsights" | "canUseOwnWhatsAppNumber",
 ): boolean => entitlementsOf(planId)[feature] === true;

@@ -22,6 +22,12 @@ export interface PlanEntitlements {
   detailedMetrics: boolean;
   /** Análise de métricas com IA. */
   aiInsights: boolean;
+  /**
+   * Libera solicitar a integração do PRÓPRIO número de WhatsApp da clínica
+   * (mensagens saem com o nome/número da clínica, não o compartilhado da
+   * plataforma). No Essential, só o número compartilhado está disponível.
+   */
+  canUseOwnWhatsAppNumber: boolean;
 }
 
 export interface PlanDefinition {
@@ -54,6 +60,7 @@ export const PLAN_CATALOG = [
       maxAppointmentsPerDay: 15,
       detailedMetrics: false,
       aiInsights: false,
+      canUseOwnWhatsAppNumber: false,
     },
   },
   {
@@ -69,6 +76,7 @@ export const PLAN_CATALOG = [
       maxAppointmentsPerDay: 40,
       detailedMetrics: true,
       aiInsights: false,
+      canUseOwnWhatsAppNumber: true,
     },
   },
   {
@@ -84,6 +92,7 @@ export const PLAN_CATALOG = [
       maxAppointmentsPerDay: null,
       detailedMetrics: true,
       aiInsights: true,
+      canUseOwnWhatsAppNumber: true,
     },
   },
 ] as const satisfies readonly PlanDefinition[];

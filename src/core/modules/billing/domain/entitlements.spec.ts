@@ -60,4 +60,10 @@ describe("entitlements", () => {
   it("plano sem limite diário (gold) nunca avisa", () => {
     expect(isOneAppointmentAwayFromDailyLimit("gold", 99999)).toBe(false);
   });
+
+  it("apenas premium e gold liberam número de WhatsApp próprio", () => {
+    expect(planHasFeature("essential", "canUseOwnWhatsAppNumber")).toBe(false);
+    expect(planHasFeature("premium", "canUseOwnWhatsAppNumber")).toBe(true);
+    expect(planHasFeature("gold", "canUseOwnWhatsAppNumber")).toBe(true);
+  });
 });
