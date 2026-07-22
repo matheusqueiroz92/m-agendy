@@ -20,6 +20,12 @@ import {
  * `auth.api.createUser` (plugin `admin` do BetterAuth) e dispara o e-mail de
  * "definir senha" reaproveitando o fluxo padrão de recuperação de senha
  * (`sendResetPassword`, já configurado em `src/lib/auth.ts`).
+ *
+ * A conta já nasce com `emailVerified: true`: clicar no link de "definir
+ * senha" exige acesso à caixa de entrada, o que já prova a posse do e-mail —
+ * sem isso, `requireEmailVerification: true` bloquearia o primeiro login e
+ * disparasse um SEGUNDO e-mail (de verificação) depois que a pessoa já tivesse
+ * acabado de definir a senha, invertendo a ordem esperada do onboarding.
  */
 export class DrizzleClinicOwnerProvisioner implements ClinicOwnerProvisioner {
   async provision(
@@ -46,12 +52,13 @@ export class DrizzleClinicOwnerProvisioner implements ClinicOwnerProvisioner {
       },
     });
 
-    if (input.phoneNumber) {
-      await db
-        .update(usersTable)
-        .set({ phoneNumber: input.phoneNumber })
-        .where(eq(usersTable.id, created.user.id));
-    }
+    await db
+      .update(usersTable)
+      .set({
+        emailVerified: true,
+        ...(input.phoneNumber ? { phoneNumber: input.phoneNumber } : {}),
+      })
+      .where(eq(usersTable.id, created.user.id));
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
     await auth.api.forgetPassword({
