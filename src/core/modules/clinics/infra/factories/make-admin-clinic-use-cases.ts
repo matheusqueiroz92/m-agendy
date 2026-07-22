@@ -1,4 +1,5 @@
 import { Authorizer } from "@/core/modules/iam/application/authorizer";
+import { DrizzleClinicNotifier } from "@/core/modules/scheduling/infra/messaging/drizzle-clinic-notifier";
 import { DrizzleAuditLog } from "@/core/shared/infra/drizzle-audit-log";
 
 import { DeleteClinicUseCase } from "../../application/use-cases/delete-clinic";
@@ -20,6 +21,7 @@ export const makeUpsertClinic = () =>
     new Authorizer(),
     new DrizzleAuditLog(),
     new DrizzleClinicOwnerProvisioner(),
+    new DrizzleClinicNotifier(),
   );
 
 export const makeDeleteClinic = () =>

@@ -1,5 +1,6 @@
 import { Authorizer } from "@/core/modules/iam/application/authorizer";
 import { AuthenticatedActor } from "@/core/modules/iam/domain/authenticated-actor";
+import { ClinicNotifier } from "@/core/modules/scheduling/application/ports/clinic-notifier";
 import { AuditLog } from "@/core/shared/application/ports/audit-log";
 import { NotFoundError } from "@/core/shared/domain/errors";
 
@@ -38,6 +39,7 @@ export class UpsertClinicUseCase {
     private readonly authorizer: Authorizer,
     private readonly audit: AuditLog,
     private readonly owners: ClinicOwnerProvisioner,
+    private readonly clinicNotifier: ClinicNotifier,
   ) {}
 
   async execute(input: UpsertClinicInput): Promise<UpsertClinicOutput> {
@@ -111,6 +113,20 @@ export class UpsertClinicUseCase {
       entityType: "clinic",
       entityId: clinic.id,
     });
+
+    // Aviso único (na criação): as mensagens saem com o número da
+    // plataforma até a clínica integrar o próprio (Premium/Gold). Best-effort
+    // — não desfaz a criação da clínica se a notificação falhar.
+    try {
+      await this.clinicNotifier.notifyWhatsAppSharedNumberDisclosure({
+        clinicId: clinic.id,
+      });
+    } catch (error) {
+      console.error(
+        "[clinics] falha ao avisar sobre o número compartilhado:",
+        error,
+      );
+    }
 
     return { clinicId: clinic.id };
   }

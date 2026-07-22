@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { Authorizer } from "@/core/modules/iam/application/authorizer";
 import { AuthenticatedActor } from "@/core/modules/iam/domain/authenticated-actor";
+import { FakeClinicNotifier } from "@/core/modules/scheduling/application/testing/confirmation-fakes";
 import { FakeAuditLog } from "@/core/shared/application/testing/fake-audit-log";
 import { ForbiddenError, NotFoundError } from "@/core/shared/domain/errors";
 
@@ -28,15 +29,17 @@ describe("Casos de uso de administração de clínicas", () => {
   let repo: InMemoryAdminClinicRepository;
   let audit: FakeAuditLog;
   let owners: FakeClinicOwnerProvisioner;
+  let clinicNotifier: FakeClinicNotifier;
 
   beforeEach(() => {
     repo = new InMemoryAdminClinicRepository();
     audit = new FakeAuditLog();
     owners = new FakeClinicOwnerProvisioner();
+    clinicNotifier = new FakeClinicNotifier();
   });
 
   it("admin cria clínica, provisiona uma conta nova para o responsável e audita", async () => {
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
     const { clinicId } = await useCase.execute({
       actor: admin,
       name: "Clínica Nova",
@@ -60,7 +63,7 @@ describe("Casos de uso de administração de clínicas", () => {
 
   it("reaproveita usuário existente quando o e-mail do responsável já tem conta", async () => {
     owners.setExisting("existente@example.com", "user-existente");
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
 
     const { clinicId } = await useCase.execute({
       actor: admin,
@@ -74,7 +77,7 @@ describe("Casos de uso de administração de clínicas", () => {
   });
 
   it("rejeita criação sem nome do responsável", async () => {
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
     await expect(
       useCase.execute({
         actor: admin,
@@ -87,7 +90,7 @@ describe("Casos de uso de administração de clínicas", () => {
   });
 
   it("rejeita criação sem e-mail do responsável", async () => {
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
     await expect(
       useCase.execute({
         actor: admin,
@@ -101,7 +104,7 @@ describe("Casos de uso de administração de clínicas", () => {
 
   it("não exige responsável ao editar uma clínica existente", async () => {
     const { id } = await repo.create({ name: "C", type: "medical" });
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
 
     await useCase.execute({
       actor: admin,
@@ -114,9 +117,38 @@ describe("Casos de uso de administração de clínicas", () => {
     expect(owners.provisioned).toHaveLength(0);
   });
 
+  it("avisa a clínica sobre o número compartilhado ao criar, mas não ao editar", async () => {
+    const useCase = new UpsertClinicUseCase(
+      repo,
+      new Authorizer(),
+      audit,
+      owners,
+      clinicNotifier,
+    );
+
+    const { clinicId } = await useCase.execute({
+      actor: admin,
+      name: "Clínica Nova",
+      type: "medical",
+      ownerName: "Maria Souza",
+      ownerEmail: "maria2@example.com",
+    });
+    expect(clinicNotifier.sharedNumberDisclosures).toEqual([
+      { clinicId },
+    ]);
+
+    await useCase.execute({
+      actor: admin,
+      id: clinicId,
+      name: "Clínica Editada",
+      type: "medical",
+    });
+    expect(clinicNotifier.sharedNumberDisclosures).toHaveLength(1);
+  });
+
   it("reverte a clínica criada se o provisionamento do responsável falhar", async () => {
     owners.failNext();
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
 
     await expect(
       useCase.execute({
@@ -132,14 +164,14 @@ describe("Casos de uso de administração de clínicas", () => {
   });
 
   it("não-admin é barrado em qualquer operação", async () => {
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
     await expect(
       useCase.execute({ actor: member, name: "X", type: "dental" }),
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("rejeita nome vazio", async () => {
-    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners);
+    const useCase = new UpsertClinicUseCase(repo, new Authorizer(), audit, owners, clinicNotifier);
     await expect(
       useCase.execute({ actor: admin, name: "   ", type: "medical" }),
     ).rejects.toBeInstanceOf(ClinicValidationError);
