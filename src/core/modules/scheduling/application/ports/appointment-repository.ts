@@ -20,6 +20,17 @@ export interface AppointmentRepository {
     start: Date,
     end: Date,
   ): Promise<number>;
+  /**
+   * Total de agendamentos CRIADOS pela clínica no período [start, end)
+   * (filtra por `createdAt`, não por `scheduledAt`) — usado no limite diário,
+   * que controla volume de mensagens de WhatsApp disparadas (uma por
+   * agendamento criado), não capacidade de agenda.
+   */
+  countCreatedByClinicInPeriod(
+    clinicId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number>;
   save(appointment: Appointment): Promise<void>;
   findById(id: string): Promise<Appointment | null>;
   delete(id: string): Promise<void>;

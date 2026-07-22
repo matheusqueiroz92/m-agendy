@@ -67,6 +67,24 @@ export class DrizzleAppointmentRepository implements AppointmentRepository {
     return row?.value ?? 0;
   }
 
+  async countCreatedByClinicInPeriod(
+    clinicId: string,
+    start: Date,
+    end: Date,
+  ): Promise<number> {
+    const [row] = await db
+      .select({ value: count() })
+      .from(appointmentsTable)
+      .where(
+        and(
+          eq(appointmentsTable.clinicId, clinicId),
+          gte(appointmentsTable.createdAt, start),
+          lt(appointmentsTable.createdAt, end),
+        ),
+      );
+    return row?.value ?? 0;
+  }
+
   async save(appointment: Appointment): Promise<void> {
     const data = appointment.toPrimitives();
 

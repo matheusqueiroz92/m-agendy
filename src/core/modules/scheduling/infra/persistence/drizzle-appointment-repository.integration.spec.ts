@@ -59,6 +59,35 @@ describe("DrizzleAppointmentRepository (integração)", () => {
     ).resolves.toBe(1);
   });
 
+  it("conta agendamentos pela data de CRIAÇÃO (createdAt), não pela data agendada", async () => {
+    const { clinic, doctor } = await seedClinicWithOwnerAndDoctor();
+    const patient = await seedPatient(clinic.id);
+
+    // Criado agora (a coluna created_at usa defaultNow() no insert), mas
+    // agendado para uma data bem distante — prova que o filtro é por
+    // createdAt (limite diário/mensagens), não por scheduledAt.
+    await repo.save(
+      Appointment.create({
+        clinicId: clinic.id,
+        patientId: patient.id,
+        doctorId: doctor.id,
+        scheduledAt: new Date(Date.UTC(2030, 0, 1, 9, 0)),
+        priceInCents: 10000,
+      }),
+    );
+
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    await expect(
+      repo.countCreatedByClinicInPeriod(clinic.id, yesterday, tomorrow),
+    ).resolves.toBe(1);
+    await expect(
+      repo.countCreatedByClinicInPeriod(clinic.id, twoDaysAgo, yesterday),
+    ).resolves.toBe(0);
+  });
+
   it("detecta conflito de horário do mesmo profissional", async () => {
     const { clinic, doctor } = await seedClinicWithOwnerAndDoctor();
     const patient = await seedPatient(clinic.id);
