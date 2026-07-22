@@ -9,6 +9,7 @@ import {
   AppointmentInThePastError,
 } from "../../domain/errors";
 import { FakeBookingDirectory } from "../testing/fake-booking-directory";
+import { FakeClinicNotifier } from "../testing/confirmation-fakes";
 import {
   FakeAppointmentNotifier,
   FakeClinicPlanProvider,
@@ -27,6 +28,7 @@ describe("BookAppointmentUseCase", () => {
   let reminders: InMemoryReminderScheduler;
   let notifier: FakeAppointmentNotifier;
   let audit: FakeAuditLog;
+  let clinicNotifier: FakeClinicNotifier;
   let useCase: BookAppointmentUseCase;
 
   const baseInput = {
@@ -45,6 +47,7 @@ describe("BookAppointmentUseCase", () => {
     reminders = new InMemoryReminderScheduler();
     notifier = new FakeAppointmentNotifier();
     audit = new FakeAuditLog();
+    clinicNotifier = new FakeClinicNotifier();
     useCase = new BookAppointmentUseCase(
       appointments,
       booking,
@@ -53,6 +56,7 @@ describe("BookAppointmentUseCase", () => {
       audit,
       new FixedClock(now),
       new FakeClinicPlanProvider(null),
+      clinicNotifier,
     );
   });
 
@@ -101,7 +105,7 @@ describe("BookAppointmentUseCase", () => {
       }),
     ).rejects.toBeInstanceOf(AppointmentInThePastError);
   });
-it("bloqueia o agendamento público ao atingir o limite do plano", async () => {
+  it("bloqueia o agendamento público ao atingir o limite do plano", async () => {
     for (let i = 0; i < 100; i++) {
       await appointments.save(
         Appointment.create({
@@ -121,9 +125,69 @@ it("bloqueia o agendamento público ao atingir o limite do plano", async () => {
       audit,
       new FixedClock(now),
       new FakeClinicPlanProvider("essential"),
+      clinicNotifier,
     );
     await expect(limited.execute(baseInput)).rejects.toBeInstanceOf(
       PlanLimitError,
     );
+  });
+
+  it("bloqueia o agendamento público ao atingir o limite diário do plano (essential = 15/dia)", async () => {
+    for (let i = 0; i < 15; i++) {
+      await appointments.save(
+        Appointment.create({
+          clinicId: "clinic-1",
+          patientId: "p",
+          doctorId: "doctor-x",
+          scheduledAt: new Date(Date.UTC(2026, 6, 1 + i, 9, 0, 0)),
+          priceInCents: 10000,
+        }),
+        now,
+      );
+    }
+    const limited = new BookAppointmentUseCase(
+      appointments,
+      booking,
+      reminders,
+      notifier,
+      audit,
+      new FixedClock(now),
+      new FakeClinicPlanProvider("essential"),
+      clinicNotifier,
+    );
+    await expect(limited.execute(baseInput)).rejects.toBeInstanceOf(
+      PlanLimitError,
+    );
+  });
+
+  it("avisa a clínica quando faltar 1 agendamento para o limite diário", async () => {
+    for (let i = 0; i < 13; i++) {
+      await appointments.save(
+        Appointment.create({
+          clinicId: "clinic-1",
+          patientId: "p",
+          doctorId: "doctor-x",
+          scheduledAt: new Date(Date.UTC(2026, 6, 1 + i, 9, 0, 0)),
+          priceInCents: 10000,
+        }),
+        now,
+      );
+    }
+    const limited = new BookAppointmentUseCase(
+      appointments,
+      booking,
+      reminders,
+      notifier,
+      audit,
+      new FixedClock(now),
+      new FakeClinicPlanProvider("essential"),
+      clinicNotifier,
+    );
+
+    await limited.execute(baseInput);
+
+    expect(clinicNotifier.dailyLimitWarnings).toEqual([
+      { clinicId: "clinic-1", limit: 15 },
+    ]);
   });
 });

@@ -1,6 +1,12 @@
-import { canCreateAppointment } from "@/core/modules/billing/domain/entitlements";
+import {
+  canCreateAppointment,
+  canCreateAppointmentToday,
+  entitlementsOf,
+  isOneAppointmentAwayFromDailyLimit,
+} from "@/core/modules/billing/domain/entitlements";
 import { AuditLog } from "@/core/shared/application/ports/audit-log";
 import { Clock } from "@/core/shared/application/ports/clock";
+import { dayWindowInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
 import { NotFoundError, PlanLimitError } from "@/core/shared/domain/errors";
 
 import { Appointment } from "../../domain/appointment";
@@ -13,6 +19,7 @@ import { computeReminderTimes } from "../../domain/reminder-policy";
 import { AppointmentNotifier } from "../ports/appointment-notifier";
 import { AppointmentRepository } from "../ports/appointment-repository";
 import { BookingDirectory } from "../ports/booking-directory";
+import { ClinicNotifier } from "../ports/clinic-notifier";
 import { ClinicPlanProvider } from "../ports/clinic-plan-provider";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
@@ -46,6 +53,7 @@ export class BookAppointmentUseCase {
     private readonly audit: AuditLog,
     private readonly clock: Clock,
     private readonly plans: ClinicPlanProvider,
+    private readonly clinicNotifier: ClinicNotifier,
   ) {}
 
   async execute(input: BookAppointmentInput): Promise<BookAppointmentOutput> {
@@ -57,6 +65,7 @@ export class BookAppointmentUseCase {
 
     // Limite mensal do plano (agendamento público pelo paciente).
     const plan = await this.plans.getEffectivePlan(input.clinicId);
+    let dayCountBeforeCreate: number | null = null;
     if (plan) {
       const { start, end } = monthWindowUTC(input.scheduledAt);
       const monthCount = await this.appointments.countByClinicInPeriod(
@@ -67,6 +76,20 @@ export class BookAppointmentUseCase {
       if (!canCreateAppointment(plan, monthCount)) {
         throw new PlanLimitError(
           "O limite de agendamentos do plano desta clínica foi atingido neste mês.",
+        );
+      }
+
+      // Limite diário (controle de volume de mensagens de WhatsApp) — conta
+      // por data de CRIAÇÃO, não pela data agendada.
+      const { start: dayStart, end: dayEnd } = dayWindowInClinicTimezone(now);
+      dayCountBeforeCreate = await this.appointments.countCreatedByClinicInPeriod(
+        input.clinicId,
+        dayStart,
+        dayEnd,
+      );
+      if (!canCreateAppointmentToday(plan, dayCountBeforeCreate)) {
+        throw new PlanLimitError(
+          "O limite diário de agendamentos do plano desta clínica foi atingido. Tente novamente amanhã.",
         );
       }
     }
@@ -121,6 +144,27 @@ export class BookAppointmentUseCase {
       entityId: appointment.id,
       metadata: { patientId, channel: "public_link" },
     });
+
+    // Aviso de proximidade do limite diário (best-effort).
+    if (plan && dayCountBeforeCreate !== null) {
+      const limit = entitlementsOf(plan).maxAppointmentsPerDay;
+      if (
+        limit !== null &&
+        isOneAppointmentAwayFromDailyLimit(plan, dayCountBeforeCreate + 1)
+      ) {
+        try {
+          await this.clinicNotifier.notifyDailyLimitWarning({
+            clinicId: input.clinicId,
+            limit,
+          });
+        } catch (error) {
+          console.error(
+            "[scheduling] falha ao avisar limite diário (booking):",
+            error,
+          );
+        }
+      }
+    }
 
     // Confirmação + lembretes não devem derrubar o agendamento.
     try {

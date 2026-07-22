@@ -3,7 +3,13 @@ import { AuthenticatedActor } from "@/core/modules/iam/domain/authenticated-acto
 import { AuditLog } from "@/core/shared/application/ports/audit-log";
 import { Clock } from "@/core/shared/application/ports/clock";
 import { NotFoundError, PlanLimitError } from "@/core/shared/domain/errors";
-import { canCreateAppointment } from "@/core/modules/billing/domain/entitlements";
+import { dayWindowInClinicTimezone } from "@/core/shared/domain/combine-date-and-time";
+import {
+  canCreateAppointment,
+  canCreateAppointmentToday,
+  entitlementsOf,
+  isOneAppointmentAwayFromDailyLimit,
+} from "@/core/modules/billing/domain/entitlements";
 
 import { Appointment, AppointmentType } from "../../domain/appointment";
 import {
@@ -17,6 +23,7 @@ import { AppointmentContactDirectory } from "../ports/appointment-contact-direct
 import { AppointmentNotifier } from "../ports/appointment-notifier";
 import { AppointmentRepository } from "../ports/appointment-repository";
 import { AvailabilityReader } from "../ports/availability-reader";
+import { ClinicNotifier } from "../ports/clinic-notifier";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
 export interface UpsertAppointmentInput {
@@ -54,6 +61,7 @@ export class UpsertAppointmentUseCase {
     private readonly notifier: AppointmentNotifier,
     private readonly contacts: AppointmentContactDirectory,
     private readonly availability: AvailabilityReader,
+    private readonly clinicNotifier: ClinicNotifier,
   ) {}
 
   async execute(
@@ -66,6 +74,8 @@ export class UpsertAppointmentUseCase {
     if (input.scheduledAt.getTime() <= now.getTime()) {
       throw new AppointmentInThePastError();
     }
+
+    let dayCountBeforeCreate: number | null = null;
 
     if (input.id) {
       const existing = await this.appointments.findById(input.id);
@@ -85,6 +95,20 @@ export class UpsertAppointmentUseCase {
       if (!canCreateAppointment(input.plan, monthCount)) {
         throw new PlanLimitError(
           "Seu plano atingiu o limite de agendamentos deste mês. Faça upgrade para criar mais.",
+        );
+      }
+
+      // Limite diário (controle de volume de mensagens de WhatsApp) — conta
+      // por data de CRIAÇÃO, não pela data agendada.
+      const { start: dayStart, end: dayEnd } = dayWindowInClinicTimezone(now);
+      dayCountBeforeCreate = await this.appointments.countCreatedByClinicInPeriod(
+        input.clinicId,
+        dayStart,
+        dayEnd,
+      );
+      if (!canCreateAppointmentToday(input.plan, dayCountBeforeCreate)) {
+        throw new PlanLimitError(
+          "Sua clínica atingiu o limite diário de agendamentos do plano. Tente novamente amanhã ou faça upgrade.",
         );
       }
     }
@@ -146,6 +170,26 @@ export class UpsertAppointmentUseCase {
       entityType: "appointment",
       entityId: appointment.id,
     });
+
+    // Aviso de proximidade do limite diário (best-effort, não derruba o
+    // agendamento). dayCountBeforeCreate só é calculado na criação (não na
+    // edição) — dayCountBeforeCreate + 1 é a contagem já incluindo este.
+    if (!isUpdate && input.plan && dayCountBeforeCreate !== null) {
+      const limit = entitlementsOf(input.plan).maxAppointmentsPerDay;
+      if (
+        limit !== null &&
+        isOneAppointmentAwayFromDailyLimit(input.plan, dayCountBeforeCreate + 1)
+      ) {
+        try {
+          await this.clinicNotifier.notifyDailyLimitWarning({
+            clinicId: input.clinicId,
+            limit,
+          });
+        } catch (error) {
+          console.error("[scheduling] falha ao avisar limite diário:", error);
+        }
+      }
+    }
 
     // Confirmação + lembretes não devem derrubar o agendamento.
     try {

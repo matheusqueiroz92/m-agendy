@@ -3,6 +3,7 @@ import { SystemClock } from "@/core/shared/infra/system-clock";
 import { ScheduleAppointmentUseCase } from "../../application/use-cases/schedule-appointment";
 import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment-repository";
 import { DrizzleClinicPlanProvider } from "../persistence/drizzle-clinic-plan-provider";
+import { DrizzleClinicNotifier } from "../messaging/drizzle-clinic-notifier";
 import { QStashReminderScheduler } from "../scheduling/qstash-reminder-scheduler";
 import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
 
@@ -24,4 +25,5 @@ export const makeScheduleAppointment = () =>
     }),
     new SystemClock(),
     new DrizzleClinicPlanProvider(),
+    new DrizzleClinicNotifier(),
   );
