@@ -85,6 +85,12 @@ export const usersTable = pgTable("users", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  // Opt-in para receber e-mails de novidades/promoções do M.Agendy (toggle
+  // "Emails de Marketing" em Configurações → Notificações). Não confundir com
+  // e-mails transacionais (verificação, redefinição de senha), que sempre saem.
+  marketingEmailsOptIn: boolean("marketing_emails_opt_in")
+    .notNull()
+    .default(false),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
@@ -149,6 +155,12 @@ export const clinicsTable = pgTable("clinics", {
   // ID do número do WhatsApp (Meta) que atende esta clínica. Permite rotear o
   // webhook multi-tenant: cada clínica tem seu próprio número.
   whatsappPhoneNumberId: text("whatsapp_phone_number_id").unique(),
+  // Toggle "Lembretes de Agendamento" em Configurações → Notificações.
+  // Desligado, os agendamentos continuam sendo confirmados por WhatsApp, mas
+  // os lembretes de 24h/2h antes não são mais enfileirados no QStash.
+  appointmentRemindersEnabled: boolean("appointment_reminders_enabled")
+    .notNull()
+    .default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
