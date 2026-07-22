@@ -1,6 +1,7 @@
 import {
   AppointmentConfirmedNotification,
   ClinicNotifier,
+  DailyLimitWarningNotification,
 } from "../ports/clinic-notifier";
 import {
   ConfirmableAppointment,
@@ -29,10 +30,17 @@ export class FakeConfirmationLookup implements ConfirmationLookup {
 /** Notificador de clínica fake que registra os avisos emitidos. */
 export class FakeClinicNotifier implements ClinicNotifier {
   public readonly sent: AppointmentConfirmedNotification[] = [];
+  public readonly dailyLimitWarnings: DailyLimitWarningNotification[] = [];
 
   async notifyAppointmentConfirmed(
     notification: AppointmentConfirmedNotification,
   ): Promise<void> {
     this.sent.push(notification);
+  }
+
+  async notifyDailyLimitWarning(
+    notification: DailyLimitWarningNotification,
+  ): Promise<void> {
+    this.dailyLimitWarnings.push(notification);
   }
 }
