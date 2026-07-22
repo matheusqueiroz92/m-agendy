@@ -83,13 +83,12 @@ const RegisterForm = () => {
     <Form {...registerForm}>
       <form
         onSubmit={registerForm.handleSubmit(handleSubmitRegister)}
-        className="space-y-6"
+        className="space-y-4 sm:space-y-6"
       >
         <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Criar conta</h2>
-          <p className="text-muted-foreground text-sm">
-            Comece a organizar sua clínica hoje.
-          </p>
+          <h3 className="text-lg mb-4 font-semibold text-balance sm:mb-6">
+            Crie sua conta e comece a usar a plataforma agora mesmo
+          </h3>
         </div>
 
         <div className="space-y-4">
@@ -157,7 +156,7 @@ const RegisterForm = () => {
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer bg-blue-500 text-white hover:bg-blue-600"
           disabled={registerForm.formState.isSubmitting}
         >
           {registerForm.formState.isSubmitting ? (

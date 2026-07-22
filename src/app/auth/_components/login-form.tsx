@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTheme } from "@teispace/next-themes";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -19,8 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import GithubIconBlack from "@/components/ui/github-icon-black";
-import GithubIconWhite from "@/components/ui/github-icon-white";
 import GoogleIcon from "@/components/ui/google-icon";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -35,7 +32,6 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -74,13 +70,6 @@ const LoginForm = () => {
     });
   };
 
-  const handleGithubLogin = async () => {
-    await authClient.signIn.social({
-      provider: "github",
-      callbackURL: "/entrar",
-    });
-  };
-
   if (!mounted) {
     return null;
   }
@@ -89,11 +78,12 @@ const LoginForm = () => {
     <Form {...loginForm}>
       <form
         onSubmit={loginForm.handleSubmit(handleSubmitLogin)}
-        className="space-y-6"
+        className="space-y-4"
       >
         <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Login</h2>
-          <p className="text-muted-foreground text-sm">Acesse sua clínica.</p>
+          <h3 className="text-lg mb-4 font-semibold sm:mb-6">
+            Faça o login e acesse a plataforma
+          </h3>
         </div>
 
         <div className="space-y-4">
@@ -140,7 +130,7 @@ const LoginForm = () => {
         <div className="flex flex-col gap-3">
           <Button
             type="submit"
-            className="w-full cursor-pointer bg-blue-600 text-white hover:bg-blue-800"
+            className="w-full cursor-pointer bg-blue-500 text-white hover:bg-blue-600"
             disabled={loginForm.formState.isSubmitting}
           >
             {loginForm.formState.isSubmitting ? (
@@ -157,19 +147,6 @@ const LoginForm = () => {
           >
             <GoogleIcon />
             Entrar com Google
-          </Button>
-          <Button
-            variant="outline"
-            type="button"
-            onClick={handleGithubLogin}
-            className="w-full cursor-pointer"
-          >
-            {resolvedTheme === "dark" ? (
-              <GithubIconWhite />
-            ) : (
-              <GithubIconBlack />
-            )}
-            Entrar com Github
           </Button>
         </div>
       </form>
