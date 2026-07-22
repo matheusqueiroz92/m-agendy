@@ -18,4 +18,11 @@ export class DrizzleClinicWhatsAppDirectory implements ClinicWhatsAppDirectory {
 
     return clinic?.whatsappPhoneNumberId ?? null;
   }
+
+  async setPhoneNumberId(clinicId: string, phoneNumberId: string): Promise<void> {
+    await db
+      .update(clinicsTable)
+      .set({ whatsappPhoneNumberId: phoneNumberId, updatedAt: new Date() })
+      .where(eq(clinicsTable.id, clinicId));
+  }
 }

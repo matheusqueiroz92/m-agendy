@@ -8,4 +8,6 @@
  */
 export interface ClinicWhatsAppDirectory {
   getPhoneNumberId(clinicId: string): Promise<string | null>;
+  /** Grava o phone_number_id próprio da clínica (integração concluída). */
+  setPhoneNumberId(clinicId: string, phoneNumberId: string): Promise<void>;
 }

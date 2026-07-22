@@ -81,4 +81,8 @@ export class FakeClinicWhatsAppDirectory implements ClinicWhatsAppDirectory {
   async getPhoneNumberId(clinicId: string): Promise<string | null> {
     return this.numbers.get(clinicId) ?? null;
   }
+
+  async setPhoneNumberId(clinicId: string, phoneNumberId: string): Promise<void> {
+    this.numbers.set(clinicId, phoneNumberId);
+  }
 }
