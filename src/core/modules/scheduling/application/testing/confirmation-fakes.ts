@@ -2,6 +2,8 @@ import {
   AppointmentConfirmedNotification,
   ClinicNotifier,
   DailyLimitWarningNotification,
+  WhatsAppIntegrationCompletedNotification,
+  WhatsAppSharedNumberDisclosureNotification,
 } from "../ports/clinic-notifier";
 import {
   ConfirmableAppointment,
@@ -31,6 +33,10 @@ export class FakeConfirmationLookup implements ConfirmationLookup {
 export class FakeClinicNotifier implements ClinicNotifier {
   public readonly sent: AppointmentConfirmedNotification[] = [];
   public readonly dailyLimitWarnings: DailyLimitWarningNotification[] = [];
+  public readonly sharedNumberDisclosures: WhatsAppSharedNumberDisclosureNotification[] =
+    [];
+  public readonly integrationCompletions: WhatsAppIntegrationCompletedNotification[] =
+    [];
 
   async notifyAppointmentConfirmed(
     notification: AppointmentConfirmedNotification,
@@ -42,5 +48,17 @@ export class FakeClinicNotifier implements ClinicNotifier {
     notification: DailyLimitWarningNotification,
   ): Promise<void> {
     this.dailyLimitWarnings.push(notification);
+  }
+
+  async notifyWhatsAppSharedNumberDisclosure(
+    notification: WhatsAppSharedNumberDisclosureNotification,
+  ): Promise<void> {
+    this.sharedNumberDisclosures.push(notification);
+  }
+
+  async notifyWhatsAppIntegrationCompleted(
+    notification: WhatsAppIntegrationCompletedNotification,
+  ): Promise<void> {
+    this.integrationCompletions.push(notification);
   }
 }
