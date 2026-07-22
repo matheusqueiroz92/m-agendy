@@ -1,6 +1,12 @@
 "use client";
 
-import { Building2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -21,6 +27,11 @@ import { authClient } from "@/lib/auth-client";
 const items = [
   { title: "Visão geral", url: "/platform", icon: LayoutDashboard },
   { title: "Clínicas", url: "/platform/clinics", icon: Building2 },
+  {
+    title: "Integração WhatsApp",
+    url: "/platform/whatsapp-requests",
+    icon: MessageCircle,
+  },
 ];
 
 export const PlatformSidebar = () => {
