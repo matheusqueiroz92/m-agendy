@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   combineDateAndTimeInClinicTimezone,
+  dayWindowInClinicTimezone,
   formatInClinicTimezone,
 } from "./combine-date-and-time";
 
@@ -52,5 +53,29 @@ describe("formatInClinicTimezone", () => {
     const instant = combineDateAndTimeInClinicTimezone(date, "14:30");
 
     expect(formatInClinicTimezone(instant, "HH:mm")).toBe("14:30");
+  });
+});
+
+describe("dayWindowInClinicTimezone", () => {
+  it("retorna [meia-noite, meia-noite seguinte) do dia em São Paulo, não em UTC", () => {
+    // 10:00 em São Paulo (UTC-3) de 25/07/2026 = 13:00 UTC.
+    const instant = new Date("2026-07-25T13:00:00.000Z");
+    const { start, end } = dayWindowInClinicTimezone(instant);
+
+    // Meia-noite de 25/07 em SP = 03:00 UTC do mesmo dia.
+    expect(start.toISOString()).toBe("2026-07-25T03:00:00.000Z");
+    // Meia-noite de 26/07 em SP = 03:00 UTC do dia seguinte.
+    expect(end.toISOString()).toBe("2026-07-26T03:00:00.000Z");
+  });
+
+  it("classifica corretamente um instante perto da virada do dia em UTC mas ainda 'ontem' em São Paulo", () => {
+    // 23:30 em São Paulo (UTC-3) de 25/07/2026 = 02:30 UTC do dia 26/07 —
+    // um cálculo de janela baseado em UTC classificaria isso como 26/07,
+    // quando na verdade ainda é 25/07 no fuso da clínica.
+    const instant = new Date("2026-07-26T02:30:00.000Z");
+    const { start, end } = dayWindowInClinicTimezone(instant);
+
+    expect(start.toISOString()).toBe("2026-07-25T03:00:00.000Z");
+    expect(end.toISOString()).toBe("2026-07-26T03:00:00.000Z");
   });
 });

@@ -56,3 +56,21 @@ export function combineDateAndTimeInClinicTimezone(
 export function formatInClinicTimezone(date: Date, pattern: string): string {
   return dayjs(date).tz(CLINIC_TIMEZONE).format(pattern);
 }
+
+/**
+ * Janela [start, end) — instantes UTC reais — do dia-calendário da clínica
+ * (`CLINIC_TIMEZONE`) que contém `date`. Para limites diários (ex.: quantos
+ * agendamentos foram criados "hoje").
+ *
+ * Motivo de existir: um cálculo de janela baseado em `getUTCFullYear/Month/Date`
+ * (o mesmo padrão usado em `monthWindowUTC`, para o limite mensal) classificaria
+ * um instante como 23:30 em São Paulo (02:30 UTC do dia seguinte) no dia
+ * errado — ainda é "hoje" para a clínica, mas já é "amanhã" em UTC.
+ */
+export function dayWindowInClinicTimezone(date: Date): {
+  start: Date;
+  end: Date;
+} {
+  const start = dayjs(date).tz(CLINIC_TIMEZONE).startOf("day");
+  return { start: start.toDate(), end: start.add(1, "day").toDate() };
+}
