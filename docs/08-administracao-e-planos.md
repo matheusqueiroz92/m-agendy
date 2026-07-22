@@ -52,7 +52,9 @@ usuário vinculado — e sem isso ninguém consegue logar nela. Por isso, ao cri
    nem o admin — e o e-mail de "definir senha" é disparado na hora,
    reaproveitando o mesmo fluxo de recuperação de senha do login
    (`sendResetPassword`). A pessoa define a própria senha pelo link e já cai
-   direto na clínica dela.
+   direto na clínica dela. A conta já nasce com `emailVerified: true` (ver
+   nota abaixo) — clicar nesse link já prova posse do e-mail, então não há
+   um segundo e-mail de verificação no primeiro login.
 3. Se esse provisionamento falhar por qualquer motivo, a clínica recém-criada
    é revertida (excluída) em vez de ficar um registro órfão/inacessível.
 
@@ -69,6 +71,42 @@ geral de portas/casos de uso do projeto.
 > clínica falha em runtime com `BetterAuthError: The field "role" does not
 > exist...`. Já aplicado em `src/db/schema.ts` e em
 > `drizzle/manual/apply-admin-plugin-fields.sql`.
+
+### Correções do onboarding pelo admin ✅ implementadas (22/07/2026)
+
+Encontradas testando o fluxo completo (criar clínica → responsável redefine
+senha → login):
+
+- **`session.user.phoneNumber` sempre vazio, mesmo com o telefone salvo no
+  banco** — `customSession` (`src/lib/auth.ts`) espalhava o objeto `user` do
+  próprio BetterAuth (que só carrega os campos declarados em
+  `user.additionalFields` — `phoneNumber` não estava lá) em vez do resultado
+  da consulta Drizzle direta que a mesma função já fazia (`userData`, que
+  tinha o telefone). Corrigido: `phoneNumber` adicionado a
+  `additionalFields` e mesclado explicitamente no retorno da sessão.
+- **E-mail de verificação redundante e fora de ordem** — como
+  `requireEmailVerification: true` está ativo globalmente e a conta nasce
+  com `emailVerified: false`, o primeiro login do responsável (depois de já
+  ter redefinido a senha) disparava um SEGUNDO e-mail, de verificação. Como
+  clicar no link de redefinir senha já prova o acesso à caixa de entrada,
+  `DrizzleClinicOwnerProvisioner.provision()` agora marca
+  `emailVerified: true` na criação da conta — só 1 e-mail, sem etapa
+  duplicada.
+- **Link de verificação de e-mail caía na landing page em vez do
+  dashboard** — todo e-mail de verificação disparado pelo app embute
+  `callbackURL=/` (nenhum dos pontos de disparo do BetterAuth usados aqui
+  informa um `callbackURL` próprio), e a página `/verify-email` fazia sua
+  própria checagem via `fetch()` (sem repassar esse parâmetro) seguida de um
+  `router.push` manual — nunca deixando o BetterAuth completar o próprio
+  fluxo de criar sessão + redirecionar. Corrigido: a página agora navega a
+  página inteira para `/api/auth/verify-email?token=...&callbackURL=/entrar`,
+  deixando o BetterAuth validar o token, criar a sessão e redirecionar de
+  verdade — `/entrar` já é o roteador pós-login que manda para
+  `/dashboard`.
+
+Na mesma leva, a fila `/platform/whatsapp-requests` passou a exibir o
+telefone do responsável (mesmo coletado aqui na criação) — ver
+[docs/11-plano-notificacoes-whatsapp.md](11-plano-notificacoes-whatsapp.md).
 
 ## Bloqueio de acesso
 

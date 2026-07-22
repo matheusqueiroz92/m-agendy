@@ -96,3 +96,30 @@ descontrolado de mensagens?
   compartilhado) e na conclusão da integração. Campo de texto livre que
   existia antes em Configurações foi removido. Detalhes:
   [docs/11-plano-notificacoes-whatsapp.md](docs/11-plano-notificacoes-whatsapp.md).
+- **Telefone do responsável na fila admin de WhatsApp** — coluna nova em
+  `/platform/whatsapp-requests`, facilita achar o número certo para
+  cadastrar no WABA. Detalhes: [docs/11](docs/11-plano-notificacoes-whatsapp.md).
+
+## 2026-07-22 — Correções do onboarding de clínica pelo admin
+
+Encontradas testando manualmente o fluxo completo: criar clínica → e-mail de
+redefinição de senha → responsável define senha → login.
+
+### Corrigido
+
+- **Telefone do responsável não aparecia em Configurações** — `customSession`
+  (`src/lib/auth.ts`) montava a sessão a partir do objeto de usuário do
+  BetterAuth, que não carrega campos fora de `additionalFields`
+  (`phoneNumber` não estava declarado ali), em vez da consulta Drizzle direta
+  que a mesma função já fazia e que tinha o valor certo. Detalhes:
+  [docs/08-administracao-e-planos.md](docs/08-administracao-e-planos.md).
+- **E-mail de verificação redundante e fora de ordem** — a conta do
+  responsável, criada pelo admin, nasce agora com `emailVerified: true`
+  (clicar no link de redefinir senha já prova posse do e-mail), eliminando o
+  segundo e-mail que era disparado automaticamente no primeiro login.
+  Detalhes: [docs/08](docs/08-administracao-e-planos.md).
+- **Link de verificação de e-mail caía na landing page em vez do dashboard**
+  — a página `/verify-email` fazia uma checagem manual via `fetch()` (sem
+  repassar o `callbackURL`) seguida de um `router.push` — trocada por
+  navegação de página inteira para o endpoint do BetterAuth, que cria a
+  sessão e redireciona de verdade. Detalhes: [docs/08](docs/08-administracao-e-planos.md).

@@ -413,3 +413,13 @@ conforme o estado atual. O campo de texto livre que existia antes (qualquer
 um podia digitar um `phone_number_id` em Configurações, sem nenhuma validação
 de plano) foi removido — a única forma de vincular o número passa a ser este
 fluxo de solicitação + conclusão pelo admin.
+
+### Telefone do responsável na fila admin ✅ implementado (22/07/2026)
+
+A tela `/platform/whatsapp-requests` não tinha nenhum dado de contato da
+clínica, dificultando saber qual número cadastrar no Meta Business Manager.
+Adicionado `ownerPhoneNumber` a `WhatsAppIntegrationRequestListItem` (mesmo
+telefone coletado na criação da clínica pelo admin, populado no
+`DrizzleWhatsAppIntegrationRequestRepository.listAll()` reaproveitando a
+mesma consulta de "primeiro dono encontrado por clínica" já usada para o
+plano), exibido como coluna "Telefone" na tabela.
