@@ -67,7 +67,15 @@ export class HandleChatbotMessageUseCase {
       return;
     }
 
-    if (!clinicId) return;
+    // Sem clínica identificada (número compartilhado, sem dono cadastrado):
+    // não dá pra saber com segurança de qual clínica é essa conversa nova,
+    // então não inicia o agendamento por chat — orienta a usar o link direto.
+    if (!clinicId) {
+      await reply(
+        "No momento não é possível agendar por aqui. Peça à recepção da clínica o link de agendamento online.",
+      );
+      return;
+    }
 
     const patient = await this.patients.findByPhone({ clinicId, phone });
     if (!patient) {

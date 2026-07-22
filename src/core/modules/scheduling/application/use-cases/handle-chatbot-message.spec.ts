@@ -57,6 +57,24 @@ describe("HandleChatbotMessageUseCase", () => {
     expect(store.map.size).toBe(0);
   });
 
+  it("sem clínica identificada (número compartilhado sem dono), orienta e não inicia conversa", async () => {
+    const useCaseSemClinica = new HandleChatbotMessageUseCase(
+      store,
+      new FakeChatClinicResolver(null),
+      patients,
+      catalog,
+      availability,
+      scheduler,
+      messenger,
+      new FixedClock(now),
+    );
+
+    await useCaseSemClinica.execute({ fromPhone: phone, text: "oi" });
+
+    expect(messenger.last().toLowerCase()).toContain("link de agendamento");
+    expect(store.map.size).toBe(0);
+  });
+
   it("envia as respostas com o clinicId resolvido (roteamento multi-tenant do número de envio)", async () => {
     await useCase.execute({ fromPhone: phone, text: "oi" });
     expect(messenger.sent[0].clinicId).toBe("clinic-1");
