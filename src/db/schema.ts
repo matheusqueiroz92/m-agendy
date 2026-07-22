@@ -188,7 +188,46 @@ export const clinicsTableRelations = relations(clinicsTable, ({ many }) => ({
   patients: many(patientsTable),
   appointments: many(appointmentsTable),
   usersToClinics: many(usersToClinicsTable),
+  whatsappIntegrationRequests: many(whatsappIntegrationRequestsTable),
 }));
+
+export const whatsappIntegrationRequestStatusEnum = pgEnum(
+  "whatsapp_integration_request_status",
+  ["pending", "completed"],
+);
+
+/**
+ * Solicitação da clínica para integrar seu PRÓPRIO número de WhatsApp
+ * (planos Premium/Gold — ver `canUseOwnWhatsAppNumber` em
+ * `billing/domain/plans.ts`). Fluxo unificado: a equipe do M.Agendy conclui
+ * já gravando o `phone_number_id` obtido no Meta Business Manager, sem etapa
+ * intermediária de "em andamento".
+ */
+export const whatsappIntegrationRequestsTable = pgTable(
+  "whatsapp_integration_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clinicId: uuid("clinic_id")
+      .notNull()
+      .references(() => clinicsTable.id, { onDelete: "cascade" }),
+    status: whatsappIntegrationRequestStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    phoneNumberId: text("phone_number_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    completedAt: timestamp("completed_at"),
+  },
+);
+
+export const whatsappIntegrationRequestsTableRelations = relations(
+  whatsappIntegrationRequestsTable,
+  ({ one }) => ({
+    clinic: one(clinicsTable, {
+      fields: [whatsappIntegrationRequestsTable.clinicId],
+      references: [clinicsTable.id],
+    }),
+  }),
+);
 
 export const doctorsTable = pgTable("doctors", {
   id: uuid("id").defaultRandom().primaryKey(),
