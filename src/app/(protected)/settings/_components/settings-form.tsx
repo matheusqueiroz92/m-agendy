@@ -54,7 +54,7 @@ interface SettingsFormProps {
     id: string;
     name: string;
     email: string;
-    phoneNumber?: string;
+    phoneNumber?: string | null;
     clinic?: {
       id: string;
       name: string;
