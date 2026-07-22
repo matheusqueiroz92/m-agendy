@@ -14,7 +14,7 @@ import { planHasFeature } from "@/core/modules/billing/domain/entitlements";
 import { DrizzleWhatsAppIntegrationRequestRepository } from "@/core/modules/clinics/infra/persistence/drizzle-whatsapp-integration-request-repository";
 import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
 import { db } from "@/db";
-import { clinicsTable } from "@/db/schema";
+import { clinicsTable, usersTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import { SettingsForm } from "./_components/settings-form";
@@ -43,10 +43,19 @@ const SettingsPage = async () => {
   const actor = await getAuthenticatedActor();
   const canManageClinic = actor?.canManageClinic(clinicId) ?? false;
 
-  const clinic = await db.query.clinicsTable.findFirst({
-    where: eq(clinicsTable.id, clinicId),
-    columns: { whatsappPhoneNumberId: true },
-  });
+  const [clinic, currentUser] = await Promise.all([
+    db.query.clinicsTable.findFirst({
+      where: eq(clinicsTable.id, clinicId),
+      columns: {
+        whatsappPhoneNumberId: true,
+        appointmentRemindersEnabled: true,
+      },
+    }),
+    db.query.usersTable.findFirst({
+      where: eq(usersTable.id, session.user.id),
+      columns: { marketingEmailsOptIn: true },
+    }),
+  ]);
 
   const canUseOwnWhatsAppNumber = planHasFeature(
     session.user.plan,
@@ -75,6 +84,10 @@ const SettingsPage = async () => {
           clinicWhatsappPhoneNumberId={clinic?.whatsappPhoneNumberId ?? ""}
           canUseOwnWhatsAppNumber={canUseOwnWhatsAppNumber}
           hasPendingWhatsAppRequest={!!pendingWhatsAppRequest}
+          appointmentRemindersEnabled={
+            clinic?.appointmentRemindersEnabled ?? true
+          }
+          marketingEmailsOptIn={currentUser?.marketingEmailsOptIn ?? false}
         />
       </PageContent>
     </PageContainer>

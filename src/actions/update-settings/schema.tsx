@@ -5,11 +5,9 @@ export const updateSettingsSchema = z.object({
   email: z.string().email("Email inválido"),
   phoneNumber: z.string().optional(),
   clinicName: z.string().min(1, "Nome da clínica é obrigatório"),
-  language: z.string(),
-  timezone: z.string(),
-  emailNotifications: z.boolean(),
-  smsNotifications: z.boolean(),
+  // Lembretes de agendamento: setting da clínica (afeta todos os pacientes).
   appointmentReminders: z.boolean(),
+  // Opt-in de e-mails de marketing: preferência do usuário logado.
   marketingEmails: z.boolean(),
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Bell, Globe, Lock, MessageCircle, Shield, User } from "lucide-react";
+import { Bell, Globe, MessageCircle, Shield, User } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -31,16 +31,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { ChangePasswordCard } from "./change-password-card";
 
 // Schema de validação para o formulário de configurações
 const settingsSchema = z.object({
@@ -48,14 +43,8 @@ const settingsSchema = z.object({
   email: z.string().email("Email inválido"),
   phoneNumber: z.string().optional(),
   clinicName: z.string().min(1, "Nome da clínica é obrigatório"),
-  language: z.string(),
-  timezone: z.string(),
-  emailNotifications: z.boolean(),
-  smsNotifications: z.boolean(),
   appointmentReminders: z.boolean(),
   marketingEmails: z.boolean(),
-  twoFactorAuth: z.boolean(),
-  sessionTimeout: z.string(),
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
@@ -77,6 +66,10 @@ interface SettingsFormProps {
   canUseOwnWhatsAppNumber?: boolean;
   /** Já existe uma solicitação de integração pendente (aguardando a equipe). */
   hasPendingWhatsAppRequest?: boolean;
+  /** Estado real (persistido) do toggle "Lembretes de Agendamento". */
+  appointmentRemindersEnabled?: boolean;
+  /** Estado real (persistido) do opt-in de e-mails de marketing. */
+  marketingEmailsOptIn?: boolean;
 }
 
 export const SettingsForm = ({
@@ -85,6 +78,8 @@ export const SettingsForm = ({
   clinicWhatsappPhoneNumberId = "",
   canUseOwnWhatsAppNumber = false,
   hasPendingWhatsAppRequest = false,
+  appointmentRemindersEnabled = true,
+  marketingEmailsOptIn = false,
 }: SettingsFormProps) => {
   const updateSettingsAction = useAction(updateSettings, {
     onSuccess: () => {
@@ -119,14 +114,8 @@ export const SettingsForm = ({
       email: user.email || "",
       phoneNumber: user.phoneNumber || "",
       clinicName: user.clinic?.name || "",
-      language: "pt-BR",
-      timezone: "America/Sao_Paulo",
-      emailNotifications: true,
-      smsNotifications: false,
-      appointmentReminders: true,
-      marketingEmails: false,
-      twoFactorAuth: false,
-      sessionTimeout: "30",
+      appointmentReminders: appointmentRemindersEnabled,
+      marketingEmails: marketingEmailsOptIn,
     },
   });
 
@@ -347,52 +336,6 @@ export const SettingsForm = ({
                 <CardContent className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="emailNotifications"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Notificações por Email</FormLabel>
-                          <FormDescription>
-                            Receba notificações importantes por email
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Separator />
-
-                  <FormField
-                    control={form.control}
-                    name="smsNotifications"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Notificações por SMS</FormLabel>
-                          <FormDescription>
-                            Receba notificações urgentes por SMS
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Separator />
-
-                  <FormField
-                    control={form.control}
                     name="appointmentReminders"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between">
@@ -440,119 +383,7 @@ export const SettingsForm = ({
 
             {/* Aba Segurança */}
             <TabsContent value="security" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Configurações de Segurança
-                  </CardTitle>
-                  <CardDescription>
-                    Mantenha sua conta segura com essas configurações.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="twoFactorAuth"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Autenticação de Dois Fatores</FormLabel>
-                          <FormDescription>
-                            Adicione uma camada extra de segurança à sua conta
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Separator />
-
-                  <FormField
-                    control={form.control}
-                    name="sessionTimeout"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Timeout da Sessão</FormLabel>
-                        <FormDescription>
-                          Tempo em minutos para logout automático por
-                          inatividade
-                        </FormDescription>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o tempo" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="15">15 minutos</SelectItem>
-                            <SelectItem value="30">30 minutos</SelectItem>
-                            <SelectItem value="60">1 hora</SelectItem>
-                            <SelectItem value="120">2 horas</SelectItem>
-                            <SelectItem value="never">Nunca</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Alterar Senha
-                  </CardTitle>
-                  <CardDescription>
-                    Mantenha sua senha atualizada e segura.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">
-                        Senha Atual
-                      </label>
-                      <Input
-                        type="password"
-                        placeholder="Digite sua senha atual"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">
-                        Nova Senha
-                      </label>
-                      <Input
-                        type="password"
-                        placeholder="Digite sua nova senha"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium">
-                        Confirmar Nova Senha
-                      </label>
-                      <Input
-                        type="password"
-                        placeholder="Confirme sua nova senha"
-                      />
-                    </div>
-                    <Button type="button" variant="outline">
-                      Atualizar Senha
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <ChangePasswordCard />
             </TabsContent>
 
             {/* Aba Preferências */}
@@ -564,80 +395,10 @@ export const SettingsForm = ({
                     Preferências Gerais
                   </CardTitle>
                   <CardDescription>
-                    Configure as preferências de idioma, fuso horário e
-                    aparência.
+                    Configure a aparência da aplicação.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="language"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Idioma</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o idioma" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="pt-BR">
-                                Português (Brasil)
-                              </SelectItem>
-                              <SelectItem value="en-US">
-                                English (US)
-                              </SelectItem>
-                              <SelectItem value="es-ES">Español</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="timezone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Fuso Horário</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o fuso horário" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="America/Sao_Paulo">
-                                Brasília (GMT-3)
-                              </SelectItem>
-                              <SelectItem value="America/New_York">
-                                Nova York (GMT-5)
-                              </SelectItem>
-                              <SelectItem value="Europe/London">
-                                Londres (GMT+0)
-                              </SelectItem>
-                              <SelectItem value="Asia/Tokyo">
-                                Tóquio (GMT+9)
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <Separator />
-
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium">Aparência</label>
@@ -653,7 +414,11 @@ export const SettingsForm = ({
 
             {/* Botões de ação */}
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => form.reset()}
+              >
                 Cancelar
               </Button>
               <Button type="submit" disabled={updateSettingsAction.isPending}>

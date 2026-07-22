@@ -31,37 +31,36 @@ export const updateSettings = actionClient
       email,
       phoneNumber,
       clinicName,
-      // As configurações de notificação e preferências poderiam ser salvas
-      // em uma tabela separada de configurações, por enquanto vamos apenas
-      // atualizar os dados básicos do usuário e clínica
-      ...otherSettings
+      appointmentReminders,
+      marketingEmails,
     } = parsedInput;
 
-    // Atualizar dados do usuário
+    // Atualizar dados do usuário (inclui o opt-in de e-mails de marketing —
+    // preferência da pessoa, não da clínica).
     await db
       .update(usersTable)
       .set({
         name,
         email,
         phoneNumber: phoneNumber || null,
+        marketingEmailsOptIn: marketingEmails,
         updatedAt: new Date(),
       })
       .where(eq(usersTable.id, session.user.id));
 
     // Atualizar dados da clínica. O phone_number_id do WhatsApp não é mais
     // editável por aqui — só pela solicitação de integração (Configurações →
-    // Integração WhatsApp), concluída pelo admin da plataforma.
+    // Integração WhatsApp), concluída pelo admin da plataforma. Lembretes de
+    // agendamento são uma configuração operacional da clínica (afeta os
+    // pacientes de todos), não da conta individual.
     await db
       .update(clinicsTable)
       .set({
         name: clinicName,
+        appointmentRemindersEnabled: appointmentReminders,
         updatedAt: new Date(),
       })
       .where(eq(clinicsTable.id, session.user.clinic.id));
-
-    // TODO: Implementar salvamento das outras configurações
-    // em uma tabela de settings quando necessário
-    console.log("Other settings:", otherSettings);
 
     revalidatePath("/settings");
     revalidatePath("/dashboard");
