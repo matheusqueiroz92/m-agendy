@@ -100,6 +100,49 @@ descontrolado de mensagens?
   `/platform/whatsapp-requests`, facilita achar o número certo para
   cadastrar no WABA. Detalhes: [docs/11](docs/11-plano-notificacoes-whatsapp.md).
 
+## 2026-07-22 — Configurações e notificações: raio-x geral
+
+Verificação geral pedida pelo Matheus: vários controles de Configurações
+pareciam funcionar mas não tinham efeito real (valor descartado no servidor
+ou botão sem handler). Detalhes: [docs/12-configuracoes-e-notificacoes.md](docs/12-configuracoes-e-notificacoes.md).
+
+### Corrigido
+
+- **Sino de notificações do header não fazia nada** — sem `onClick`, sem
+  contagem. Agora vira link para `/notifications` com badge de não lidas
+  (mesmo padrão do menu lateral). Itens "Perfil"/"Configurações" do menu da
+  conta, que também não navegavam, agora vão para `/settings`.
+- **Toggle "Lembretes de Agendamento" não ativava/desativava nada** — o
+  valor era descartado no servidor. Agora é uma configuração real por
+  clínica (`clinics.appointment_reminders_enabled`); os 3 casos de uso de
+  criação de agendamento passam a checar isso antes de enfileirar os
+  lembretes de 24h/2h (a confirmação imediata continua normal).
+- **Toggle "Emails de Marketing" não ativava/desativava nada** — agora é um
+  opt-in real por usuário (`users.marketing_emails_opt_in`).
+- **Formulário de Configurações sempre mostrava os mesmos valores fixos**,
+  independente do que estava salvo (nunca buscava o estado real no banco).
+- **Botão "Atualizar Senha" não fazia nada** — sem `onClick`. Agora usa
+  `authClient.changePassword` (BetterAuth), com validação RHF + Zod.
+
+### Removido
+
+- **Notificações por SMS** — não existe canal de SMS na aplicação.
+- **Notificações por Email, Autenticação de Dois Fatores, Timeout de
+  Sessão** — mesma classe de problema do SMS (nenhum efeito real, sem
+  infraestrutura por trás).
+- **Idioma e Fuso Horário** (Preferências) — não há i18n no projeto (UI
+  inteira em português) nem fuso horário configurável por clínica (é uma
+  constante única usada em todo o motor de agendamento). Removidos por
+  enquanto para não sugerir uma opção que não muda nada; a aparência
+  (claro/escuro) continua, pois já era real.
+
+### Adicionado
+
+- **Disparo de e-mails de marketing** — novo módulo `core/modules/marketing`
+  e página `/platform/marketing-emails`: o admin da plataforma escreve
+  assunto + conteúdo e envia para quem deu opt-in, com confirmação antes do
+  disparo e contagem de sucesso/falha.
+
 ## 2026-07-22 — Correções do onboarding de clínica pelo admin
 
 Encontradas testando manualmente o fluxo completo: criar clínica → e-mail de

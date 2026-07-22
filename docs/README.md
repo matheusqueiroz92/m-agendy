@@ -13,5 +13,6 @@ consultórios de qualquer segmento.
 6. [Conectando gateways de pagamento](06-gateways-de-pagamento.md) — Stripe, Pagar.me, Mercado Pago.
 7. [Gestão e operação](07-gestao-e-operacao.md) — RBAC, admin, LGPD, multi-tenant.
 8. [Administração da plataforma e planos](08-administracao-e-planos.md) — área /platform, bloqueio de clínicas, catálogo de planos.
+9. [Configurações e notificações](12-configuracoes-e-notificacoes.md) — sino do header, lembretes por clínica, opt-in e disparo de e-mails de marketing, remoção de controles cosméticos (SMS, 2FA, idioma/fuso).
 
 Documento histórico: [plano de migração de arquitetura](plano-de-migracao-arquitetura.md).
