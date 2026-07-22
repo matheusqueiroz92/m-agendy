@@ -74,8 +74,17 @@ Bloqueada (`status = 'blocked'`), seus usuários logam mas caem em
 
 Cada clínica pode ter seu próprio número. Em **Configurações → Integração
 WhatsApp** (visível para gestores), informe o **`phone_number_id`** (Meta) da
-clínica. O webhook usa esse id para rotear a mensagem à clínica certa; sem
-correspondência, cai na `WHATSAPP_DEFAULT_CLINIC_ID`.
+clínica. O webhook usa esse id para rotear a mensagem à clínica certa.
+
+Confirmação de presença (paciente respondendo a um lembrete) funciona em
+qualquer número, com ou sem `phone_number_id` próprio — a clínica é resolvida
+pelo agendamento já existente, não pelo número que recebeu a mensagem.
+
+O **chatbot de agendamento** (conversa nova, sem um lembrete anterior) só
+funciona para clínicas com `phone_number_id` **próprio** cadastrado: no
+número compartilhado, não há como saber com segurança de qual clínica é uma
+mensagem nova, então o sistema não inicia o agendamento por chat e orienta o
+paciente a usar o link de agendamento online.
 
 Checklist para ligar o WhatsApp de uma clínica:
 1. Configure o número na Meta (WhatsApp Cloud API) e pegue o `phone_number_id`.

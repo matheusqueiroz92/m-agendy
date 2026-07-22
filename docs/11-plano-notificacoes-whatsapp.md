@@ -317,3 +317,33 @@ trabalho de cadastrar/verificar números reais de cada clínica na Meta fica
 para quando houver demanda real de clientes — o lançamento pode seguir com
 todas as clínicas usando o número compartilhado (fallback), sem dívida
 técnica para migrar depois.
+
+## Chatbot restrito a clínicas com número próprio (21/07/2026)
+
+O número compartilhado tem dois problemas de escala reais: o limite de
+mensagens/dia da Meta (por portfólio de negócio desde out/2025, não por
+número) é dividido entre todas as clínicas que o usam, e a reputação
+(*quality rating*) de uma clínica problemática pode penalizar as demais que
+compartilham o mesmo número. Além disso, `DrizzleChatClinicResolver` caía num
+`WHATSAPP_DEFAULT_CLINIC_ID` fixo quando o número recebido não tinha
+correspondência — ou seja, com o número compartilhado, uma conversa nova de
+chatbot (sem lembrete anterior) sempre caía numa única clínica fixa,
+independente de qual clínica o paciente realmente queria falar.
+
+Correção: `DrizzleChatClinicResolver.resolveInboundClinicId` agora retorna
+`null` (em vez do fallback fixo) quando o `phone_number_id` recebido não
+corresponde a nenhuma clínica cadastrada. `HandleChatbotMessageUseCase`, ao
+receber `clinicId: null` numa conversa nova, não inicia o agendamento por
+chat — responde orientando o paciente a usar o link de agendamento online.
+Na prática, **o chatbot de agendamento por conversa nova só funciona para
+clínicas com `phone_number_id` próprio configurado**; no número
+compartilhado, o paciente é direcionado ao link.
+
+Isso não afeta a **confirmação de presença** (paciente respondendo a um
+lembrete já enviado): `ConfirmAppointmentFromWhatsAppUseCase` resolve a
+clínica pelo agendamento pendente encontrado via telefone, não pelo número
+que recebeu a mensagem — continua funcionando em qualquer número, com ou sem
+`phone_number_id` próprio.
+
+A variável `WHATSAPP_DEFAULT_CLINIC_ID` foi removida (não é mais lida por
+nenhum resolver em uso).
