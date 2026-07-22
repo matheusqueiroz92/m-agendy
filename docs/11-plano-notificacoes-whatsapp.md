@@ -365,3 +365,51 @@ janela do dia no fuso da clínica (`dayWindowInClinicTimezone`). Ao faltar
 exatamente 1 agendamento para o limite, a clínica recebe um aviso in-app
 (`ClinicNotifier.notifyDailyLimitWarning`) antes do próximo ser bloqueado.
 Detalhes de configuração: [docs/08-administracao-e-planos.md](08-administracao-e-planos.md).
+
+## Solicitação de integração de número próprio de WhatsApp (22/07/2026)
+
+Como o `phone_number_id` só pode ser obtido dentro do Meta Business Manager
+(não há como o responsável pela clínica, ao contratar o plano, gerar esse
+número sozinho — ver decisão registrada acima sobre número compartilhado),
+formalizamos o fluxo de solicitação em vez de deixar um campo de texto livre
+em Configurações sem contexto nenhum.
+
+**Regra por plano** (`canUseOwnWhatsAppNumber` em `billing/domain/plans.ts`):
+Essential só usa o número compartilhado (seção acima); Premium e Gold podem
+solicitar a integração do número próprio.
+
+**Fluxo**:
+1. **Disclosure na criação da clínica** — `UpsertClinicUseCase` dispara
+   `ClinicNotifier.notifyWhatsAppSharedNumberDisclosure` (aviso in-app, best
+   effort) assim que a clínica é criada pelo admin, explicando que as
+   mensagens saem com o nome/número do M.Agendy até a integração ser feita.
+   Em Configurações → Integração WhatsApp, o mesmo texto fica permanente.
+2. **Solicitação (clínica)** — em Configurações, clínicas Premium/Gold sem
+   número próprio e sem solicitação pendente veem um botão "Solicitar
+   integração" (sem formulário — é só um pedido). Isso cria um
+   `WhatsAppIntegrationRequest` com `status: "pending"`
+   (`RequestWhatsAppIntegrationUseCase`), rejeitando com `PlanLimitError` se o
+   plano não libera o recurso, e com `ForbiddenError` se a clínica já tem
+   número próprio ou já tem uma solicitação pendente.
+3. **Fila administrativa** — `/platform/whatsapp-requests` lista todas as
+   solicitações (clínica, plano, status, data) via
+   `ListWhatsAppIntegrationRequestsUseCase`, restrito a `platform_admin`.
+4. **Conclusão (admin)** — depois de configurar manualmente o número no Meta
+   Business Manager, o admin clica em "Concluir" na fila, cola o
+   `phone_number_id` obtido e salva. `CompleteWhatsAppIntegrationRequestUseCase`
+   grava o número na clínica (via `ClinicWhatsAppDirectory.setPhoneNumberId`,
+   o mesmo diretório usado no envio multi-tenant) e avisa a clínica in-app
+   (`ClinicNotifier.notifyWhatsAppIntegrationCompleted`). Fluxo unificado: não
+   há etapa intermediária de "em andamento" — pendente vira concluída
+   diretamente.
+
+**Schema**: tabela `whatsapp_integration_requests` (`clinic_id`, `status`
+`pending`/`completed`, `phone_number_id`, `created_at`, `completed_at`).
+
+**UI da clínica** (Configurações → Integração WhatsApp): Essential vê a seção
+desabilitada com uma chamada para upgrade; Premium/Gold vê o botão de
+solicitar, ou o status "Solicitação em andamento", ou o número já ativo,
+conforme o estado atual. O campo de texto livre que existia antes (qualquer
+um podia digitar um `phone_number_id` em Configurações, sem nenhuma validação
+de plano) foi removido — a única forma de vincular o número passa a ser este
+fluxo de solicitação + conclusão pelo admin.

@@ -88,3 +88,11 @@ descontrolado de mensagens?
   mensal já existente. Essential 15/dia, Premium 40/dia, Gold ilimitado;
   avisa a clínica ao faltar 1 para o limite. Detalhes:
   [docs/08-administracao-e-planos.md](docs/08-administracao-e-planos.md).
+- **Solicitação de integração de número próprio de WhatsApp** — novo
+  entitlement `canUseOwnWhatsAppNumber` (Premium/Gold); clínica solicita em
+  Configurações (botão, sem formulário), admin conclui em
+  `/platform/whatsapp-requests` colando o `phone_number_id` obtido no Meta
+  Business Manager. Clínica é avisada in-app na criação (número
+  compartilhado) e na conclusão da integração. Campo de texto livre que
+  existia antes em Configurações foi removido. Detalhes:
+  [docs/11-plano-notificacoes-whatsapp.md](docs/11-plano-notificacoes-whatsapp.md).

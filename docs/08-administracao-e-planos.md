@@ -20,6 +20,7 @@ layouts: o layout protegido manda admin para `/platform`; o layout de
 |---|---|
 | `/platform` | Visão geral: total de clínicas, bloqueadas, pacientes e consultas. |
 | `/platform/clinics` | Gestão das clínicas: criar, editar, bloquear/liberar, plano, excluir. |
+| `/platform/whatsapp-requests` | Fila de solicitações de integração de número próprio de WhatsApp (ver [docs/11](11-plano-notificacoes-whatsapp.md)). |
 
 ### Gestão de clínicas (`/platform/clinics`)
 
@@ -140,11 +141,11 @@ desbloqueia automaticamente quando há cortesia — sem mexer em cada página.
 
 Cada plano declara seus **entitlements** no catálogo (`entitlements`):
 
-| Plano | Profissionais | Agendamentos/mês | Agendamentos/dia | Métricas detalhadas | IA |
-|---|---|---|---|---|---|
-| Essential | 3 | 100 | 15 | não | não |
-| Premium | 10 | ilimitado | 40 | sim | não |
-| Gold | ilimitado | ilimitado | ilimitado | sim | sim |
+| Plano | Profissionais | Agendamentos/mês | Agendamentos/dia | Métricas detalhadas | IA | WhatsApp próprio |
+|---|---|---|---|---|---|---|
+| Essential | 3 | 100 | 15 | não | não | não |
+| Premium | 10 | ilimitado | 40 | sim | não | sim |
+| Gold | ilimitado | ilimitado | ilimitado | sim | sim | sim |
 
 Onde é aplicado:
 
@@ -166,6 +167,10 @@ Onde é aplicado:
 - **Métricas detalhadas / IA** — o dashboard usa `planHasFeature(...)` para
   exibir gráficos/rankings só para quem tem direito; os demais veem um aviso de
   upgrade.
+- **Número de WhatsApp próprio** (`canUseOwnWhatsAppNumber`) — Essential só usa
+  o número compartilhado da plataforma; Premium/Gold podem **solicitar** a
+  integração do próprio número (ver [docs/11](11-plano-notificacoes-whatsapp.md)
+  para o fluxo completo).
 
 Helpers puros em `billing/domain/entitlements.ts`: `canAddProfessional`,
 `canCreateAppointment`, `canCreateAppointmentToday`,
@@ -191,6 +196,7 @@ Tudo num lugar só: **`src/core/modules/billing/domain/plans.ts`**, no campo
     maxAppointmentsPerDay: 15,     // número ou null (ilimitado) — volume de WhatsApp/dia
     detailedMetrics: false,        // gráficos/rankings no dashboard
     aiInsights: false,             // recurso de IA
+    canUseOwnWhatsAppNumber: false, // pode solicitar número de WhatsApp próprio
   },
 }
 ```
