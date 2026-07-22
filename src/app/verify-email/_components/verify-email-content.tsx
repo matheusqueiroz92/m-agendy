@@ -4,7 +4,6 @@ import { CheckCircle, MailPlus, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,34 +24,19 @@ export const VerifyEmailContent = () => {
   const token = searchParams.get("token");
 
   useEffect(() => {
-    const handleVerification = async () => {
-      if (!token) return;
-
-      setIsVerifying(true);
-      try {
-        // Fazer uma requisição para o endpoint de verificação do better-auth
-        const response = await fetch(`/api/auth/verify-email?token=${token}`, {
-          method: "GET",
-        });
-
-        if (response.ok) {
-          toast.success("E-mail verificado com sucesso!");
-          router.push("/entrar");
-        } else {
-          toast.error("Link de verificação inválido ou expirado.");
-        }
-      } catch (error) {
-        console.error("Erro na verificação:", error);
-        toast.error("Erro ao verificar e-mail.");
-      } finally {
-        setIsVerifying(false);
-      }
-    };
-    // Se há um token na URL, significa que o usuário clicou no link de verificação
-    if (token) {
-      handleVerification();
-    }
-  }, [token, router]);
+    // Se há um token na URL, o usuário clicou no link de verificação.
+    // Navegação de página inteira (não fetch) para o endpoint do BetterAuth:
+    // ele valida o token, cria a sessão (cookie via resposta HTTP real) e
+    // redireciona de verdade — é o próprio BetterAuth que sabe fazer os três
+    // passos de forma atômica. `callbackURL` fixo em "/entrar" (o roteador
+    // pós-login que manda para o dashboard certo) porque o link do e-mail
+    // sempre chega com "callbackURL" apontando para "/" (a home), já que
+    // nenhum dos disparos de e-mail de verificação do app informa um
+    // callback próprio.
+    if (!token) return;
+    setIsVerifying(true);
+    window.location.href = `/api/auth/verify-email?token=${encodeURIComponent(token)}&callbackURL=${encodeURIComponent("/entrar")}`;
+  }, [token]);
 
   const handleBackToLogin = () => {
     router.push("/auth");
