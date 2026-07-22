@@ -10,7 +10,10 @@ export class InMemoryWhatsAppIntegrationRequestRepository
 {
   public items: WhatsAppIntegrationRequest[] = [];
   /** Metadados de clínica usados só para compor o read model de `listAll`. */
-  public clinicInfo = new Map<string, { name: string; plan: string | null }>();
+  public clinicInfo = new Map<
+    string,
+    { name: string; plan: string | null; ownerPhoneNumber?: string | null }
+  >();
 
   async findPendingByClinic(
     clinicId: string,
@@ -42,6 +45,7 @@ export class InMemoryWhatsAppIntegrationRequestRepository
         clinicId: p.clinicId,
         clinicName: info?.name ?? "",
         clinicPlan: info?.plan ?? null,
+        ownerPhoneNumber: info?.ownerPhoneNumber ?? null,
         status: p.status,
         phoneNumberId: p.phoneNumberId,
         createdAt: p.createdAt,

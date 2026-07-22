@@ -51,16 +51,19 @@ export class DrizzleWhatsAppIntegrationRequestRepository
   }
 
   async listAll(): Promise<WhatsAppIntegrationRequestListItem[]> {
-    // Primeiro dono encontrado por clínica, só para exibir o plano de base
-    // (mesmo critério do AdminClinicRepository).
+    // Primeiro dono encontrado por clínica, para exibir o plano de base e o
+    // telefone de contato (mesmo critério do AdminClinicRepository) — esse
+    // telefone é o que a equipe usa para cadastrar o número no WABA.
     const owners = await db.query.usersToClinicsTable.findMany({
       where: eq(usersToClinicsTable.role, "owner"),
       with: { user: true },
     });
     const planByClinic = new Map<string, string | null>();
+    const phoneByClinic = new Map<string, string | null>();
     for (const o of owners) {
       if (!planByClinic.has(o.clinicId)) {
         planByClinic.set(o.clinicId, o.user?.plan ?? null);
+        phoneByClinic.set(o.clinicId, o.user?.phoneNumber ?? null);
       }
     }
 
@@ -74,6 +77,7 @@ export class DrizzleWhatsAppIntegrationRequestRepository
       clinicId: row.clinicId,
       clinicName: row.clinic.name,
       clinicPlan: planByClinic.get(row.clinicId) ?? null,
+      ownerPhoneNumber: phoneByClinic.get(row.clinicId) ?? null,
       status: row.status,
       phoneNumberId: row.phoneNumberId,
       createdAt: row.createdAt,

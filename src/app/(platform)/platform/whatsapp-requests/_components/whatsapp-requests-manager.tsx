@@ -35,6 +35,7 @@ export interface WhatsAppIntegrationRequestRow {
   clinicId: string;
   clinicName: string;
   clinicPlan: string | null;
+  ownerPhoneNumber: string | null;
   status: "pending" | "completed";
   phoneNumberId: string | null;
   createdAt: string;
@@ -82,6 +83,7 @@ export const WhatsAppRequestsManager = ({
         <TableHeader>
           <TableRow>
             <TableHead>Clínica</TableHead>
+            <TableHead>Telefone</TableHead>
             <TableHead>Plano</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Solicitado em</TableHead>
@@ -93,6 +95,9 @@ export const WhatsAppRequestsManager = ({
           {requests.map((r) => (
             <TableRow key={r.id}>
               <TableCell className="font-medium">{r.clinicName}</TableCell>
+              <TableCell className="text-sm">
+                {r.ownerPhoneNumber ?? "—"}
+              </TableCell>
               <TableCell className="text-sm">
                 {getPlanLabel(r.clinicPlan)}
               </TableCell>

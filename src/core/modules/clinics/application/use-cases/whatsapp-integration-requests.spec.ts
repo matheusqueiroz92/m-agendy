@@ -104,7 +104,11 @@ describe("RequestWhatsAppIntegrationUseCase", () => {
 describe("ListWhatsAppIntegrationRequestsUseCase", () => {
   it("admin lista todas as solicitações", async () => {
     const requests = new InMemoryWhatsAppIntegrationRequestRepository();
-    requests.clinicInfo.set("clinic-1", { name: "Clínica A", plan: "premium" });
+    requests.clinicInfo.set("clinic-1", {
+      name: "Clínica A",
+      plan: "premium",
+      ownerPhoneNumber: "5511999998888",
+    });
     const created = await new RequestWhatsAppIntegrationUseCase(
       requests,
       new FakeClinicWhatsAppDirectory(),
@@ -123,6 +127,7 @@ describe("ListWhatsAppIntegrationRequestsUseCase", () => {
       id: created.requestId,
       clinicName: "Clínica A",
       clinicPlan: "premium",
+      ownerPhoneNumber: "5511999998888",
       status: "pending",
     });
   });

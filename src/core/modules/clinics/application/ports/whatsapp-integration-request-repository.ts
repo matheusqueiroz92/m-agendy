@@ -10,6 +10,8 @@ export interface WhatsAppIntegrationRequestListItem {
   clinicName: string;
   /** Plano "de base" da clínica (assinatura do dono), para o admin priorizar. */
   clinicPlan: string | null;
+  /** Telefone do responsável pela clínica, para facilitar o cadastro no WABA. */
+  ownerPhoneNumber: string | null;
   status: WhatsAppIntegrationRequestStatus;
   phoneNumberId: string | null;
   createdAt: Date;
