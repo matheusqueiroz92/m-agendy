@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { doctorsTable, patientsTable } from "@/db/schema";
@@ -8,7 +8,6 @@ import { computeAvailableSlots } from "../../domain/availability";
 import { ChatbotOption } from "../../domain/chatbot";
 import {
   ChatAvailability,
-  ChatClinicResolver,
   ChatPatientLookup,
   ChatProfessionalsCatalog,
 } from "../../application/ports/chatbot-ports";
@@ -42,15 +41,23 @@ export class DrizzleChatPatientLookup implements ChatPatientLookup {
     phone: string;
   }): Promise<{ patientId: string; name: string } | null> {
     const target = toE164BR(params.phone);
+    const withoutCountryCode =
+      target.length >= 12 && target.startsWith("55")
+        ? target.slice(2)
+        : target;
 
-    const patients = await db.query.patientsTable.findMany({
-      where: eq(patientsTable.clinicId, params.clinicId),
-      columns: { id: true, name: true, phoneNumber: true },
-    });
+    const normalizedPhone = sql`regexp_replace(${patientsTable.phoneNumber}, '\\D', '', 'g')`;
 
-    const patient = patients.find(
-      (candidate) => toE164BR(candidate.phoneNumber) === target,
-    );
+    const [patient] = await db
+      .select({ id: patientsTable.id, name: patientsTable.name })
+      .from(patientsTable)
+      .where(
+        and(
+          eq(patientsTable.clinicId, params.clinicId),
+          sql`${normalizedPhone} IN (${target}, ${withoutCountryCode})`,
+        ),
+      )
+      .limit(1);
 
     return patient ? { patientId: patient.id, name: patient.name } : null;
   }
@@ -87,19 +94,6 @@ export class DrizzleChatAvailability implements ChatAvailability {
     )
       .filter((slot) => slot.available)
       .map((slot) => slot.time);
-  }
-}
-
-/**
- * Resolve a clínica do número de entrada. Hoje usa um padrão por variável de
- * ambiente; quando cada clínica tiver seu número, mapear o phone_number_id.
- */
-export class EnvChatClinicResolver implements ChatClinicResolver {
-  async resolveInboundClinicId(_params: {
-    phoneNumberId?: string | null;
-  }): Promise<string | null> {
-    void _params;
-    return process.env.WHATSAPP_DEFAULT_CLINIC_ID ?? null;
   }
 }
 
