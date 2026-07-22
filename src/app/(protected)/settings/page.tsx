@@ -10,6 +10,8 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
+import { planHasFeature } from "@/core/modules/billing/domain/entitlements";
+import { DrizzleWhatsAppIntegrationRequestRepository } from "@/core/modules/clinics/infra/persistence/drizzle-whatsapp-integration-request-repository";
 import { getAuthenticatedActor } from "@/core/modules/iam/infra/session-actor-provider";
 import { db } from "@/db";
 import { clinicsTable } from "@/db/schema";
@@ -46,6 +48,16 @@ const SettingsPage = async () => {
     columns: { whatsappPhoneNumberId: true },
   });
 
+  const canUseOwnWhatsAppNumber = planHasFeature(
+    session.user.plan,
+    "canUseOwnWhatsAppNumber",
+  );
+  const pendingWhatsAppRequest = canManageClinic
+    ? await new DrizzleWhatsAppIntegrationRequestRepository().findPendingByClinic(
+        clinicId,
+      )
+    : null;
+
   return (
     <PageContainer>
       <PageHeader>
@@ -61,6 +73,8 @@ const SettingsPage = async () => {
           user={session.user}
           canManageClinic={canManageClinic}
           clinicWhatsappPhoneNumberId={clinic?.whatsappPhoneNumberId ?? ""}
+          canUseOwnWhatsAppNumber={canUseOwnWhatsAppNumber}
+          hasPendingWhatsAppRequest={!!pendingWhatsAppRequest}
         />
       </PageContent>
     </PageContainer>

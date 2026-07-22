@@ -3,13 +3,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bell, Globe, Lock, MessageCircle, Shield, User } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { requestWhatsAppIntegration } from "@/actions/request-whatsapp-integration";
 import { updateSettings } from "@/actions/update-settings";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,7 +48,6 @@ const settingsSchema = z.object({
   email: z.string().email("Email inválido"),
   phoneNumber: z.string().optional(),
   clinicName: z.string().min(1, "Nome da clínica é obrigatório"),
-  whatsappPhoneNumberId: z.string().optional(),
   language: z.string(),
   timezone: z.string(),
   emailNotifications: z.boolean(),
@@ -71,12 +73,18 @@ interface SettingsFormProps {
   };
   canManageClinic?: boolean;
   clinicWhatsappPhoneNumberId?: string;
+  /** Plano da clínica libera integrar o próprio número (Premium/Gold). */
+  canUseOwnWhatsAppNumber?: boolean;
+  /** Já existe uma solicitação de integração pendente (aguardando a equipe). */
+  hasPendingWhatsAppRequest?: boolean;
 }
 
 export const SettingsForm = ({
   user,
   canManageClinic = false,
   clinicWhatsappPhoneNumberId = "",
+  canUseOwnWhatsAppNumber = false,
+  hasPendingWhatsAppRequest = false,
 }: SettingsFormProps) => {
   const updateSettingsAction = useAction(updateSettings, {
     onSuccess: () => {
@@ -88,6 +96,22 @@ export const SettingsForm = ({
     },
   });
 
+  const requestWhatsAppIntegrationAction = useAction(
+    requestWhatsAppIntegration,
+    {
+      onSuccess: () => {
+        toast.success(
+          "Solicitação enviada! Nossa equipe vai configurar e avisar por aqui.",
+        );
+      },
+      onError: ({ error }) => {
+        toast.error(
+          error.serverError ?? "Não foi possível enviar a solicitação.",
+        );
+      },
+    },
+  );
+
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -95,7 +119,6 @@ export const SettingsForm = ({
       email: user.email || "",
       phoneNumber: user.phoneNumber || "",
       clinicName: user.clinic?.name || "",
-      whatsappPhoneNumberId: clinicWhatsappPhoneNumberId || "",
       language: "pt-BR",
       timezone: "America/Sao_Paulo",
       emailNotifications: true,
@@ -238,32 +261,71 @@ export const SettingsForm = ({
                       Integração WhatsApp
                     </CardTitle>
                     <CardDescription>
-                      Vincule o número da sua clínica para confirmações e
-                      agendamento pelo WhatsApp.
+                      Por padrão, as mensagens de WhatsApp para os pacientes
+                      (confirmações, lembretes) saem com o nome e número do
+                      M.Agendy, não da sua clínica. Para usar o número da sua
+                      clínica, é preciso solicitar a integração.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="whatsappPhoneNumberId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ID do número do WhatsApp (Meta)</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Ex.: 123456789012345"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            O <strong>phone_number_id</strong> do número no Meta
-                            WhatsApp Cloud API. Roteia as mensagens recebidas
-                            para esta clínica. Deixe em branco para desvincular.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {!canUseOwnWhatsAppNumber ? (
+                      <div className="bg-muted/40 space-y-2 rounded-lg border border-dashed p-4">
+                        <p className="text-sm font-medium">
+                          Número próprio da clínica
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          Disponível nos planos Premium e Gold. Faça upgrade
+                          para que as mensagens saiam com o nome e número da
+                          sua clínica.
+                        </p>
+                        <Button asChild size="sm" variant="outline" type="button">
+                          <Link href="/subscription">Ver planos</Link>
+                        </Button>
+                      </div>
+                    ) : clinicWhatsappPhoneNumberId ? (
+                      <div className="space-y-2">
+                        <Badge variant="secondary">Número próprio ativo</Badge>
+                        <p className="text-muted-foreground text-sm">
+                          phone_number_id:{" "}
+                          <span className="font-mono">
+                            {clinicWhatsappPhoneNumberId}
+                          </span>
+                        </p>
+                      </div>
+                    ) : hasPendingWhatsAppRequest ? (
+                      <div className="space-y-2">
+                        <Badge variant="outline">
+                          Solicitação em andamento
+                        </Badge>
+                        <p className="text-muted-foreground text-sm">
+                          Nossa equipe está configurando a integração no Meta
+                          Business Manager. Você será avisado por aqui assim
+                          que estiver pronta.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-muted-foreground text-sm">
+                          Solicite a integração do número de WhatsApp da sua
+                          clínica — nossa equipe configura no Meta Business
+                          Manager e ativa para você.
+                        </p>
+                        <Button
+                          type="button"
+                          disabled={requestWhatsAppIntegrationAction.isPending}
+                          onClick={() =>
+                            user.clinic?.id &&
+                            requestWhatsAppIntegrationAction.execute({
+                              clinicId: user.clinic.id,
+                            })
+                          }
+                        >
+                          {requestWhatsAppIntegrationAction.isPending
+                            ? "Enviando..."
+                            : "Solicitar integração"}
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
