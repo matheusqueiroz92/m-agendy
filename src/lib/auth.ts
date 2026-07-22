@@ -89,6 +89,9 @@ export const auth = betterAuth({
       return {
         user: {
           ...user,
+          // Telefone do responsável: não está em `additionalFields`, então o
+          // `user` do BetterAuth não o carrega — vem da consulta direta acima.
+          phoneNumber: userData?.phoneNumber ?? null,
           // Plano efetivo: respeita cortesia/override concedido pela plataforma.
           plan: access ? access.effectivePlan : userData?.plan,
           platformRole: userData?.platformRole ?? "member",
@@ -135,6 +138,11 @@ export const auth = betterAuth({
       platformRole: {
         type: "string",
         fieldName: "platformRole",
+        required: false,
+      },
+      phoneNumber: {
+        type: "string",
+        fieldName: "phoneNumber",
         required: false,
       },
     },
