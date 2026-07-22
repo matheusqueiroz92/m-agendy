@@ -11,6 +11,13 @@ export interface PlanEntitlements {
   maxProfessionals: number | null;
   /** Máximo de agendamentos por mês (null = ilimitado). */
   maxAppointmentsPerMonth: number | null;
+  /**
+   * Máximo de agendamentos CRIADOS por dia (null = ilimitado). Controla o
+   * volume de mensagens de WhatsApp disparadas (cada agendamento criado gera
+   * uma confirmação imediata + lembretes futuros) — independente do limite
+   * mensal, que é um teto de capacidade, não de volume de mensagens.
+   */
+  maxAppointmentsPerDay: number | null;
   /** Métricas detalhadas no dashboard. */
   detailedMetrics: boolean;
   /** Análise de métricas com IA. */
@@ -44,6 +51,7 @@ export const PLAN_CATALOG = [
     entitlements: {
       maxProfessionals: 3,
       maxAppointmentsPerMonth: 100,
+      maxAppointmentsPerDay: 15,
       detailedMetrics: false,
       aiInsights: false,
     },
@@ -58,6 +66,7 @@ export const PLAN_CATALOG = [
     entitlements: {
       maxProfessionals: 10,
       maxAppointmentsPerMonth: null,
+      maxAppointmentsPerDay: 40,
       detailedMetrics: true,
       aiInsights: false,
     },
@@ -72,6 +81,7 @@ export const PLAN_CATALOG = [
     entitlements: {
       maxProfessionals: null,
       maxAppointmentsPerMonth: null,
+      maxAppointmentsPerDay: null,
       detailedMetrics: true,
       aiInsights: true,
     },

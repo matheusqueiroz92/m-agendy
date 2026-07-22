@@ -4,6 +4,7 @@ import { getPlan, PlanEntitlements } from "./plans";
 const NONE: PlanEntitlements = {
   maxProfessionals: 0,
   maxAppointmentsPerMonth: 0,
+  maxAppointmentsPerDay: 0,
   detailedMetrics: false,
   aiInsights: false,
 };
@@ -29,6 +30,32 @@ export const canCreateAppointment = (
 ): boolean => {
   const max = entitlementsOf(planId).maxAppointmentsPerMonth;
   return max === null || monthCount < max;
+};
+
+/**
+ * Pode criar mais um agendamento hoje dado o total já criado hoje?
+ * Controla o volume diário de mensagens de WhatsApp, independente do limite
+ * mensal (que é sobre capacidade de agenda, não sobre volume de mensagens).
+ */
+export const canCreateAppointmentToday = (
+  planId: string | null | undefined,
+  todayCount: number,
+): boolean => {
+  const max = entitlementsOf(planId).maxAppointmentsPerDay;
+  return max === null || todayCount < max;
+};
+
+/**
+ * Está a exatamente 1 agendamento de bater o limite diário do plano? Usado
+ * para avisar a clínica antes de efetivamente bloquear (`todayCount` é a
+ * contagem JÁ incluindo o agendamento recém-criado).
+ */
+export const isOneAppointmentAwayFromDailyLimit = (
+  planId: string | null | undefined,
+  todayCount: number,
+): boolean => {
+  const max = entitlementsOf(planId).maxAppointmentsPerDay;
+  return max !== null && todayCount === max - 1;
 };
 
 /** O plano libera um recurso booleano (ex.: detailedMetrics, aiInsights)? */

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   canAddProfessional,
   canCreateAppointment,
+  canCreateAppointmentToday,
+  isOneAppointmentAwayFromDailyLimit,
   planHasFeature,
 } from "./entitlements";
 
@@ -32,5 +34,30 @@ describe("entitlements", () => {
   it("plano inexistente/ausente não libera nada", () => {
     expect(canAddProfessional(null, 0)).toBe(false);
     expect(planHasFeature(undefined, "detailedMetrics")).toBe(false);
+  });
+
+  it("essential limita agendamentos/dia a 15", () => {
+    expect(canCreateAppointmentToday("essential", 14)).toBe(true);
+    expect(canCreateAppointmentToday("essential", 15)).toBe(false);
+  });
+
+  it("premium limita agendamentos/dia a 40", () => {
+    expect(canCreateAppointmentToday("premium", 39)).toBe(true);
+    expect(canCreateAppointmentToday("premium", 40)).toBe(false);
+  });
+
+  it("gold é ilimitado em agendamentos/dia", () => {
+    expect(canCreateAppointmentToday("gold", 99999)).toBe(true);
+  });
+
+  it("avisa quando falta exatamente 1 agendamento para o limite diário", () => {
+    // Essential: limite 15. Após criar o 14º do dia, restou espaço para 1.
+    expect(isOneAppointmentAwayFromDailyLimit("essential", 14)).toBe(true);
+    expect(isOneAppointmentAwayFromDailyLimit("essential", 13)).toBe(false);
+    expect(isOneAppointmentAwayFromDailyLimit("essential", 15)).toBe(false);
+  });
+
+  it("plano sem limite diário (gold) nunca avisa", () => {
+    expect(isOneAppointmentAwayFromDailyLimit("gold", 99999)).toBe(false);
   });
 });
