@@ -4,6 +4,7 @@ import {
   Building2,
   LayoutDashboard,
   LogOut,
+  Mail,
   MessageCircle,
   ShieldCheck,
 } from "lucide-react";
@@ -31,6 +32,11 @@ const items = [
     title: "Integração WhatsApp",
     url: "/platform/whatsapp-requests",
     icon: MessageCircle,
+  },
+  {
+    title: "E-mails de Marketing",
+    url: "/platform/marketing-emails",
+    icon: Mail,
   },
 ];
 

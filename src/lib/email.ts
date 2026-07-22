@@ -174,6 +174,105 @@ export function createVerificationEmailTemplate(
   return { subject, html, text };
 }
 
+// Template para e-mail de novidades/promoções (marketing, opt-in)
+export function createMarketingEmailTemplate(
+  userName: string,
+  subject: string,
+  body: string,
+): { subject: string; html: string; text: string } {
+  // O corpo é digitado em texto simples pelo admin (Configurações →
+  // disparo de e-mails); aqui só convertemos quebras de linha para <br>.
+  const bodyHtml = body
+    .split("\n")
+    .map((line) => (line.trim() ? `<p style="margin: 0 0 12px">${line}</p>` : ""))
+    .join("\n");
+
+  const html = `
+    <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${subject}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            p,
+            h2 {
+              color: #fff;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background-color: #155dfc;
+              color: white;
+              padding: 20px;
+              border-radius: 8px 8px 0 0;
+            }
+            .content {
+              background-color: #09090b;
+              padding: 30px;
+              border-radius: 0 0 8px 8px;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 30px;
+              color: #6b7280;
+              font-size: 14px;
+            }
+            .unsubscribe {
+              text-align: center;
+              margin-top: 10px;
+              color: #6b7280;
+              font-size: 12px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0">M.Agendy</h1>
+            </div>
+            <div class="content">
+              <h2>Olá, ${userName}!</h2>
+              ${bodyHtml}
+            </div>
+            <div class="footer">
+              <p>© 2024 M.Agendy. Todos os direitos reservados.</p>
+            </div>
+            <div class="unsubscribe">
+              <p>
+                Você recebeu este e-mail porque optou por receber novidades do
+                M.Agendy. Para deixar de receber, desative "Emails de
+                Marketing" em Configurações &gt; Notificações.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+  `;
+
+  const text = `
+    Olá, ${userName}!
+
+    ${body}
+
+    ---
+    Você recebeu este e-mail porque optou por receber novidades do M.Agendy.
+    Para deixar de receber, desative "Emails de Marketing" em Configurações > Notificações.
+
+    © 2024 M.Agendy. Todos os direitos reservados.
+  `;
+
+  return { subject, html, text };
+}
+
 export function createPasswordResetEmailTemplate(
   userName: string,
   resetUrl: string,
