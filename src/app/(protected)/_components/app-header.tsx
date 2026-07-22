@@ -2,9 +2,14 @@
 
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { Bell, LogOut, Settings, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
 
+import { countUnreadNotifications } from "@/actions/count-unread-notifications";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +25,21 @@ import { HeaderBreadcrumbs } from "./header-breadcrumbs";
 
 export const AppHeader = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const session = authClient.useSession();
+
+  // Mesmo padrão do badge de notificações não lidas do menu lateral
+  // (app-sidebar.tsx): busca ao montar e revalida a cada 60s/troca de rota.
+  const { execute: refreshUnread, result: unreadResult } = useAction(
+    countUnreadNotifications,
+  );
+  const unreadCount = unreadResult?.data?.count ?? 0;
+
+  useEffect(() => {
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 60_000);
+    return () => clearInterval(interval);
+  }, [pathname, refreshUnread]);
 
   const handleSignOut = () => {
     authClient.signOut({
@@ -64,13 +83,17 @@ export const AppHeader = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>
-                <User aria-hidden="true" className="mr-2 h-4 w-4" />
-                Perfil
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <User aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Perfil
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings aria-hidden="true" className="mr-2 h-4 w-4" />
-                Configurações
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Configurações
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
@@ -79,8 +102,21 @@ export const AppHeader = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="ghost" size="icon" aria-label="Notificações">
-            <Bell aria-hidden="true" className="h-5 w-5" />
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="relative"
+            aria-label="Notificações"
+          >
+            <Link href="/notifications">
+              <Bell aria-hidden="true" className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 min-w-4 justify-center rounded-full px-1 text-[10px] leading-none">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Badge>
+              )}
+            </Link>
           </Button>
 
           <ThemeToggle />
