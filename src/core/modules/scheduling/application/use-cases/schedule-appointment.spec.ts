@@ -12,6 +12,7 @@ import { FakeClinicNotifier } from "../testing/confirmation-fakes";
 import {
   FakeAppointmentNotifier,
   FakeClinicPlanProvider,
+  FakeClinicReminderPreference,
   FixedClock,
   InMemoryReminderScheduler,
 } from "../testing/fakes";
@@ -48,6 +49,7 @@ describe("ScheduleAppointmentUseCase", () => {
       new FixedClock(now),
       new FakeClinicPlanProvider(null),
       clinicNotifier,
+      new FakeClinicReminderPreference(true),
     );
   });
 
@@ -84,6 +86,27 @@ describe("ScheduleAppointmentUseCase", () => {
   it("não notifica nem agenda lembretes quando não há telefone", async () => {
     await useCase.execute(baseInput);
     expect(notifier.scheduled).toHaveLength(0);
+    expect(reminders.scheduled).toHaveLength(0);
+  });
+
+  it("confirma o agendamento mas não agenda lembretes quando a clínica desativou o toggle", async () => {
+    const withRemindersDisabled = new ScheduleAppointmentUseCase(
+      appointments,
+      notifier,
+      reminders,
+      new FixedClock(now),
+      new FakeClinicPlanProvider(null),
+      clinicNotifier,
+      new FakeClinicReminderPreference(false),
+    );
+
+    await withRemindersDisabled.execute({
+      ...baseInput,
+      patientName: "Maria",
+      patientPhoneNumber: "+5511999999999",
+    });
+
+    expect(notifier.scheduled).toHaveLength(1);
     expect(reminders.scheduled).toHaveLength(0);
   });
 
@@ -137,6 +160,7 @@ describe("ScheduleAppointmentUseCase", () => {
       new FixedClock(now),
       new FakeClinicPlanProvider("essential"),
       clinicNotifier,
+      new FakeClinicReminderPreference(true),
     );
     await expect(limited.execute(baseInput)).rejects.toBeInstanceOf(
       PlanLimitError,
@@ -163,6 +187,7 @@ describe("ScheduleAppointmentUseCase", () => {
       new FixedClock(now),
       new FakeClinicPlanProvider("essential"),
       clinicNotifier,
+      new FakeClinicReminderPreference(true),
     );
     await expect(limited.execute(baseInput)).rejects.toBeInstanceOf(
       PlanLimitError,
@@ -189,6 +214,7 @@ describe("ScheduleAppointmentUseCase", () => {
       new FixedClock(now),
       new FakeClinicPlanProvider("essential"),
       clinicNotifier,
+      new FakeClinicReminderPreference(true),
     );
 
     await limited.execute(baseInput);

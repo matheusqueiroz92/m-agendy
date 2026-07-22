@@ -21,6 +21,7 @@ import { AppointmentRepository } from "../ports/appointment-repository";
 import { BookingDirectory } from "../ports/booking-directory";
 import { ClinicNotifier } from "../ports/clinic-notifier";
 import { ClinicPlanProvider } from "../ports/clinic-plan-provider";
+import { ClinicReminderPreference } from "../ports/clinic-reminder-preference";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
 export interface BookAppointmentInput {
@@ -54,6 +55,7 @@ export class BookAppointmentUseCase {
     private readonly clock: Clock,
     private readonly plans: ClinicPlanProvider,
     private readonly clinicNotifier: ClinicNotifier,
+    private readonly reminderPreference: ClinicReminderPreference,
   ) {}
 
   async execute(input: BookAppointmentInput): Promise<BookAppointmentOutput> {
@@ -176,16 +178,21 @@ export class BookAppointmentUseCase {
         doctorName: professional.name,
       });
 
-      for (const runAt of computeReminderTimes(appointment.scheduledAt, now)) {
-        await this.reminders.schedule({
-          appointmentId: appointment.id,
-          clinicId: input.clinicId,
-          runAt,
-          to: input.patientPhoneNumber,
-          patientName: input.patientName,
-          doctorName: professional.name,
-          scheduledAt: appointment.scheduledAt,
-        });
+      const remindersEnabled = await this.reminderPreference.areRemindersEnabled(
+        input.clinicId,
+      );
+      if (remindersEnabled) {
+        for (const runAt of computeReminderTimes(appointment.scheduledAt, now)) {
+          await this.reminders.schedule({
+            appointmentId: appointment.id,
+            clinicId: input.clinicId,
+            runAt,
+            to: input.patientPhoneNumber,
+            patientName: input.patientName,
+            doctorName: professional.name,
+            scheduledAt: appointment.scheduledAt,
+          });
+        }
       }
     } catch (error) {
       console.error(

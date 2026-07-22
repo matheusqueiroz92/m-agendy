@@ -24,6 +24,7 @@ import { AppointmentNotifier } from "../ports/appointment-notifier";
 import { AppointmentRepository } from "../ports/appointment-repository";
 import { AvailabilityReader } from "../ports/availability-reader";
 import { ClinicNotifier } from "../ports/clinic-notifier";
+import { ClinicReminderPreference } from "../ports/clinic-reminder-preference";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
 export interface UpsertAppointmentInput {
@@ -62,6 +63,7 @@ export class UpsertAppointmentUseCase {
     private readonly contacts: AppointmentContactDirectory,
     private readonly availability: AvailabilityReader,
     private readonly clinicNotifier: ClinicNotifier,
+    private readonly reminderPreference: ClinicReminderPreference,
   ) {}
 
   async execute(
@@ -212,16 +214,23 @@ export class UpsertAppointmentUseCase {
           doctorName: contact.doctorName ?? undefined,
         });
 
-        for (const runAt of computeReminderTimes(appointment.scheduledAt, now)) {
-          await this.reminders.schedule({
-            appointmentId: appointment.id,
-            clinicId: input.clinicId,
-            runAt,
-            to: contact.patientPhoneNumber,
-            patientName: contact.patientName,
-            doctorName: contact.doctorName ?? undefined,
-            scheduledAt: appointment.scheduledAt,
-          });
+        const remindersEnabled =
+          await this.reminderPreference.areRemindersEnabled(input.clinicId);
+        if (remindersEnabled) {
+          for (const runAt of computeReminderTimes(
+            appointment.scheduledAt,
+            now,
+          )) {
+            await this.reminders.schedule({
+              appointmentId: appointment.id,
+              clinicId: input.clinicId,
+              runAt,
+              to: contact.patientPhoneNumber,
+              patientName: contact.patientName,
+              doctorName: contact.doctorName ?? undefined,
+              scheduledAt: appointment.scheduledAt,
+            });
+          }
         }
       }
     } catch (error) {

@@ -9,6 +9,7 @@ import { UpsertAppointmentUseCase } from "../../application/use-cases/upsert-app
 import { DrizzleAppointmentContactDirectory } from "../persistence/drizzle-appointment-contact-directory";
 import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment-repository";
 import { DrizzleAvailabilityReader } from "../persistence/drizzle-availability-reader";
+import { DrizzleClinicReminderPreference } from "../persistence/drizzle-clinic-reminder-preference";
 import { DrizzleClinicNotifier } from "../messaging/drizzle-clinic-notifier";
 import { QStashReminderScheduler } from "../scheduling/qstash-reminder-scheduler";
 import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
@@ -39,6 +40,7 @@ export const makeUpsertAppointment = () =>
     new DrizzleAppointmentContactDirectory(),
     new DrizzleAvailabilityReader(),
     new DrizzleClinicNotifier(),
+    new DrizzleClinicReminderPreference(),
   );
 
 export const makeRescheduleAppointment = () =>

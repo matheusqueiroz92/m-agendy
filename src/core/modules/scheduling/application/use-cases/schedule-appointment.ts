@@ -19,6 +19,7 @@ import { AppointmentNotifier } from "../ports/appointment-notifier";
 import { AppointmentRepository } from "../ports/appointment-repository";
 import { ClinicNotifier } from "../ports/clinic-notifier";
 import { ClinicPlanProvider } from "../ports/clinic-plan-provider";
+import { ClinicReminderPreference } from "../ports/clinic-reminder-preference";
 import { ReminderScheduler } from "../ports/reminder-scheduler";
 
 export interface ScheduleAppointmentInput {
@@ -52,6 +53,7 @@ export class ScheduleAppointmentUseCase {
     private readonly clock: Clock,
     private readonly plans: ClinicPlanProvider,
     private readonly clinicNotifier: ClinicNotifier,
+    private readonly reminderPreference: ClinicReminderPreference,
   ) {}
 
   async execute(
@@ -155,18 +157,24 @@ export class ScheduleAppointmentUseCase {
         // TODO: logar/observabilidade; não propagar.
       }
 
-      // Agenda os lembretes futuros (24h e 2h antes, por padrão).
-      const reminderTimes = computeReminderTimes(appointment.scheduledAt, now);
-      for (const runAt of reminderTimes) {
-        await this.reminders.schedule({
-          appointmentId: appointment.id,
-          clinicId: input.clinicId,
-          runAt,
-          to: input.patientPhoneNumber,
-          patientName,
-          doctorName: input.doctorName,
-          scheduledAt: appointment.scheduledAt,
-        });
+      // Agenda os lembretes futuros (24h e 2h antes, por padrão) — a menos
+      // que a clínica tenha desativado o toggle "Lembretes de Agendamento".
+      const remindersEnabled = await this.reminderPreference.areRemindersEnabled(
+        input.clinicId,
+      );
+      if (remindersEnabled) {
+        const reminderTimes = computeReminderTimes(appointment.scheduledAt, now);
+        for (const runAt of reminderTimes) {
+          await this.reminders.schedule({
+            appointmentId: appointment.id,
+            clinicId: input.clinicId,
+            runAt,
+            to: input.patientPhoneNumber,
+            patientName,
+            doctorName: input.doctorName,
+            scheduledAt: appointment.scheduledAt,
+          });
+        }
       }
     }
 

@@ -14,6 +14,7 @@ import { FakeAppointmentContactDirectory } from "../testing/fake-appointment-con
 import { FakeAvailabilityReader } from "../testing/fake-availability-reader";
 import {
   FakeAppointmentNotifier,
+  FakeClinicReminderPreference,
   FixedClock,
   InMemoryReminderScheduler,
 } from "../testing/fakes";
@@ -77,6 +78,7 @@ describe("UpsertAppointmentUseCase", () => {
       contacts,
       availability,
       clinicNotifier,
+      new FakeClinicReminderPreference(true),
     );
   });
 
@@ -167,6 +169,26 @@ describe("UpsertAppointmentUseCase", () => {
       reminders.scheduled.filter((r) => r.appointmentId === existing.id),
     ).toHaveLength(2);
     expect(audit.entries[0].action).toBe("appointment.updated");
+  });
+
+  it("confirma o agendamento mas não agenda lembretes quando a clínica desativou o toggle", async () => {
+    const withRemindersDisabled = new UpsertAppointmentUseCase(
+      appointments,
+      new Authorizer(),
+      audit,
+      new FixedClock(now),
+      reminders,
+      notifier,
+      contacts,
+      availability,
+      clinicNotifier,
+      new FakeClinicReminderPreference(false),
+    );
+
+    await withRemindersDisabled.execute(baseInput);
+
+    expect(notifier.scheduled).toHaveLength(1);
+    expect(reminders.scheduled).toHaveLength(0);
   });
 
   it("rejeita conflito de horário do mesmo profissional", async () => {

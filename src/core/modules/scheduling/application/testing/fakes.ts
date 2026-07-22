@@ -6,6 +6,7 @@ import {
   AppointmentReminderNotification,
   AppointmentScheduledNotification,
 } from "../ports/appointment-notifier";
+import { ClinicReminderPreference } from "../ports/clinic-reminder-preference";
 import { ClinicWhatsAppDirectory } from "../ports/clinic-whatsapp-directory";
 import {
   AppointmentReminder,
@@ -67,6 +68,18 @@ export class FakeClinicPlanProvider {
   constructor(private readonly plan: string | null = null) {}
   async getEffectivePlan(): Promise<string | null> {
     return this.plan;
+  }
+}
+
+/**
+ * ClinicReminderPreference fake: liga/desliga os lembretes por padrão (true),
+ * para os testes que precisam simular a clínica desativando o toggle.
+ */
+export class FakeClinicReminderPreference implements ClinicReminderPreference {
+  constructor(private readonly enabled: boolean = true) {}
+
+  async areRemindersEnabled(): Promise<boolean> {
+    return this.enabled;
   }
 }
 

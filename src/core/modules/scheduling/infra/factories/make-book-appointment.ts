@@ -5,6 +5,7 @@ import { BookAppointmentUseCase } from "../../application/use-cases/book-appoint
 import { DrizzleBookingDirectory } from "../persistence/drizzle-booking-directory";
 import { DrizzleAppointmentRepository } from "../persistence/drizzle-appointment-repository";
 import { DrizzleClinicPlanProvider } from "../persistence/drizzle-clinic-plan-provider";
+import { DrizzleClinicReminderPreference } from "../persistence/drizzle-clinic-reminder-preference";
 import { DrizzleClinicNotifier } from "../messaging/drizzle-clinic-notifier";
 import { QStashReminderScheduler } from "../scheduling/qstash-reminder-scheduler";
 import { makeWhatsAppAppointmentNotifier } from "./make-whatsapp-appointment-notifier";
@@ -23,4 +24,5 @@ export const makeBookAppointment = () =>
     new SystemClock(),
     new DrizzleClinicPlanProvider(),
     new DrizzleClinicNotifier(),
+    new DrizzleClinicReminderPreference(),
   );
