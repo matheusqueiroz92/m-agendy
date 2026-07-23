@@ -71,7 +71,7 @@ const ForgotPasswordForm = () => {
           </p>
         </div>
         <Button variant="outline" className="w-full" asChild>
-          <Link href="/auth">
+          <Link href="/auth/sign-in">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar ao login
           </Link>
@@ -83,15 +83,6 @@ const ForgotPasswordForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Esqueceu sua senha?
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Informe seu e-mail e enviaremos um link para redefinir sua senha.
-          </p>
-        </div>
-
         <FormField
           control={form.control}
           name="email"
@@ -99,7 +90,7 @@ const ForgotPasswordForm = () => {
             <FormItem>
               <FormLabel>E-mail</FormLabel>
               <FormControl>
-                <Input placeholder="seu@email.com…" {...field} />
+                <Input placeholder="seu@email.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -109,7 +100,7 @@ const ForgotPasswordForm = () => {
         <div className="flex flex-col gap-3">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full cursor-pointer bg-blue-500 hover:bg-blue-600"
             disabled={form.formState.isSubmitting}
           >
             {form.formState.isSubmitting ? (
@@ -119,7 +110,7 @@ const ForgotPasswordForm = () => {
             )}
           </Button>
           <Button variant="outline" className="w-full" asChild>
-            <Link href="/auth">
+            <Link href="/auth/sign-in">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao login
             </Link>

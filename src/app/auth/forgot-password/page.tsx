@@ -1,50 +1,15 @@
-import { headers } from "next/headers";
-import Image from "next/image";
-import { redirect } from "next/navigation";
-
-import { ThemeToggle } from "@/components/theme-toggle";
-import { auth } from "@/lib/auth";
-
-import Logo from "../../../../public/images/logo-m-agendy-com-nome.png";
-import Logo2 from "../../../../public/images/logo-m-agendy-com-nome-2.png";
-import ForgotPasswordForm from "./_components/forgot-password-form";
+import { CardAuth } from "../_components/card-auth";
+import PageAuthContainer from "../_components/page-auth-container";
+import ForgotPasswordForm from "../_components/forgot-password-form";
 
 const ForgotPasswordPage = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (session?.user) {
-    redirect("/entrar");
-  }
-
   return (
-    <div className="bg-background relative flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="absolute top-8 right-8 z-50">
-        <ThemeToggle />
-      </div>
-
-      <div className="mb-8 flex flex-col items-center justify-center">
-        <Image
-          src={Logo}
-          alt="logo-m-agendy"
-          width={200}
-          height={200}
-          className="block dark:hidden"
-        />
-        <Image
-          src={Logo2}
-          alt="logo-m-agendy"
-          width={200}
-          height={200}
-          className="hidden dark:block"
-        />
-      </div>
-
-      <div className="w-full max-w-[400px]">
-        <ForgotPasswordForm />
-      </div>
-    </div>
+    <PageAuthContainer>
+      <CardAuth
+        title="Esqueceu sua senha?"
+        description={{ text: "Informe seu e-mail e enviaremos um link para redefinir sua senha."}}
+        content={<ForgotPasswordForm />} />
+    </PageAuthContainer>
   );
 };
 

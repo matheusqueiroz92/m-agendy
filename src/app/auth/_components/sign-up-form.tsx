@@ -94,7 +94,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Nome</FormLabel>
                 <FormControl>
-                  <Input placeholder="Seu nome completo…" {...field} />
+                  <Input placeholder="Seu nome completo" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -107,7 +107,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>E-mail</FormLabel>
                 <FormControl>
-                  <Input placeholder="seu@email.com…" {...field} />
+                  <Input placeholder="seu@email.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -120,7 +120,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="Sua senha…" {...field} />
+                  <PasswordInput placeholder="Sua senha" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -133,7 +133,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Confirmar senha</FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="Confirme sua senha…" {...field} />
+                  <PasswordInput placeholder="Confirme sua senha" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -149,7 +149,7 @@ const RegisterForm = () => {
           {registerForm.formState.isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            "Registrar"
+            "Cadastrar"
           )}
         </Button>
       </form>

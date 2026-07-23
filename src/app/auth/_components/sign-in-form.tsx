@@ -89,7 +89,7 @@ const LoginForm = () => {
               <FormItem>
                 <FormLabel>E-mail</FormLabel>
                 <FormControl>
-                  <Input placeholder="seu@email.com…" {...field} />
+                  <Input placeholder="seu@email.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,12 +102,12 @@ const LoginForm = () => {
               <FormItem>
                 <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="Sua senha…" {...field} />
+                  <PasswordInput placeholder="Sua senha" {...field} />
                 </FormControl>
                 <div className="flex items-center justify-end">
                   <Link
                     href="/auth/forgot-password"
-                    className="text-primary text-sm hover:underline"
+                    className="text-blue-500 text-sm  hover:underline"
                   >
                     Esqueceu sua senha?
                   </Link>
@@ -130,13 +130,13 @@ const LoginForm = () => {
               "Entrar"
             )}
           </Button>
-          
-          <div className="flex items-center">
-            <div className="grow border-b border-neutral-400"></div>
-            <div className="mx-6 text-neutral-400">ou</div>
-            <div className="grow border-b border-neutral-400"></div>
-          </div>
 
+          <div className="flex items-center justify-center">
+            <div className="grow border-b border-neutral-300"></div>
+            <div className="mx-6 mt-2 mb-2 text-neutral-300">ou</div>
+            <div className="grow border-b border-neutral-300"></div>
+          </div>
+          
           <Button
             variant="outline"
             type="button"

@@ -73,7 +73,7 @@ const ResetPasswordForm = () => {
       {
         onSuccess: () => {
           toast.success("Senha redefinida com sucesso!");
-          router.push("/auth");
+          router.push("/auth/sign-in");
         },
         onError: () => {
           toast.error("Não foi possível redefinir a senha. O link pode ter expirado.");
@@ -95,11 +95,11 @@ const ResetPasswordForm = () => {
           </p>
         </div>
         <div className="flex flex-col gap-3">
-          <Button className="w-full" asChild>
+          <Button className="w-full cursor-pointer bg-blue-500 hover:bg-blue-600" asChild>
             <Link href="/auth/forgot-password">Solicitar novo link</Link>
           </Button>
           <Button variant="outline" className="w-full" asChild>
-            <Link href="/auth">
+            <Link href="/auth/sign-in">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao login
             </Link>
@@ -112,15 +112,6 @@ const ResetPasswordForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Redefinir senha
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Crie uma nova senha para sua conta.
-          </p>
-        </div>
-
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -131,7 +122,7 @@ const ResetPasswordForm = () => {
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Mínimo de 8 caracteres…"
+                    placeholder="Mínimo de 8 caracteres"
                     {...field}
                   />
                 </FormControl>
@@ -148,7 +139,7 @@ const ResetPasswordForm = () => {
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Repita a nova senha…"
+                    placeholder="Repita a nova senha"
                     {...field}
                   />
                 </FormControl>
@@ -161,7 +152,7 @@ const ResetPasswordForm = () => {
         <div className="flex flex-col gap-3">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full cursor-pointer bg-blue-500 hover:bg-blue-600"
             disabled={form.formState.isSubmitting}
           >
             {form.formState.isSubmitting ? (
@@ -170,8 +161,8 @@ const ResetPasswordForm = () => {
               "Redefinir senha"
             )}
           </Button>
-          <Button variant="outline" className="w-full" asChild>
-            <Link href="/auth">
+          <Button type="button" variant="outline" className="w-full cursor-pointer" asChild>
+            <Link href="/auth/sign-in">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao login
             </Link>
