@@ -129,7 +129,7 @@ export function HeroSection() {
                   href="/demo"
                   bgColor="cta"
                 >
-                  Quero ver como funciona
+                  Quero testar gratuitamente
                   <ArrowRight className="ml-2 size-5" aria-hidden="true" />
                 </CtaButton>
 

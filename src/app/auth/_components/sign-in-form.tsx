@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import GoogleIcon from "@/components/ui/google-icon";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
 
 const loginSchema = z.object({
@@ -80,12 +81,6 @@ const LoginForm = () => {
         onSubmit={loginForm.handleSubmit(handleSubmitLogin)}
         className="space-y-4"
       >
-        <div className="space-y-2 text-center">
-          <h3 className="text-lg mb-4 font-semibold sm:mb-6">
-            Faça o login e acesse a plataforma
-          </h3>
-        </div>
-
         <div className="space-y-4">
           <FormField
             control={loginForm.control}
@@ -105,8 +100,11 @@ const LoginForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Senha</FormLabel>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder="Sua senha…" {...field} />
+                </FormControl>
+                <div className="flex items-center justify-end">
                   <Link
                     href="/auth/forgot-password"
                     className="text-primary text-sm hover:underline"
@@ -114,13 +112,6 @@ const LoginForm = () => {
                     Esqueceu sua senha?
                   </Link>
                 </div>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Sua senha…"
-                    {...field}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -139,6 +130,13 @@ const LoginForm = () => {
               "Entrar"
             )}
           </Button>
+          
+          <div className="flex items-center">
+            <div className="grow border-b border-neutral-400"></div>
+            <div className="mx-6 text-neutral-400">ou</div>
+            <div className="grow border-b border-neutral-400"></div>
+          </div>
+
           <Button
             variant="outline"
             type="button"

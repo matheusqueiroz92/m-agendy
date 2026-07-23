@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z
@@ -85,12 +86,6 @@ const RegisterForm = () => {
         onSubmit={registerForm.handleSubmit(handleSubmitRegister)}
         className="space-y-4 sm:space-y-6"
       >
-        <div className="space-y-2 text-center">
-          <h3 className="text-lg mb-4 font-semibold text-balance sm:mb-6">
-            Crie sua conta e comece a usar a plataforma agora mesmo
-          </h3>
-        </div>
-
         <div className="space-y-4">
           <FormField
             control={registerForm.control}
@@ -125,11 +120,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Sua senha…"
-                    {...field}
-                  />
+                  <PasswordInput placeholder="Sua senha…" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,11 +133,7 @@ const RegisterForm = () => {
               <FormItem>
                 <FormLabel>Confirmar senha</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Confirme sua senha…"
-                    {...field}
-                  />
+                  <PasswordInput placeholder="Confirme sua senha…" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

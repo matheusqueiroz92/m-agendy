@@ -67,15 +67,17 @@ export function LandingHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-          <ThemeToggle />
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-6">
+          <Link className="cursor-pointer text-cta hover:text-cta/80" href="/auth">
+            Entrar
+          </Link>
           <Link className="cursor-pointer" href="/auth">
           <Button
             variant="outline"
             size="sm"
             className="cursor-pointer text-cta hover:text-cta/80 hidden h-10 md:inline-flex px-6 border border-cta/20 hover:border-cta/50"
           >
-            Entrar
+            Criar conta
           </Button>
           </Link>
           <Button

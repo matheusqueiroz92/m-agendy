@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
+import { NavigationLoader } from "@/components/navigation-loader";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -24,6 +25,7 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <NuqsAdapter>{children}</NuqsAdapter>
+            <NavigationLoader />
             <Toaster richColors />
           </QueryProvider>
         </ThemeProvider>
